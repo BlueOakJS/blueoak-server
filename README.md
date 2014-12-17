@@ -1,7 +1,15 @@
 ps-nas
 ======
 
-PointSource Node App Server reference implementation
+PointSource Node App Server reference implementation.
+
+This is a prescribed framework for building NodeJS-based middleware.
+
+### Features
+    * Based on expressjs
+    * Supports clustering out of the box
+    * Service framework
+    * Built in config and logging
 
 ### Installation
 
