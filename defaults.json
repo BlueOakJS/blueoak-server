@@ -4,8 +4,7 @@
   },
 
   "logging": {
-    "levels": ["DEBUG", "INFO", "WARN", "ERROR"],
-    "format": ""
+    "default_levels": ["DEBUG", "INFO", "WARN", "ERROR"]
   },
 
   "cluster": {
