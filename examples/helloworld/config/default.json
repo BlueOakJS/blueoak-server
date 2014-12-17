@@ -3,17 +3,22 @@
   "http": {
     //"port": 3001
   },
-
   "cluster": {
     "maxWorkers": 1
   },
-
   "logging": {
     "levels": ["USEFUL"]
   },
-
   "randomizer": {
     "min": 0,
     "max": 1000
+  },
+  "test": {
+    "value": {
+      "encrypted": "{aes-256-cbc}7d343a60de6b2ee4cca096509745f9fd=" //decryption key is testkey
+    }
+  },
+  "security": {
+    "key": "testkey" //When set, don't prompt during startup for password
   }
 }

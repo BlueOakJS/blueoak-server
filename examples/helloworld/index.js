@@ -2,7 +2,7 @@ var server = require('ps-nas');
 
 server.init(function(err) {
     if (err) {
-        console.warn(err);
+        console.warn('Startup failed', err);
     } else {
         console.log('started');
 
