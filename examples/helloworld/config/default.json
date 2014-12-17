@@ -1,0 +1,19 @@
+//Default config for my app
+{
+  "http": {
+    //"port": 3001
+  },
+
+  "cluster": {
+    "maxWorkers": 1
+  },
+
+  "logging": {
+
+  },
+
+  "randomizer": {
+    "min": 0,
+    "max": 1000
+  }
+}

@@ -21,6 +21,6 @@ exports.init = function(registry, callback) {
 }
 
 exports.get = function(key) {
-    var val = defaults[key];
+    var val = defaults[key] || {};
     return config.util.extendDeep(val, config[key]);
 }
