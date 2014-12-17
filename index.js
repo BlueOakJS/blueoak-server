@@ -91,12 +91,8 @@ function initWorker() {
     });
 }
 
-function initServices(callback) {
-    var depCalc = require('./lib/dependencyCalc');
+function initServicesInDirectory(depCalc, serviceDir) {
     var serviceList = {};
-
-    //built in services
-    var serviceDir = path.resolve(__dirname, 'services');
     var files = fs.readdirSync(serviceDir);
     files.forEach(function(file) {
         if (path.extname(file) === '.js') {
@@ -107,19 +103,18 @@ function initServices(callback) {
             }
         }
     });
+    return serviceList;
+}
+
+function initServices(callback) {
+    var depCalc = require('./lib/dependencyCalc');
+    var serviceList = {};
+
+    //built in services
+    _.extend(serviceList, initServicesInDirectory(depCalc, path.resolve(__dirname, 'services')));
 
     //user services
-    serviceDir = path.resolve(process.cwd(), 'services');
-    files = fs.readdirSync(serviceDir);
-    files.forEach(function(file) {
-        if (path.extname(file) === '.js') {
-            var mod = require(path.resolve(serviceDir, file));
-            if (mod.metadata) {
-                serviceList[mod.metadata.id] = mod;
-                depCalc.addNode(mod.metadata.id, mod.metadata.dependencies);
-            }
-        }
-    });
+    _.extend(serviceList, initServicesInDirectory(depCalc, path.resolve(process.cwd(), 'services')));
 
     try {
         var depGroups = depCalc.calcGroups()
