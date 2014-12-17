@@ -4,8 +4,9 @@ var path = require('path'),
     _ = require('lodash'),
     async = require('async'),
     q = require('q'),
-    cluster = require('cluster'),
-    serviceRegistry = require('./lib/serviceRegistry');
+    cluster = require('cluster');
+
+var server = module.exports;
 
 //Opts is optional
 module.exports.init = function (opts, callback) {
@@ -17,12 +18,12 @@ module.exports.init = function (opts, callback) {
 
     //bootstrap the config registry
     var configService = require('./services/config');
-    configService.init(serviceRegistry, function(err) {
+    configService.init(server, function(err) {
         if (err) {
             return callback(err);
         }
 
-        serviceRegistry.add(configService);
+        addService(configService);
 
         var clusterCount = 0;
         if (cluster.isMaster) {
@@ -119,9 +120,9 @@ function initServices(callback) {
         async.each(serviceIds, function(serviceId, serviceCallback) {
 
             //Is the service already registered because it was a bootstrap service?
-            if (!serviceRegistry.get(serviceId)) {
-                serviceList[serviceId].init(serviceRegistry, function(err) {
-                    serviceRegistry.add(serviceList[serviceId]);
+            if (!module.exports[serviceId]) {
+                serviceList[serviceId].init(server, function(err) {
+                    addService(serviceList[serviceId]);
                     serviceCallback(err);
                 });
             } else {
@@ -138,22 +139,47 @@ function initServices(callback) {
 
 }
 
+function addService(service) {
+    module.exports[service.metadata.id] = service;
+}
+
 
 function initExpress(callback) {
 
-    var configService = serviceRegistry.get('config');
-    var logger = serviceRegistry.get('logger');
-    var httpConf = configService.get('http');
+    var httpConf = server.config.get('http');
+    var logger = server.logger;
+    var app = express();
 
-    var app = express()
+    //Look for handlers in the client
+    var handlerDir = path.join(process.cwd(), 'handlers');
+    var files = fs.readdirSync(handlerDir);
+    async.each(files, function(file, initCallback) {
+        if (path.extname(file) === '.js') {
+            logger.debug('Begin initializing handler ' + file);
+            var mod = require(path.resolve(handlerDir, file));
+            mod.init(app, server, function() {
+                logger.debug('Finish initializing handler ' + file);
+                initCallback();
+            });
+        } else {
+            initCallback();
+        }
+    }, function(err) {
+        //Done registering handlers
+        if (err) {
+            return callback(err);
+        }
 
-    var server = app.listen(httpConf.port, function () {
-        var host = server.address().address
-        var port = server.address().port
+        //Setup up express to listen
+        var server = app.listen(httpConf.port, function () {
+            var host = server.address().address
+            var port = server.address().port
 
-        logger.info('Server is listening at http://%s:%s', host, port);
-        callback();
-    }).on('error', function(err) {
-        callback(err);
+            logger.info('Server is listening at http://%s:%s', host, port);
+            callback();
+        }).on('error', function(err) {
+            callback(err);
+        });
     });
+
 }
