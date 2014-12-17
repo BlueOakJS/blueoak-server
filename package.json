@@ -13,6 +13,7 @@
     "config": "^1.9.0",
     "express": "^4.10.6",
     "lodash": "^2.4.1",
+    "prompt": "^0.2.14",
     "q": "^1.1.2",
     "strip-json-comments": "^1.0.2"
   }

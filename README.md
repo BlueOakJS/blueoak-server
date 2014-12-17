@@ -103,6 +103,29 @@ Additional log levels can be specified in the logger config.  The levels will be
 ```
 The logger will prepend the log messages with the log level, timestamp, and PID.
 
+### Security
+The security service is used to securely store config values in the server.
+If the config contains an encrypted value, the server will prompt for a password during startup.
+
+The format for encrypted values is `{cipher}value=`, e.g. `{aes-256-cbc}cf3d490f602b718d5694e2ca1a231d08=`
+
+### Generating Encrypted Config
+A tool is provided, ps-nas/bin/encrypt.js, for encrypting values.
+
+Typical usage is `encrypt.js -c <cipher> <key> <data>`.  The default cipher is aes-256-cbc.
+
+### Bypassing prompt
+The key can either be specified as an environment variable, `decryptionKey`, or included in the security section of the config file.
+**Storing the key in the config isn't secure and is only suggested for avoiding sensitive data in plain text**.
+
+```json
+{
+  "security": {
+    "key": "myKey" //When set, don't prompt during startup for password
+  }
+}
+```
+
 ## Clustering
 Clustering is supported out of the box.  The number of workers can be configured.  A value of 1 is recommended during development.
 

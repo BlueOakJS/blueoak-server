@@ -16,30 +16,35 @@ module.exports.init = function (opts, callback) {
         opts = {};
     }
 
-    //bootstrap the config registry
-    var configService = require('./services/config');
-    configService.init(server, function(err) {
+    //Load the bootstrap services first
+    initServices({bootstrap: true}, function (err) {
         if (err) {
-            return callback(err);
+            if (cluster.isMaster) {
+                return callback(err);
+            } else {
+                //TODO: Don't like having to duplicate the startupComplete message
+                var message = {cmd: 'startupComplete', procId: process.pid};
+                message.error = err.message;
+                process.send(message);
+            }
         }
-
-        addService(configService);
 
         var clusterCount = 0;
         if (cluster.isMaster) {
 
-            var clusterConfig = configService.get('cluster');
+            var clusterConfig = server.config.get('cluster');
 
             // Either set to maxWorkers, or if < 0, use the count of machine's CPUs
             var workerCount = clusterConfig.maxWorkers < 0 ? require('os').cpus().length : clusterConfig.maxWorkers;
 
             // Create a worker for each CPU
             for (var i = 0; i < workerCount; i += 1) {
-                cluster.fork();
+                cluster.fork({decryptionKey: server.config.decryptionKey});
             }
 
-            Object.keys(cluster.workers).forEach(function(id) {
-                cluster.workers[id].on('message', function(msg) {
+            var startupFailed = false;
+            Object.keys(cluster.workers).forEach(function (id) {
+                cluster.workers[id].on('message', function (msg) {
                     if (msg.cmd === 'startupComplete') {
                         clusterCount++;
                     }
@@ -51,12 +56,14 @@ module.exports.init = function (opts, callback) {
                         }
 
                         //Callback with the error
+                        startupFailed = true;
                         callback(new Error(msg.error));
 
                     }
 
                     if (clusterCount === workerCount) {
-                        callback();
+                        if (!startupFailed) //prevent callback from being called twice, once with error and once without
+                            callback();
                     }
 
                 });
@@ -72,16 +79,15 @@ module.exports.init = function (opts, callback) {
 
 function initWorker() {
 
-
     //Use this callback to notify back to the cluster master that we're started, either successfully or with error
-    var callback = function(err) {
-        var message = { cmd: 'startupComplete', procId : process.pid };
+    var callback = function (err) {
+        var message = {cmd: 'startupComplete', procId: process.pid};
         if (err)
             message.error = err.message;
         process.send(message);
     }
 
-    initServices(function(err) {
+    initServices(function (err) {
         if (err)
             return callback(err);
 
@@ -94,7 +100,7 @@ function initWorker() {
 function initServicesInDirectory(depCalc, serviceDir) {
     var serviceList = {};
     var files = fs.readdirSync(serviceDir);
-    files.forEach(function(file) {
+    files.forEach(function (file) {
         if (path.extname(file) === '.js') {
             var mod = require(path.resolve(serviceDir, file));
             if (mod.metadata) {
@@ -106,7 +112,14 @@ function initServicesInDirectory(depCalc, serviceDir) {
     return serviceList;
 }
 
-function initServices(callback) {
+function initServices(opts, callback) {
+    if (!callback) {
+        callback = opts;
+        opts = {};
+    }
+
+    var bootstrap = opts.bootstrap || false;
+
     var depCalc = require('./lib/dependencyCalc');
     var serviceList = {};
 
@@ -124,13 +137,13 @@ function initServices(callback) {
     }
 
     //Now init the services in sequence
-    async.eachSeries(depGroups, function(serviceIds, groupCallback) {
+    async.eachSeries(depGroups, function (serviceIds, groupCallback) {
 
-        async.each(serviceIds, function(serviceId, serviceCallback) {
+        async.each(serviceIds, function (serviceId, serviceCallback) {
 
-            //Is the service already registered because it was a bootstrap service?
-            if (!module.exports[serviceId]) {
-                serviceList[serviceId].init(server, function(err) {
+            //Use bootstrap flag to determine if we should register this service
+            if (bootstrap === (serviceList[serviceId].metadata.bootstrap || false)) {
+                serviceList[serviceId].init(server, function (err) {
                     addService(serviceList[serviceId]);
                     serviceCallback(err);
                 });
@@ -138,11 +151,11 @@ function initServices(callback) {
                 //need to callback even though we didn't init anything
                 serviceCallback();
             }
-        }, function(err) {
+        }, function (err) {
             groupCallback(err);
         });
 
-    }, function(err) {
+    }, function (err) {
         callback(err);
     });
 
@@ -162,18 +175,18 @@ function initExpress(callback) {
     //Look for handlers in the client
     var handlerDir = path.join(process.cwd(), 'handlers');
     var files = fs.readdirSync(handlerDir);
-    async.each(files, function(file, initCallback) {
+    async.each(files, function (file, initCallback) {
         if (path.extname(file) === '.js') {
             logger.debug('Begin initializing handler ' + file);
             var mod = require(path.resolve(handlerDir, file));
-            mod.init(app, server, function() {
+            mod.init(app, server, function () {
                 logger.debug('Finish initializing handler ' + file);
                 initCallback();
             });
         } else {
             initCallback();
         }
-    }, function(err) {
+    }, function (err) {
         //Done registering handlers
         if (err) {
             return callback(err);
@@ -186,7 +199,7 @@ function initExpress(callback) {
 
             logger.info('Server is listening at http://%s:%s', host, port);
             callback();
-        }).on('error', function(err) {
+        }).on('error', function (err) {
             callback(err);
         });
     });
