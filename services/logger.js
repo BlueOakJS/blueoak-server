@@ -6,14 +6,14 @@ exports.metadata = {
 
 var _ = require('lodash');
 
-exports.init = function(registry, callback) {
+exports.init = function(server, callback) {
 
     var util = require('util');
-    var config = registry.get('config').get('logging');
+    var config = server.config.get('logging');
 
     //Merge the default levels with any custom-configured levels
     var levels = _.unique(config.default_levels.concat(config.levels || [])); //e.g. 'DEBUG', 'INFO', 'WARN', 'ERROR'
-    console.log(levels)
+
     levels.forEach(function(level) {
         module.exports[level.toLowerCase()] = function() {
             //{timestamp: Date.now(), pid: process.pid}
