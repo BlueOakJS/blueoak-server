@@ -1,9 +1,9 @@
 {
   "http": {
-    "port": 3000 //Express port
+    "port": 3000
   },
 
-  "logging": {
+  "logger": {
     "default_levels": ["DEBUG", "INFO", "WARN", "ERROR"]
   },
 
