@@ -10,7 +10,6 @@ var config = require('config'),
     fs = require('fs'),
     _ = require('lodash'),
     cluster = require('cluster'),
-    prompt = require('prompt'),
     security = require('../lib/security');
 
 //These are the default config values for anything not specified in the app's config dir
@@ -24,10 +23,12 @@ exports.init = function(server, callback) {
         }
         defaults = JSON.parse(stripJsonComments(data.toString()));
 
+        //We only ever want to check for a password in the cluster scenario, and then let the master
+        //pass the password to the individual workers
         if (cluster.isMaster) {
             //Check if any of the config has encrypted data, in which case we need to prompt for a password
-            if (scanConfigForEncryptedValues(config)) {
-                promptForPassword(function(err, result) {
+            if (security.containsEncryptedData(config)) {
+                getPassword(function(err, result) {
                     if (err) {
                         return callback(err);
                     } else {
@@ -39,9 +40,10 @@ exports.init = function(server, callback) {
                 callback();
             }
         } else {
+            //If we're a worker process, we expect that the master has set the decryptionKey as an env variable
             if (process.env.decryptionKey) {
                 try {
-                    decryptConfig(config, function (str) {
+                    security.decryptObject(config, function (str) {
                         //Decryption function
                         return security.decrypt(str, process.env.decryptionKey);
                     });
@@ -60,59 +62,8 @@ exports.get = function(key) {
     return config.util.extendDeep(val, config[key]);
 };
 
-function isEncrypted(str) {
-    return /^{.*}.*=$/.test(str);
-}
 
-/**
- * Recurse through the provided json object, looking for strings that are encrypted
- * @param obj
- * @param callback
- * @returns {*}
- */
-function scanConfigForEncryptedValues(obj) {
-    var foundEncrypted = false;
-    if (_.isString(obj)) {
-        foundEncrypted = isEncrypted(obj);
-    } else if (_.isArray(obj)) {
-        for (var i = 0; i < obj.length; i++) {
-            foundEncrypted = foundEncrypted || scanConfigForEncryptedValues(obj[i]);
-        }
-    } else if (_.isObject(obj)) {
-        for (var key in obj) {
-            foundEncrypted = foundEncrypted || scanConfigForEncryptedValues(obj[key]);
-        }
-    }
-
-    return foundEncrypted;
-};
-
-function decryptConfig(obj, decryptFunction) {
-    if (_.isArray(obj)) {
-        for (var i = 0; i < obj.length; i++) {
-            if (_.isString(obj[i])) {
-                if (isEncrypted(obj[i])) {
-                    obj[i] = decryptFunction(obj[i]);
-                }
-            } else {
-                decryptConfig(obj[i], decryptFunction);
-            }
-        }
-    } else if (_.isObject(obj)) {
-        for (var key in obj) {
-            if (_.isString(obj[key])) {
-                if (isEncrypted(obj[key])) {
-                    obj[key] = decryptFunction(obj[key]);
-                }
-            } else {
-                decryptConfig(obj[key], decryptFunction);
-            }
-        }
-    }
-};
-
-
-function promptForPassword(callback) {
+function getPassword(callback) {
     //Check first if we have a config value for the key
     var key = exports.get('security').key;
     if (key) {
@@ -121,22 +72,6 @@ function promptForPassword(callback) {
         return callback(null, process.env.decryptionKey);
     }
 
-    //otherwise we'll have to prompt
-
-    var properties = [
-        {
-            description: 'Enter your password',
-            name: 'password',
-            hidden: true,
-            type: 'string',
-            pattern: /^\w+$/
-        }
-    ];
-    prompt.start();
-
-    prompt.get(properties, function (err, result) {
-        if (err) { return callback(err); }
-        callback(null, result.password);
-    });
+    security.promptForPassword(callback);
 }
 
