@@ -15,7 +15,7 @@ module.exports = {
         //These were created using the bin/encrypt.js tool
         var data = [
             ['{bf}f2556cbd22a264f8a641d835bdaf5f8f=', 'key1', 'testdata1'],
-            ['{aes256}0f785ad2e71122e2f1bfe6914a01ab56=', 'key2', 'testdata2'],
+            ['{aes-256-cbc}0f785ad2e71122e2f1bfe6914a01ab56=', 'key2', 'testdata2'],
         ];
 
         test.expect(data.length);
