@@ -146,7 +146,8 @@ function initServices(opts, callback) {
 
             //Use bootstrap flag to determine if we should register this service
             if (bootstrap === (serviceList[serviceId].metadata.bootstrap || false)) {
-                serviceList[serviceId].init(server, function (err) {
+                var serviceConfig = serviceId === 'config' ? null : server.config.get(serviceId);
+                serviceList[serviceId].init(server, serviceConfig, function (err) {
                     addService(serviceList[serviceId]);
                     serviceCallback(err);
                 });
