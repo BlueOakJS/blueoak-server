@@ -4,7 +4,7 @@
   "description": "PointSource Node App Server",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "nodeunit test"
   },
   "author": "",
   "license": "ISC",
@@ -16,5 +16,8 @@
     "prompt": "^0.2.14",
     "q": "^1.1.2",
     "strip-json-comments": "^1.0.2"
+  },
+  "devDependencies": {
+    "nodeunit": "^0.9.0"
   }
 }

@@ -2,7 +2,7 @@ exports.metadata = {
     id: "config",
     description: "Configuration service",
     bootstrap: true,
-    dependencies: ['security']
+    dependencies: []
 }
 
 var config = require('config'),
@@ -10,7 +10,8 @@ var config = require('config'),
     fs = require('fs'),
     _ = require('lodash'),
     cluster = require('cluster'),
-    prompt = require('prompt');
+    prompt = require('prompt'),
+    security = require('../lib/security');
 
 //These are the default config values for anything not specified in the app's config dir
 defaults = {}
@@ -42,7 +43,7 @@ exports.init = function(server, callback) {
                 try {
                     decryptConfig(config, function (str) {
                         //Decryption function
-                        return server.security.decrypt(str, process.env.decryptionKey);
+                        return security.decrypt(str, process.env.decryptionKey);
                     });
                 } catch (err) {
                     return callback(new Error('Could not decrypt keys: ' + err.message));
@@ -138,3 +139,4 @@ function promptForPassword(callback) {
         callback(null, result.password);
     });
 }
+
