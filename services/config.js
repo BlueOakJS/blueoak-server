@@ -3,17 +3,16 @@ exports.metadata = {
     description: "Configuration service",
     bootstrap: true,
     dependencies: []
-}
+};
 
 var config = require('config'),
     stripJsonComments = require('strip-json-comments'),
     fs = require('fs'),
-    _ = require('lodash'),
     cluster = require('cluster'),
     security = require('../lib/security');
 
 //These are the default config values for anything not specified in the app's config dir
-defaults = {}
+var defaults = {};
 
 exports.init = function(server, callback) {
 

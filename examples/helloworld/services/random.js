@@ -3,7 +3,7 @@ exports.metadata = {
     id: "randomizer",
     description: "Random number generator",
     dependencies: ['config', 'logger']
-}
+};
 
 var request = require('request');
 var url, logger;
@@ -15,7 +15,7 @@ exports.init = function(server, callback) {
     url = 'http://www.random.org/integers/?num=1&min=' + min + '&max=' + max + '&col=1&base=10&format=plain&rnd=new';
     logger = server.logger;
     callback();
-}
+};
 
 exports.get = function(callback) {
     //custom log level
@@ -23,4 +23,4 @@ exports.get = function(callback) {
     request.get({url: url}, function(err, response, body) {
         callback(Number(body));
     });
-}
+};

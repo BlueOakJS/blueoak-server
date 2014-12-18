@@ -20,7 +20,7 @@ module.exports = {
 
     testGroups: function (test) {
         test.expect(9);
-        this.depCalc.addNode('a')
+        this.depCalc.addNode('a');
         this.depCalc.addNode('c', ['a']);
         this.depCalc.addNode('d', ['a']);
         this.depCalc.addNode('e', ['c', 'd']);
@@ -47,7 +47,7 @@ module.exports = {
 
     testCircular: function (test) {
         test.expect(1);
-        this.depCalc.addNode('a', ['d'])
+        this.depCalc.addNode('a', ['d']);
         this.depCalc.addNode('b', ['a']);
         this.depCalc.addNode('c', ['d']);
         this.depCalc.addNode('d', ['a', 'e']);

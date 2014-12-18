@@ -62,10 +62,10 @@ module.exports.init = function (opts, callback) {
                     }
 
                     if (clusterCount === workerCount) {
-                        if (!startupFailed) //prevent callback from being called twice, once with error and once without
+                        if (!startupFailed) { //prevent callback from being called twice, once with error and once without
                             callback();
+                        }
                     }
-
                 });
             });
 
@@ -75,21 +75,23 @@ module.exports.init = function (opts, callback) {
 
     });
 
-}
+};
 
 function initWorker() {
 
     //Use this callback to notify back to the cluster master that we're started, either successfully or with error
     var callback = function (err) {
         var message = {cmd: 'startupComplete', procId: process.pid};
-        if (err)
+        if (err) {
             message.error = err.message;
+        }
         process.send(message);
-    }
+    };
 
     initServices(function (err) {
-        if (err)
+        if (err) {
             return callback(err);
+        }
 
         initExpress(function (err) {
             callback(err);
@@ -129,8 +131,9 @@ function initServices(opts, callback) {
     //user services
     _.extend(serviceList, initServicesInDirectory(depCalc, path.resolve(process.cwd(), 'services')));
 
+    var depGroups = [];
     try {
-        var depGroups = depCalc.calcGroups()
+        depGroups = depCalc.calcGroups();
     } catch (err) {
         //can fail for circular dependencies
         return callback(err);
@@ -194,8 +197,8 @@ function initExpress(callback) {
 
         //Setup up express to listen
         var server = app.listen(httpConf.port, function () {
-            var host = server.address().address
-            var port = server.address().port
+            var host = server.address().address;
+            var port = server.address().port;
 
             logger.info('Server is listening at http://%s:%s', host, port);
             callback();
