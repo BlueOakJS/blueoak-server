@@ -117,12 +117,12 @@ The format for encrypted values is `{cipher}value=`, e.g. `{aes-256-cbc}cf3d490f
   }
 }
 
-##### Generating Encrypted Config
+#### Generating Encrypted Config
 A tool is provided, ps-nas/bin/encrypt.js, for encrypting values.
 
 Typical usage is `encrypt.js -c <cipher> <key> <data>`.  The default cipher is aes-256-cbc.
 
-##### Bypassing prompt
+#### Bypassing prompt
 The key can either be specified as an environment variable, `decryptionKey`, or included in the security section of the config file.
 **Storing the key in the config isn't secure and is only suggested for avoiding sensitive data in plain text**.
 
