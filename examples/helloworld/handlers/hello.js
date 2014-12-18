@@ -10,4 +10,4 @@ module.exports.init = function(app, server, done) {
 
     done();
 
-}
+};

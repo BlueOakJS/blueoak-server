@@ -2,7 +2,7 @@ exports.metadata = {
     id: "logger",
     description: "Logging service",
     dependencies: ['config']
-}
+};
 
 var _ = require('lodash');
 
@@ -23,4 +23,4 @@ exports.init = function(server, callback) {
     });
 
     callback();
-}
+};
