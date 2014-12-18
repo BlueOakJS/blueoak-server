@@ -71,6 +71,151 @@ module.exports = {
         }
 
         test.done();
+    },
+
+    //Iterate through some data contain encrypted values and make sure we can detect that
+    testContainsEncryptedData: function(test) {
+        var encryptedData = '{test}data=';
+
+        var toTest = [
+            //Simple
+            {
+                data: encryptedData
+            },
+
+            //Nested
+            {
+                data: {
+                    data: {
+                        data: encryptedData
+                    }
+                }
+            },
+
+            //Array
+            {
+                data: [encryptedData]
+            },
+
+            //Nested Array
+            {
+                data: [{
+                    data: [{
+
+                    }, {
+                        data: encryptedData
+                    }]
+                }]
+            }
+        ]
+
+        test.expect(toTest.length);
+        for (var i = 0; i < toTest.length; i++) {
+            test.ok(this.security.containsEncryptedData(toTest[i]), "Should contain encrypted data");
+        }
+
+        test.done();
+    },
+
+    //Iterate through some data without any encrypted values and make sure we don't get any false positives.
+    testNotContainsEncryptedData: function(test) {
+        var unencryptedData = 'data';
+
+        var toTest = [
+            //Simple
+            {
+                data: unencryptedData
+            },
+
+            //Nested
+            {
+                data: {
+                    data: {
+                        data: unencryptedData
+                    }
+                }
+            },
+
+            //Array
+            {
+                data: [unencryptedData]
+            },
+
+            //Nested Array
+            {
+                data: [{
+                    data: [{
+
+                    }, {
+                        data: unencryptedData
+                    }]
+                }]
+            }
+        ];
+
+        test.expect(toTest.length);
+        for (var i = 0; i < toTest.length; i++) {
+            test.ok(!this.security.containsEncryptedData(toTest[i]), "Should NOT contain encrypted data");
+        }
+
+        test.done();
+    },
+
+    //Test that we can decrypt all the encrypted values in a JSON object
+    testDecryptObject: function(test) {
+        var encryptedData = '{bf}f2556cbd22a264f8a641d835bdaf5f8f=';
+        var key = 'key1';
+        var value = 'testdata1';
+
+        test.expect(4);
+
+        var security = this.security;
+        var decryptFunc = function(str) {
+            return security.decrypt(str, key);
+        }
+
+        //Simple object
+        var obj = {
+            data: encryptedData
+        };
+        this.security.decryptObject(obj, decryptFunc);
+        test.equals(obj.data, value);
+
+
+        //Nested object
+        obj = {
+            data: {
+                data: {
+                    data: encryptedData
+                }
+            }
+        };
+        this.security.decryptObject(obj, decryptFunc);
+        test.equals(obj.data.data.data, value);
+
+
+        //Simple Array
+        obj = {
+            data: [encryptedData]
+        };
+        this.security.decryptObject(obj, decryptFunc);
+        test.equals(obj.data[0], value);
+
+
+        //Nested Array
+        obj = {
+            data: [{
+                data: [{
+
+                }, {
+                    data: encryptedData
+                }]
+            }]
+        };
+        this.security.decryptObject(obj, decryptFunc);
+        test.equals(obj.data[0].data[1].data, value);
+
+        test.done();
     }
 
 };
