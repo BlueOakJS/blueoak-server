@@ -8,6 +8,10 @@ module.exports.init = function(server, express, done) {
         });
     });
 
+    express.admin.get('/admin', function(req, res) {
+        res.status(200).send('Secure connection? ' + req.secure);
+    });
+
     done();
 
 };
