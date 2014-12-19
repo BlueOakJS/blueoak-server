@@ -1,13 +1,15 @@
 {
-  "http": {
-    "port": 3000
-  },
-
   "logger": {
     "default_levels": ["DEBUG", "INFO", "WARN", "ERROR"]
   },
 
   "cluster": {
     "maxWorkers": -1 //-1 means use full cpu count
+  },
+
+  "express": {
+    "default": {
+      "port": 3000
+    }
   }
 }

@@ -1,7 +1,9 @@
 //Default config for my app
 {
-  "http": {
-    "port": 3000
+  "express": {
+    "admin": {
+      "port": "3001"
+    }
   },
   "cluster": {
     "maxWorkers": 1
