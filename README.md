@@ -33,7 +33,8 @@ server.init(function(err) {
 
 # Services
 
-Services are modules that at a minimum contain an `init` method and some metadata describing the service.  They can be placed in the *services* directory of your project and will be automatically loaded.
+Services are the building blocks of most of the functionality in the server.
+At a minimum, services are modules that contain an `init` method and some metadata describing the service.  They can be placed in the *services* directory of your project and will be automatically loaded.
 
 The metadata should contain an *id*.  The optional *dependencies* field is an array of ids of other services that are needed.  The server will guarantee that a service won't be init'd until the dependent servers are init'd.
 
@@ -45,8 +46,7 @@ exports.metadata = {
     dependencies: ['config', 'logger']
 }
 
-exports.init = function(server, callback) {
-  var config = server.config.get('myService');
+exports.init = function(server, cfg, callback) {
   server.logger.info('initializing my service');
 }
 
@@ -55,6 +55,9 @@ exports.doSomething = function() {
 }
 
 ```
+
+The *cfg* parameter is the config for that service.  This is a short-cut for having to explicitly look up the config through the config service using `server.config.get(<serviceName>)`.
+More details are described in the config service section.
 
 After initialization, the service is placed directly in the server object.
 ```js
@@ -82,6 +85,10 @@ To access the config data, use the `config.get(...)` method.
 ```js
 var fooValue = server.config.get('myConfig').foo; //fooValue === "bar"
 ```
+
+#### Service config
+Each service can have its own section of data in the config keyed off of the service ID.
+This block of data will be passed to the service's init method during initialization.
 
 ### Logger
 The logging service is a basic logger that logs to stdout.  By default it supports levels of debug, info, warn, and error.
@@ -133,6 +140,65 @@ The key can either be specified as an environment variable, `decryptionKey`, or 
   }
 }
 ```
+
+### Express JS Service
+The ExpressJS service is responsible for loading express and all the handlers.
+It's possible to host multiple express apps on multiple ports with different sets of handlers.
+
+#### Configuring an express app
+There's an express app named *default* hosted on port 3000.  The port can be modified in the config for the express service:
+
+```json
+"express": {
+    "default": {
+      "port": 3000 //Change to desired port
+    }
+}
+```
+
+Additional apps can be created with different names.  For example, to add an *admin* app on port 3001, use the config
+
+```json
+"express": {
+    "admin": {
+      "port": 3001
+    }
+}
+```
+
+#### Adding handlers
+Handlers are automatically loaded from the *handlers* directory of the application.
+
+A Handler is just a module with an init method of the form
+```js
+function(server, express, done) {
+    ...
+}
+```
+The three parameters are
+    * server - the main server object from which other services can be referenced.
+    * express - the express service
+    * done - a callback of the form done(err) to be called when registration is complete
+
+Example handler module that registers one endpoint on the default app and one on the admin app.
+
+ ```json
+ module.exports.init = function(server, express, done) {
+
+     express.default.get('/foo', function(req, res) {
+         res.status(200).send('Default Endpoint');
+     });
+
+     express.admin.get('/bar', function(req, res) {
+              res.status(200).send('Admin Endpoint');
+          });
+
+     done();
+
+ };
+
+ ```
+
 
 ## Clustering
 Clustering is supported out of the box.  The number of workers can be configured.  A value of 1 is recommended during development.

@@ -1,6 +1,5 @@
 var path = require('path'),
     fs = require('fs'),
-    express = require('express'),
     _ = require('lodash'),
     async = require('async'),
     q = require('q'),
@@ -92,10 +91,6 @@ function initWorker() {
         if (err) {
             return callback(err);
         }
-
-        initExpress(function (err) {
-            callback(err);
-        });
     });
 }
 
@@ -147,6 +142,7 @@ function initServices(opts, callback) {
             //Use bootstrap flag to determine if we should register this service
             if (bootstrap === (serviceList[serviceId].metadata.bootstrap || false)) {
                 var serviceConfig = serviceId === 'config' ? null : server.config.get(serviceId);
+
                 serviceList[serviceId].init(server, serviceConfig, function (err) {
                     addService(serviceList[serviceId]);
                     serviceCallback(err);
@@ -170,42 +166,3 @@ function addService(service) {
 }
 
 
-function initExpress(callback) {
-
-    var httpConf = server.config.get('http');
-    var logger = server.logger;
-    var app = express();
-
-    //Look for handlers in the client
-    var handlerDir = path.join(process.cwd(), 'handlers');
-    var files = fs.readdirSync(handlerDir);
-    async.each(files, function (file, initCallback) {
-        if (path.extname(file) === '.js') {
-            logger.debug('Begin initializing handler ' + file);
-            var mod = require(path.resolve(handlerDir, file));
-            mod.init(app, server, function () {
-                logger.debug('Finish initializing handler ' + file);
-                initCallback();
-            });
-        } else {
-            initCallback();
-        }
-    }, function (err) {
-        //Done registering handlers
-        if (err) {
-            return callback(err);
-        }
-
-        //Setup up express to listen
-        var server = app.listen(httpConf.port, function () {
-            var host = server.address().address;
-            var port = server.address().port;
-
-            logger.info('Server is listening at http://%s:%s', host, port);
-            callback();
-        }).on('error', function (err) {
-            callback(err);
-        });
-    });
-
-}
