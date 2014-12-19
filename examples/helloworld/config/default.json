@@ -2,7 +2,12 @@
 {
   "express": {
     "admin": {
-      "port": "3001"
+      "port": "3001",
+      "ssl": {
+        "key": "certs/server.key",
+        "cert": "certs/server.crt",
+        "passphrase": "devmode"
+      }
     }
   },
   "cluster": {
