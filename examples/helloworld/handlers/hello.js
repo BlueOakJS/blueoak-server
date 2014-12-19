@@ -8,6 +8,12 @@ module.exports.init = function(server, express, done) {
         });
     });
 
+    //Use to validate csrf check
+    express.default.post('/hello', function(req, res) {
+        res.status(200).send('POST worked');
+    });
+
+
     express.admin.get('/admin', function(req, res) {
         res.status(200).send('Secure connection? ' + req.secure);
     });

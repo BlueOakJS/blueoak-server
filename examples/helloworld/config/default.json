@@ -27,5 +27,12 @@
   },
   "security": {
     "key": "testkey" //When set, don't prompt during startup for password
+  },
+
+  "middleware": ["csrf"],
+
+  "csrf": {
+    "allowedOrigins": ["http://localhost:3000"]
   }
+
 }
