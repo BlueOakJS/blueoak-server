@@ -175,14 +175,11 @@ function(server, express, done) {
     ...
 }
 ```
-The three parameters are
-    * server - the main server object from which other services can be referenced.
-    * express - the express service
-    * done - a callback of the form done(err) to be called when registration is complete
+**server** is the main server object from which other services can be referenced.  **express** is the express service from which the express apps can be obtained.  **done** is a callback of the form `done(err)` to be called when registration is complete.
 
-Example handler module that registers one endpoint on the default app and one on the admin app.
+Below is an example handler module that registers one endpoint on the *default* app and one on the *admin* app.
 
- ```json
+ ```js
  module.exports.init = function(server, express, done) {
 
      express.default.get('/foo', function(req, res) {
@@ -190,15 +187,14 @@ Example handler module that registers one endpoint on the default app and one on
      });
 
      express.admin.get('/bar', function(req, res) {
-              res.status(200).send('Admin Endpoint');
-          });
+         res.status(200).send('Admin Endpoint');
+      });
 
      done();
 
  };
 
  ```
-
 
 ## Clustering
 Clustering is supported out of the box.  The number of workers can be configured.  A value of 1 is recommended during development.
