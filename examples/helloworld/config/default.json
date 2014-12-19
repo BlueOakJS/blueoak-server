@@ -29,10 +29,14 @@
     "key": "testkey" //When set, don't prompt during startup for password
   },
 
-  "middleware": ["csrf"],
+  "middleware": ["csrf", "cors"],
 
   "csrf": {
     "allowedOrigins": ["http://localhost:3000"]
+  },
+
+  "cors": {
+    "origin": "http://example.com"
   }
 
 }

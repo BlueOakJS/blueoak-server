@@ -33,7 +33,7 @@ function csrfCheck(req, res, next) {
     //Only check for non-GET requests, since GETs don't modify state
     if ('GET' !== req.method && 'HEAD' !== req.method) {
 
-        if (typeof req.headers.origin !== 'undefined') {
+        if (req.get('Origin')) {
 
             var foundMatch = false;
             for (var i = 0; i < whitelist.length; i++) {

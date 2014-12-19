@@ -13,6 +13,12 @@ module.exports.init = function(server, express, done) {
         res.status(200).send('POST worked');
     });
 
+    //Use to validate CORS
+    express.default.put('/hello', function(req, res) {
+        res.status(200).send('PUT worked');
+    });
+
+
 
     express.admin.get('/admin', function(req, res) {
         res.status(200).send('Secure connection? ' + req.secure);
