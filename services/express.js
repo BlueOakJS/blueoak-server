@@ -5,7 +5,7 @@
 exports.metadata = {
     id: "express",
     description: "ExpressJS service",
-    dependencies: ['config', 'logger']
+    dependencies: ['config', 'logger', 'middleware']
 };
 
 var _ = require('lodash'),
@@ -17,6 +17,7 @@ var _ = require('lodash'),
 
 var logger = null;
 
+var expressApps = {}; //will be a map of all the registered app names to the app
 
 exports.init = function(server, cfg, callback) {
     var httpConf = server.config.get('http');
@@ -27,24 +28,44 @@ exports.init = function(server, cfg, callback) {
     async.each(_.keys(cfg), function(appName, appCallback) {
         var app = express();
         exports[appName] = app;
+        expressApps[appName] = app;
         appCallback();
     }, function(err) {
         if (err) {
             callback(err);
+
         } else {
 
-            registerEndpoints(server, function(err) {
-                if (err) {
-                    callback(err);
-                } else {
-                    startExpress(cfg, callback);
-                }
+            registerMiddleware(server, function(err) {
+               if (err) {
+                   callback(err);
+               } else {
+
+                   registerEndpoints(server, function(err) {
+                       if (err) {
+                           callback(err);
+                       } else {
+                           startExpress(cfg, callback);
+                       }
+                   });
+               }
             });
 
         }
     });
 
 };
+
+function registerMiddleware(server, callback) {
+    async.eachSeries(server.middleware.getMiddleware(), function (mwMod, mwCallback) {
+        var mwId = mwMod.metadata.id;
+        var cfg = server.config.get(mwId);
+        mwMod.init(server, expressApps, cfg, mwCallback);
+    }, function(err) {
+        callback(err);
+    });
+
+}
 
 function registerEndpoints(server, callback) {
     var handlerDir = path.join(process.cwd(), 'handlers');
