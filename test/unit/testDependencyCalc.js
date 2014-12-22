@@ -1,5 +1,5 @@
 var assert = require("assert"),
-    depCalc = require('../lib/dependencyCalc');
+    depCalc = require('../../lib/dependencyCalc');
 
 describe('Dependency Calculator', function () {
 
@@ -34,11 +34,11 @@ describe('Dependency Calculator', function () {
     });
 
     it('should throw an error for circular dependencies', function () {
-        depCalc.addNode('a', ['d']);
-        depCalc.addNode('b', ['a']);
+        depCalc.addNode('a', ['b']);
+        depCalc.addNode('b', ['c']);
         depCalc.addNode('c', ['d']);
-        depCalc.addNode('d', ['a', 'e']);
-        depCalc.addNode('e');
+        depCalc.addNode('d', ['e']);
+        depCalc.addNode('e', ['a']);
         assert.throws(function () {
             depCalc.calcGroups();
         }, /Cycle.found/);
@@ -48,7 +48,7 @@ describe('Dependency Calculator', function () {
         depCalc.addNode('a', ['d']);
         assert.throws(function () {
             depCalc.calcGroups();
-        }, /Cycle.found/);
+        }, /Unmet.dependency/);
 
     });
 
@@ -58,7 +58,7 @@ describe('Dependency Calculator', function () {
         //First do a circular dep calc
         assert.throws(function () {
             depCalc.calcGroups();
-        }, /Cycle.found/);
+        });
 
         //Should be empty after the failure, so another calcGroups will return an empty list
         assert.equal(depCalc.calcGroups().length, 0);
