@@ -1,5 +1,5 @@
 var assert = require("assert"),
-    security = require('../lib/security');
+    security = require('../../lib/security');
 
 describe('Security Decryption', function () {
 
