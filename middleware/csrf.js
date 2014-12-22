@@ -10,7 +10,7 @@ var logger = null;
 
 exports.init = function(server, apps, cfg, callback) {
 
-    logger = server.logger;
+    logger = server.get('logger');
 
     whitelist = cfg.allowedOrigins;
     _.keys(apps).forEach(function(appName) {

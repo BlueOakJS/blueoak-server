@@ -3,9 +3,15 @@ var path = require('path'),
     _ = require('lodash'),
     async = require('async'),
     q = require('q'),
-    cluster = require('cluster');
+    cluster = require('cluster')
 
 var server = module.exports;
+
+//set the app root to the directory the main module was executed from
+global.__appDir = path.normalize(path.join(process.mainModule.filename, '../'));
+
+
+var serviceRegistry = {}; //map service ID to module
 
 //Opts is optional
 module.exports.init = function (opts, callback) {
@@ -31,14 +37,14 @@ module.exports.init = function (opts, callback) {
         var clusterCount = 0;
         if (cluster.isMaster) {
 
-            var clusterConfig = server.config.get('cluster');
+            var clusterConfig = server.get('config').get('cluster');
 
             // Either set to maxWorkers, or if < 0, use the count of machine's CPUs
             var workerCount = clusterConfig.maxWorkers < 0 ? require('os').cpus().length : clusterConfig.maxWorkers;
 
             // Create a worker for each CPU
             for (var i = 0; i < workerCount; i += 1) {
-                cluster.fork({decryptionKey: server.config.decryptionKey});
+                cluster.fork({decryptionKey: server.get('config').decryptionKey});
             }
 
             var startupFailed = false;
@@ -73,7 +79,6 @@ module.exports.init = function (opts, callback) {
         }
 
     });
-
 };
 
 function initWorker() {
@@ -94,21 +99,36 @@ function initWorker() {
     });
 }
 
-function initServicesInDirectory(depCalc, serviceDir) {
-    var serviceList = {};
+
+function getServicesInDirectory(serviceDir) {
+    var serviceList = [];
     var files = fs.readdirSync(serviceDir);
     files.forEach(function (file) {
         if (path.extname(file) === '.js') {
             var mod = require(path.resolve(serviceDir, file));
-            if (mod.metadata) {
-                serviceList[mod.metadata.id] = mod;
-                depCalc.addNode(mod.metadata.id, mod.metadata.dependencies);
-            }
+            serviceList.push(mod);
         }
     });
     return serviceList;
 }
 
+function getThirdPartyServices() {
+    var serviceList = [];
+    var otherServices = server.get('config').get('services'); //array of service module names
+
+    for (var i = 0; i < _.keys(otherServices).length; i++) {
+        var mod = require(otherServices[i]);
+        serviceList.push(mod);
+    }
+
+    return serviceList;
+}
+
+/**
+ * @param opts
+ * @param callback
+ * @returns {*}
+ */
 function initServices(opts, callback) {
     if (!callback) {
         callback = opts;
@@ -116,15 +136,30 @@ function initServices(opts, callback) {
     }
 
     var bootstrap = opts.bootstrap || false;
-
     var depCalc = require('./lib/dependencyCalc');
-    var serviceList = {};
+
+    var serviceList = [];
 
     //built in services
-    _.extend(serviceList, initServicesInDirectory(depCalc, path.resolve(__dirname, 'services')));
+    serviceList = serviceList.concat(getServicesInDirectory(path.resolve(__dirname, 'services')));
 
     //user services
-    _.extend(serviceList, initServicesInDirectory(depCalc, path.resolve(process.cwd(), 'services')));
+    serviceList = serviceList.concat(getServicesInDirectory(path.resolve(global.__appDir, 'services')));
+
+    if (!bootstrap) {
+        serviceList = serviceList.concat(getThirdPartyServices());
+    }
+
+    var serviceMap = {}; //map service id to module
+    //If we're bootstrapping only load bootstrap services
+    //Otherwise load all services, bootstrap and non bootstrap
+    serviceList.forEach(function(mod) {
+        var serviceId = mod.metadata.id;
+        if (!bootstrap || bootstrap === (mod.metadata.bootstrap || false)) {
+            depCalc.addNode(serviceId, mod.metadata.dependencies);
+            serviceMap[serviceId] = mod;
+        }
+    });
 
     var depGroups = [];
     try {
@@ -139,12 +174,13 @@ function initServices(opts, callback) {
 
         async.each(serviceIds, function (serviceId, serviceCallback) {
 
-            //Use bootstrap flag to determine if we should register this service
-            if (bootstrap === (serviceList[serviceId].metadata.bootstrap || false)) {
-                var serviceConfig = serviceId === 'config' ? null : server.config.get(serviceId);
+            if (!serviceRegistry[serviceId]) { //we might have already added bootstrap services, so check
 
-                serviceList[serviceId].init(server, serviceConfig, function (err) {
-                    addService(serviceList[serviceId]);
+                //grab config for service as long as it's not the config service
+                var serviceConfig = serviceId === 'config' ? null : server.get('config').get(serviceId);
+
+                serviceMap[serviceId].init(server, serviceConfig, function (err) {
+                    addService(serviceMap[serviceId]);
                     serviceCallback(err);
                 });
             } else {
@@ -161,8 +197,12 @@ function initServices(opts, callback) {
 
 }
 
-function addService(service) {
-    module.exports[service.metadata.id] = service;
+function addService(mod) {
+    serviceRegistry[mod.metadata.id] = mod;
 }
+
+module.exports.get = function(serviceId) {
+    return serviceRegistry[serviceId];
+};
 
 

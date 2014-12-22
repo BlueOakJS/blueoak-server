@@ -20,8 +20,7 @@ var logger = null;
 var expressApps = {}; //will be a map of all the registered app names to the app
 
 exports.init = function(server, cfg, callback) {
-    var httpConf = server.config.get('http');
-    logger = server.logger;
+    logger = server.get('logger');
 
     var appMap = {};
 
@@ -57,9 +56,9 @@ exports.init = function(server, cfg, callback) {
 };
 
 function registerMiddleware(server, callback) {
-    async.eachSeries(server.middleware.getMiddleware(), function (mwMod, mwCallback) {
+    async.eachSeries(server.get('middleware').getMiddleware(), function (mwMod, mwCallback) {
         var mwId = mwMod.metadata.id;
-        var cfg = server.config.get(mwId);
+        var cfg = server.get('config').get(mwId);
         mwMod.init(server, expressApps, cfg, mwCallback);
     }, function(err) {
         callback(err);
@@ -68,7 +67,7 @@ function registerMiddleware(server, callback) {
 }
 
 function registerEndpoints(server, callback) {
-    var handlerDir = path.join(process.cwd(), 'handlers');
+    var handlerDir = path.join(global.__appDir, 'handlers');
     var files = fs.readdirSync(handlerDir);
     async.each(files, function (file, initCallback) {
         if (path.extname(file) === '.js') {
@@ -137,16 +136,16 @@ function resolveSSLOptions(options) {
     //Resolve the file-based properties
     _.keys(toReturn).forEach(function(key) {
         if (key === 'cert' || key === 'key' || key === 'pfx') {
-            toReturn[key] = fs.readFileSync(path.resolve(process.cwd(), toReturn[key]));
+            toReturn[key] = fs.readFileSync(path.resolve(global.__appDir, toReturn[key]));
         } else if (key === 'ca') { //this can be an array
             if (_.isArray(toReturn[key])) {
                 //array
                 toReturn[key] = _.map(toReturn[key], function(val) {
-                    return fs.readFileSync(path.resolve(process.cwd(), val));
+                    return fs.readFileSync(path.resolve(global.__appDir, val));
                 });
             } else {
                 //Single value
-                toReturn[key] = fs.readFileSync(path.resolve(process.cwd(), toReturn[key]));
+                toReturn[key] = fs.readFileSync(path.resolve(global.__appDir, toReturn[key]));
             }
         }
     });
