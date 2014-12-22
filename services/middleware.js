@@ -33,7 +33,7 @@ exports.init = function(server, cfg, callback) {
             if (idToMod[mwId]) {
                 toRegister.push(idToMod[mwId]);
             } else {
-                server.logger.error('Could not locate middleware \'%s\'.', mwId);
+                server.get('logger').error('Could not locate middleware \'%s\'.', mwId);
             }
         }
     });
@@ -46,12 +46,12 @@ exports.init = function(server, cfg, callback) {
  */
 exports.getMiddleware = function() {
     return toRegister;
-}
+};
 
 function findMiddlewareJSFiles(callback) {
     var toReturn = [];
 
-    var dirs = [path.resolve(__dirname, '../middleware'), path.resolve(process.cwd(), 'middleware')];
+    var dirs = [path.resolve(__dirname, '../middleware'), path.resolve(global.__appDir, 'middleware')];
     dirs.forEach(function(dir) {
 
         if (fs.existsSync(dir)) {

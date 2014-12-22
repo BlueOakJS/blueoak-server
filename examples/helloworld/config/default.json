@@ -31,6 +31,8 @@
 
   "middleware": ["csrf", "cors"],
 
+  "services": ["echoservice"],
+
   "csrf": {
     "allowedOrigins": ["http://localhost:3000"]
   },

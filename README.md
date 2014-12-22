@@ -47,21 +47,21 @@ exports.metadata = {
 }
 
 exports.init = function(server, cfg, callback) {
-  server.logger.info('initializing my service');
+  server.get('logger').info('initializing my service');
 }
 
 exports.doSomething = function() {
-  server.logger.info('Do something');
+  ...
 }
 
 ```
 
-The *cfg* parameter is the config for that service.  This is a short-cut for having to explicitly look up the config through the config service using `server.config.get(<serviceName>)`.
+The *cfg* parameter is the config for that service.  This is a short-cut for having to explicitly look up the config through the config service using `server.get('config').get(<serviceName>)`.
 More details are described in the config service section.
 
-After initialization, the service is placed directly in the server object.
+After initialization, the service can be acquired through the `get(...)` method on the server.
 ```js
-  var myService = server.MyService;
+  var myService = server.get('MyService');
   myService.doSomething();
 ```
 
@@ -94,7 +94,7 @@ This block of data will be passed to the service's init method during initializa
 The logging service is a basic logger that logs to stdout.  By default it supports levels of debug, info, warn, and error.
 
 ```js
-  var logger = server.logger;
+  var logger = server.get('logger');
   logger.debug('debug message');
   logger.info('info message');
   logger.warn('warn message');

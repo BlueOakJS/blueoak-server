@@ -18,7 +18,7 @@ var logger = null;
 
 exports.init = function(server, apps, cfg, callback) {
 
-    logger = server.logger;
+    logger = server.get('logger');
     allowedOrigins = cfg.allowOrigin;
     _.keys(apps).forEach(function(appName) {
         apps[appName].use(cors(cfg));

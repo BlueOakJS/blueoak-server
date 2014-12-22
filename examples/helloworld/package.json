@@ -10,5 +10,9 @@
   "license": "ISC",
   "dependencies": {
     "request": "^2.51.0"
+  },
+  "scripts": {
+    "postinstall": "npm link ../echo-service",
+    "postupdate": "npm link ../echo-service"
   }
 }
