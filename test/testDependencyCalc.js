@@ -1,67 +1,74 @@
-module.exports = {
+var assert = require("assert"),
+    depCalc = require('../lib/dependencyCalc');
 
+describe('Dependency Calculator', function () {
 
-    setUp: function (callback) {
-        this.depCalc = require('../lib/dependencyCalc');
-        callback();
-    },
+    it('should return empty array when no dependencies', function () {
+        var result = depCalc.calcGroups();
+        assert.equal(result.length, 0, 'result is an empty array');
+    });
 
-    tearDown: function (callback) {
-        this.depCalc = null;
-        callback();
-    },
+    it('should correctly calculate the dependency groups', function () {
+        depCalc.addNode('a');
+        depCalc.addNode('c', ['a']);
+        depCalc.addNode('d', ['a']);
+        depCalc.addNode('e', ['c', 'd']);
+        depCalc.addNode('f', ['d']);
 
-    testEmpty: function (test) {
-        test.expect(1);
-        var result = this.depCalc.calcGroups();
-        test.equals(result.length, 0, 'result is an empty array');
-        test.done();
-    },
-
-    testGroups: function (test) {
-        test.expect(9);
-        this.depCalc.addNode('a');
-        this.depCalc.addNode('c', ['a']);
-        this.depCalc.addNode('d', ['a']);
-        this.depCalc.addNode('e', ['c', 'd']);
-        this.depCalc.addNode('f', ['d']);
-        var results = this.depCalc.calcGroups();
-        //console.log(results.length)
-        test.equals(results.length, 3);
+        var results = depCalc.calcGroups();
+        assert.equal(results.length, 3);
 
         //a
-        test.equals(results[0].length, 1);
-        test.equals(results[0][0], 'a');
+        assert.equal(results[0].length, 1);
+        assert.equal(results[0][0], 'a');
 
         //c & d
-        test.equals(results[1].length, 2);
-        test.ok(results[1].indexOf('c') > -1);
-        test.ok(results[1].indexOf('d') > -1);
+        assert.equal(results[1].length, 2);
+        assert(results[1].indexOf('c') > -1);
+        assert(results[1].indexOf('d') > -1);
 
         //e & f
-        test.equals(results[2].length, 2);
-        test.ok(results[2].indexOf('e') > -1);
-        test.ok(results[2].indexOf('f') > -1);
-        test.done();
-    },
+        assert.equal(results[2].length, 2);
+        assert(results[2].indexOf('e') > -1);
+        assert(results[2].indexOf('f') > -1);
+    });
 
-    testCircular: function (test) {
-        test.expect(1);
-        this.depCalc.addNode('a', ['d']);
-        this.depCalc.addNode('b', ['a']);
-        this.depCalc.addNode('c', ['d']);
-        this.depCalc.addNode('d', ['a', 'e']);
-        this.depCalc.addNode('e');
-        var cycleFound = false;
-        try {
-            var results = this.depCalc.calcGroups();
-        } catch (err) {
-            cycleFound = true;
-        }
-        //console.log(results.length)
-        test.equals(cycleFound, true, 'Cycle error occurred');
+    it('should throw an error for circular dependencies', function () {
+        depCalc.addNode('a', ['d']);
+        depCalc.addNode('b', ['a']);
+        depCalc.addNode('c', ['d']);
+        depCalc.addNode('d', ['a', 'e']);
+        depCalc.addNode('e');
+        assert.throws(function () {
+            depCalc.calcGroups();
+        }, /Cycle.found/);
+    });
 
-        test.done();
-    }
+    it('should throw an error for unmet dependencies', function () {
+        depCalc.addNode('a', ['d']);
+        assert.throws(function () {
+            depCalc.calcGroups();
+        }, /Cycle.found/);
 
-};
+    });
+
+    it('should reset itself after a calc', function () {
+        depCalc.addNode('a', ['d']);
+
+        //First do a circular dep calc
+        assert.throws(function () {
+            depCalc.calcGroups();
+        }, /Cycle.found/);
+
+        //Should be empty after the failure, so another calcGroups will return an empty list
+        assert.equal(depCalc.calcGroups().length, 0);
+
+        //Then let's do a non-failing one
+        depCalc.addNode('a', []);
+        assert.equal(depCalc.calcGroups().length, 1);
+
+        //And do it again
+        assert.equal(depCalc.calcGroups().length, 0);
+    });
+
+});
