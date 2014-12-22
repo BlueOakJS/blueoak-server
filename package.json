@@ -4,7 +4,7 @@
   "description": "PointSource Node App Server",
   "main": "index.js",
   "scripts": {
-    "test": "nodeunit test"
+    "test": "mocha test"
   },
   "author": "",
   "license": "ISC",
@@ -19,6 +19,6 @@
     "strip-json-comments": "^1.0.2"
   },
   "devDependencies": {
-    "nodeunit": "^0.9.0"
+    "mocha": "^2.0.1"
   }
 }

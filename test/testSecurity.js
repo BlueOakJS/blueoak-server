@@ -1,80 +1,53 @@
-module.exports = {
+var assert = require("assert"),
+    security = require('../lib/security');
 
-    setUp: function (callback) {
-        this.security = require('../lib/security');
-        callback();
-    },
+describe('Security Decryption', function () {
 
-    tearDown: function (callback) {
-        this.security = null;
-        callback();
-    },
-
-    testDecrypt: function (test) {
-
+    it('should decrypt strings with expected results', function () {
         //These were created using the bin/encrypt.js tool
         var data = [
             ['{bf}f2556cbd22a264f8a641d835bdaf5f8f=', 'key1', 'testdata1'],
             ['{aes-256-cbc}0f785ad2e71122e2f1bfe6914a01ab56=', 'key2', 'testdata2']
         ];
 
-        test.expect(data.length);
         for (var i = 0; i < data.length; i++) {
             var text = data[i][0];
             var key = data[i][1];
             var result = data[i][2];
-            test.equals(this.security.decrypt(text, key), result);
+            assert.equal(security.decrypt(text, key), result);
         }
-        test.done();
+    });
 
-    },
+    it('should throw an error when the cipher is invalid', function () {
+        assert.throws(function () {
+            security.decrypt('{foo}f2556cbd22a264f8a641d835bdaf5f8f=', 'key1');
+        });
+    });
 
-    testInvalidCipher: function (test) {
-        test.expect(1);
-        try {
-            var result = this.security.decrypt('{foo}f2556cbd22a264f8a641d835bdaf5f8f=', 'key1');
-        } catch (err) {
-            test.ok(true, 'Expected an error');
-        }
+    it('should throw an error when the encrypted text is invalid', function () {
+        assert.throws(function () {
+            security.decrypt('{bf}X2556cbd22a264f8a641d835bdaf5f8f=', 'key1');
+        });
+    });
 
-        test.done();
-    },
+    it('should throw an error when the string is in an invalid format', function () {
+        assert.throws(function () {
+            security.decrypt('INVALIDDATA', 'key1');
+        }, /Invalid/);
+    });
 
-    testInvalidText: function (test) {
-        test.expect(1);
-        try {
-            var result = this.security.decrypt('{bf}X2556cbd22a264f8a641d835bdaf5f8f=', 'key1');
-        } catch (err) {
-            test.ok(true, 'Expected an error');
-        }
+    it('should throw an error when the cipher is empty', function () {
+        assert.throws(function () {
+            security.decrypt('{}X2556cbd22a264f8a641d835bdaf5f8f=', 'key1');
+        }, /Invalid/);
+    });
 
-        test.done();
-    },
+});
 
-    testInvalidDecryptFormat: function(test) {
-        test.expect(1);
-        try {
-            var result = this.security.decrypt('INVALIDDATA', 'key1');
-        } catch (err) {
-            test.ok(err.message.indexOf('Invalid') > -1, 'Expected an error');
-        }
 
-        test.done();
-    },
+describe('Security Config', function () {
 
-    testEmptyCipher: function(test) {
-        test.expect(1);
-        try {
-            var result = this.security.decrypt('{}X2556cbd22a264f8a641d835bdaf5f8f=', 'key1');
-        } catch (err) {
-            test.ok(err.message.indexOf('Invalid') > -1, 'Expected an error');
-        }
-
-        test.done();
-    },
-
-    //Iterate through some data contain encrypted values and make sure we can detect that
-    testContainsEncryptedData: function(test) {
+    it('should identify json data containing encrypted text.', function () {
         var encryptedData = '{test}data=';
 
         var toTest = [
@@ -100,25 +73,20 @@ module.exports = {
             //Nested Array
             {
                 data: [{
-                    data: [{
-
-                    }, {
+                    data: [{}, {
                         data: encryptedData
                     }]
                 }]
             }
         ];
 
-        test.expect(toTest.length);
         for (var i = 0; i < toTest.length; i++) {
-            test.ok(this.security.containsEncryptedData(toTest[i]), "Should contain encrypted data");
+            assert(security.containsEncryptedData(toTest[i]), "Should contain encrypted data");
         }
 
-        test.done();
-    },
+    });
 
-    //Iterate through some data without any encrypted values and make sure we don't get any false positives.
-    testNotContainsEncryptedData: function(test) {
+    it('should identify json data NOT containing encrypted text.', function () {
         var unencryptedData = 'data';
 
         var toTest = [
@@ -144,33 +112,25 @@ module.exports = {
             //Nested Array
             {
                 data: [{
-                    data: [{
-
-                    }, {
+                    data: [{}, {
                         data: unencryptedData
                     }]
                 }]
             }
         ];
 
-        test.expect(toTest.length);
         for (var i = 0; i < toTest.length; i++) {
-            test.ok(!this.security.containsEncryptedData(toTest[i]), "Should NOT contain encrypted data");
+            assert(!security.containsEncryptedData(toTest[i]), "Should NOT contain encrypted data");
         }
+    });
 
-        test.done();
-    },
-
-    //Test that we can decrypt all the encrypted values in a JSON object
-    testDecryptObject: function(test) {
+    it('should decrypt all the encrypted text in the config', function () {
         var encryptedData = '{bf}f2556cbd22a264f8a641d835bdaf5f8f=';
         var key = 'key1';
         var value = 'testdata1';
 
-        test.expect(4);
 
-        var security = this.security;
-        var decryptFunc = function(str) {
+        var decryptFunc = function (str) {
             return security.decrypt(str, key);
         };
 
@@ -178,8 +138,9 @@ module.exports = {
         var obj = {
             data: encryptedData
         };
-        this.security.decryptObject(obj, decryptFunc);
-        test.equals(obj.data, value);
+
+        security.decryptObject(obj, decryptFunc);
+        assert.equal(obj.data, value);
 
 
         //Nested object
@@ -190,32 +151,29 @@ module.exports = {
                 }
             }
         };
-        this.security.decryptObject(obj, decryptFunc);
-        test.equals(obj.data.data.data, value);
+        security.decryptObject(obj, decryptFunc);
+        assert.equal(obj.data.data.data, value);
 
 
         //Simple Array
         obj = {
             data: [encryptedData]
         };
-        this.security.decryptObject(obj, decryptFunc);
-        test.equals(obj.data[0], value);
+        security.decryptObject(obj, decryptFunc);
+        assert.equal(obj.data[0], value);
 
 
         //Nested Array
         obj = {
             data: [{
-                data: [{
-
-                }, {
+                data: [{}, {
                     data: encryptedData
                 }]
             }]
         };
-        this.security.decryptObject(obj, decryptFunc);
-        test.equals(obj.data[0].data[1].data, value);
+        security.decryptObject(obj, decryptFunc);
+        assert.equal(obj.data[0].data[1].data, value);
 
-        test.done();
-    }
+    });
 
-};
+});
