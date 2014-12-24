@@ -29,7 +29,7 @@
     "key": "testkey" //When set, don't prompt during startup for password
   },
 
-  "middleware": ["csrf", "cors"],
+  "middleware": ["csrf", "cors", "session"],
 
   "services": ["echoservice"],
 
@@ -39,6 +39,10 @@
 
   "cors": {
     "origin": "http://example.com"
+  },
+
+  "session": {
+    "keys": ["sessionkey"]
   }
 
 }

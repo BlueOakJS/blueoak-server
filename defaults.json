@@ -10,6 +10,10 @@
     "maxWorkers": -1 //-1 means use full cpu count
   },
 
+  "session": {
+    "type": "cookie"
+  },
+
   "express": {
     "default": {
       "port": 3000
