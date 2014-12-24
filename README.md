@@ -141,6 +141,10 @@ The key can either be specified as an environment variable, `decryptionKey`, or 
 }
 ```
 
+## Express 
+
+ps-nas is primarily a server for express js applications, and enables the development of express apps through a combination of services, handlers, and middlware.
+
 ### Express JS Service
 The ExpressJS service is responsible for loading express and all the handlers.
 It's possible to host multiple express apps on multiple ports with different sets of handlers.
@@ -195,6 +199,66 @@ Below is an example handler module that registers one endpoint on the *default* 
  };
 
  ```
+ 
+### Middleware Services
+
+Middleware services are special services specifically for express middleware.  Rather than being loaded at server startup based on dependencies, middleware is explicitly loaded by the middleware service based on the order the middleware is listed in *middleware* property of the config.
+
+```json
+  "middleware": ["csrf", "cors", "session"]
+```
+
+The service modules themselves are loaded out of the *middleware* directory of the app.  They're similar to normal services except that the `init` method takes an additional *apps* parameter, which is a mapping of application ID (as defined in the express config) to the express js app.
+
+```js
+exports.init = function(server, apps, cfg, callback) {
+   apps.default.use(...);
+```
+
+## Built-in Middleware Services
+
+### CORS
+
+Use CORS to configure Cross-Origin Resource Sharing.  See Node's [CORS module](https://github.com/troygoode/node-cors) for available options.
+
+### CSRF
+Enables origin-based cross site request forgery protection.  Rather than the traditional token-based protection, this checks the browser's [Origin header](http://tools.ietf.org/id/draft-abarth-origin-03.html) against a white list of acceptable hosts to determine whether a given request is allowed.
+
+To configure, specify an array of all the allowed origins.
+
+```json
+"csrf": {
+    "allowedOrigins": ["http://localhost:3000"]
+}
+```
+
+### Session
+Enables a cookie-based session.  The session configuration requires one or more keys used to sign the cookie.
+
+```json
+"session": {
+    "keys": ["sessionkey"]
+}
+```
+
+Once enabled, the session can be accessed through the request object.  See the [cookie-session](https://github.com/expressjs/cookie-session) documentation for more information.
+
+## SSL
+SSL can be enabled through the *ssl* property of the express service configuration.
+
+```json
+ "express": {
+    "admin": {
+      "port": "3001",
+      "ssl": {
+        "key": "certs/server.key",
+        "cert": "certs/server.crt",
+        "passphrase": "devmode"
+      }
+    }
+  }
+```
+It supports any of the options supported by [Node's TLS server]( http://nodejs.org/api/tls.html#tls_tls_createserver_options_secureconnectionlistener).  Any file-based options, e.g. *key*, *cert*, *ca*, are resolved relative to the application's root directory.
 
 ## Clustering
 Clustering is supported out of the box.  The number of workers can be configured.  A value of 1 is recommended during development.
