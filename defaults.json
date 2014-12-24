@@ -1,6 +1,9 @@
 {
   "logger": {
-    "default_levels": ["DEBUG", "INFO", "WARN", "ERROR"]
+    "default_levels": ["DEBUG", "INFO", "WARN", "ERROR"],
+    "color": true,
+    "showPID": "auto", //auto will check for the worker count
+    "timestamp": "iso" //ether iso, none/false, ms
   },
 
   "cluster": {
