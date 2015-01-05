@@ -36,7 +36,7 @@ server.init(function(err) {
 Services are the building blocks of most of the functionality in the server.
 At a minimum, services are modules that contain an `init` method and some metadata describing the service.  They can be placed in the *services* directory of your project and will be automatically loaded.
 
-The metadata should contain an *id*.  The optional *dependencies* field is an array of ids of other services that are needed.  The server will guarantee that a service won't be init'd until the dependent servers are init'd.
+The metadata should contain an *id*.  The optional *dependencies* field is an array of ids of other services that are needed.  The server will guarantee that a service won't be initialized until the dependent services are initialized.
 
 ```js
 
@@ -208,11 +208,11 @@ Middleware services are special services specifically for express middleware.  R
   "middleware": ["csrf", "cors", "session"]
 ```
 
-The service modules themselves are loaded out of the *middleware* directory of the app.  They're similar to normal services except that the `init` method takes an additional *apps* parameter, which is a mapping of application ID (as defined in the express config) to the express js app.
+The service modules themselves are loaded out of the *middleware* directory of the app.  They're similar to normal services except that the `init` method takes an additional *express*  parameter, which is a mapping of application ID (as defined in the express config) to the express js app.
 
 ```js
-exports.init = function(server, apps, cfg, callback) {
-   apps.default.use(...);
+exports.init = function(server, express, cfg, callback) {
+   express.default.use(...);
 ```
 
 ## Built-in Middleware Services
@@ -274,7 +274,7 @@ Clustering is supported out of the box.  The number of workers can be configured
 If *maxWorkers* is not specified or a negative value, the number of workers will be set to the number of cpus/cores on the system.
 
 ## Testing
-Unit tests based on node-unit are available in the *test* directory.  The tests can be executed through npm:
+Unit tests based on mocha are available in the *test* directory.  The tests can be executed through npm:
 
 ```bash
 $ npm test
