@@ -54,7 +54,7 @@ server.init(function(err) {
 
 ### Next steps
 
-Read through the [docs](.) and look at the [helloworld sample app](../examples/helloworld/).
+Read through the [docs](./docs) and look at the [helloworld sample app](../examples/helloworld/).
 
 
 ## Testing
