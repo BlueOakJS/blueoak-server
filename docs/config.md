@@ -1,15 +1,17 @@
 # Config Service
 
 Configuration is stored in JSON files with the *config* directory of the application.
-The config service is based off of the [node-config](https://github.com/lorenwest/node-config) project, which supports a hierarchy of config files and allows for environment-specific configuration.
-Comments are allowed in the JSON files.
+The config service is based off of the [node-config](https://github.com/lorenwest/node-config) project. Comments are allowed in the JSON files.
 
-Typically there will be at least a *defaults.json* config file.
+There will be at least a *defaults.json* config file, but additional environment-specific files can be added and merged in automatically.
+For example, a config file named *production.json* will be merged in as long as the $NODE_ENV is set to production.
+See the [node-config](https://github.com/lorenwest/node-config/wiki/Configuration-Files) docs for more detailed information.
+
 
 ### Service Config
 Typically each service has its own top-level field in the config, e.g. *logger* for the logger service and *express* for the express service.
 
-Each field can contain any either an array or object.
+Each field can contain either an array or object.
 
 ```json
 {
