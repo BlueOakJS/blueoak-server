@@ -9,4 +9,4 @@
 
 ### Example applications
 
-The [helloworld](../examples/helloworld/README.md) application shows examples of many of the features provided by ps-nas.
+The [helloworld](../examples/helloworld/) application shows examples of many of the features provided by ps-nas.
