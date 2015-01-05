@@ -38,4 +38,4 @@ server.init(function(err) {
 
 ### Next steps
 
-Read through the documentation [topics](getting-started.md) and look at the [helloworld sample app](../examples/helloworld/).
+Read through the documentation [topics](.) and look at the [helloworld sample app](../examples/helloworld/).
