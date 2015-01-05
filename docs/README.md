@@ -4,4 +4,9 @@
 * [Configuration](config.md) - Creating and securing configuration
 * [Services](services.md) - Creating and using services
 * [Logging](logger.md) - Using the logging service
-* [Express JS][express.md] - Hosting express applications
+* [Express JS](express.md) - Hosting express applications
+* [Clustering](clustering.md) - Enabling vertical clustering
+
+### Example applications
+
+The [helloworld](../examples/helloworld/README.md) application shows examples of many of the features provided by ps-nas.
