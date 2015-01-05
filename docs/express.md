@@ -2,11 +2,11 @@
 
 ps-nas is primarily a server for express js applications, and enables the development of express apps through a combination of services, handlers, and middlware.
 
-## Express JS Service
+### Express JS Service
 The ExpressJS service is responsible for loading express and all the handlers.
 It's possible to host multiple express apps on multiple ports with different sets of handlers.
 
-### Configuring an express app
+#### Configuring an express app
 There's an express app named *default* hosted on port 3000.  The port can be modified in the config for the express service:
 
 ```json
@@ -27,7 +27,7 @@ Additional apps can be created with different names.  For example, to add an *ad
 }
 ```
 
-### Adding handlers
+#### Adding handlers
 Handlers are automatically loaded from the *handlers* directory of the application.
 
 A Handler is just a module with an init method of the form
@@ -57,7 +57,7 @@ Below is an example handler module that registers one endpoint on the *default* 
 
  ```
 
-## Middleware Services
+### Middleware Services
 
 Middleware services are special services specifically for express middleware.  Rather than being loaded at server startup based on dependencies, middleware is explicitly loaded by the middleware service based on the order the middleware is listed in *middleware* property of the config.
 
@@ -72,13 +72,13 @@ exports.init = function(server, express, cfg, callback) {
    express.default.use(...);
 ```
 
-# Built-in Middleware Services
+### Built-in Middleware Services
 
-## CORS
+#### CORS
 
 Use CORS to configure Cross-Origin Resource Sharing.  See Node's [CORS module](https://github.com/troygoode/node-cors) for available options.
 
-## CSRF
+#### CSRF
 Enables origin-based cross site request forgery protection.  Rather than the traditional token-based protection, this checks the browser's [Origin header](http://tools.ietf.org/id/draft-abarth-origin-03.html) against a white list of acceptable hosts to determine whether a given request is allowed.
 
 To configure, specify an array of all the allowed origins.
@@ -89,7 +89,7 @@ To configure, specify an array of all the allowed origins.
 }
 ```
 
-## Session
+#### Session
 Enables a cookie-based session.  The session configuration requires one or more keys used to sign the cookie.
 
 ```json
@@ -100,7 +100,7 @@ Enables a cookie-based session.  The session configuration requires one or more 
 
 Once enabled, the session can be accessed through the request object.  See the [cookie-session](https://github.com/expressjs/cookie-session) documentation for more information.
 
-# SSL
+### SSL
 SSL can be enabled through the *ssl* property of the express service configuration.
 
 ```json

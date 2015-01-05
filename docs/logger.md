@@ -9,9 +9,9 @@ The logging service is a basic logger that logs to stdout.  By default it suppor
   logger.error('error message');
 ```
 
-## Configuration
+### Configuration
 
-### Custom levels
+#### Custom levels
 Additional log levels can be specified in the logger config.  The levels will be lowercased when registered.
 
 The example below will create a `logger.foo(...)` method on the logger.
@@ -24,7 +24,7 @@ The example below will create a `logger.foo(...)` method on the logger.
 }
 ```
 
-### Formatting options
+#### Formatting options
 
 The default format of the log messages is **(<PID>) <LEVEL> [<TIMESTAMP>] <message>**
 
