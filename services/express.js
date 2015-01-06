@@ -68,21 +68,26 @@ function registerMiddleware(server, callback) {
 
 function registerEndpoints(server, callback) {
     var handlerDir = path.join(global.__appDir, 'handlers');
-    var files = fs.readdirSync(handlerDir);
-    async.each(files, function (file, initCallback) {
-        if (path.extname(file) === '.js') {
-            logger.debug('Begin initializing handler ' + file);
-            var mod = require(path.resolve(handlerDir, file));
-            mod.init(server, module.exports, function () {
-                logger.debug('Finish initializing handler ' + file);
+    if (fs.existsSync(handlerDir)) {
+        var files = fs.readdirSync(handlerDir);
+        async.each(files, function (file, initCallback) {
+            if (path.extname(file) === '.js') {
+                logger.debug('Begin initializing handler ' + file);
+                var mod = require(path.resolve(handlerDir, file));
+                mod.init(server, module.exports, function () {
+                    logger.debug('Finish initializing handler ' + file);
+                    initCallback();
+                });
+            } else {
                 initCallback();
-            });
-        } else {
-            initCallback();
-        }
-    }, function (err) {
-        callback(err);
-    });
+            }
+        }, function (err) {
+            callback(err);
+        });
+    } else {
+        logger.warn('No handlers directory exists.');
+        callback();
+    }
 }
 
 function startExpress(cfg, callback) {
