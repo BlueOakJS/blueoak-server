@@ -102,13 +102,17 @@ function initWorker() {
 
 function getServicesInDirectory(serviceDir) {
     var serviceList = [];
-    var files = fs.readdirSync(serviceDir);
-    files.forEach(function (file) {
-        if (path.extname(file) === '.js') {
-            var mod = require(path.resolve(serviceDir, file));
-            serviceList.push(mod);
-        }
-    });
+    if (fs.existsSync(serviceDir)) {
+        var files = fs.readdirSync(serviceDir);
+        files.forEach(function (file) {
+            if (path.extname(file) === '.js') {
+                var mod = require(path.resolve(serviceDir, file));
+                serviceList.push(mod);
+            }
+        });
+    } else {
+        //TODO: warn directory doesn't exist
+    }
     return serviceList;
 }
 
