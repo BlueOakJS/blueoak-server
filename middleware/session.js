@@ -22,7 +22,7 @@ exports.init = function(server, apps, cfg, callback) {
 
         var keys = cfg.keys;
         if (!keys) {
-            logger.error('Cooke sessions require a key to be set.');
+            logger.error('Cookie sessions require a key to be set.');
         } else {
             _.keys(apps).forEach(function(appName) {
                 apps[appName].use(session({
