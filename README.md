@@ -18,8 +18,18 @@ See the [Getting started guide](docs/getting-started.md) to get started developi
 
 ### Installation
 
+Until an npm repo is available, the easiest way to install ps-nas is to add the git repo URL to the dependency list in package.json.
+
+```json
+"dependencies": {
+  "ps-nas": "git+https://github.com/PointSource/ps-nas.git"
+}
+```
+
+Alternatively you can clone the git project to a local directory and use `npm link` to link it to your project.
+
 ```bash
-$ npm install ps-nas --save
+$ npm link path/to/ps-nas
 ```
 
 ### Directory structure
