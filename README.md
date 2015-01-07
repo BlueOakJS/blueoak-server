@@ -5,8 +5,6 @@ PointSource Node App Server reference implementation.
 
 This is a prescribed framework for building NodeJS-based middleware.
 
-See the [Getting started guide](docs/getting-started.md) to get started developing an app.
-
 ### Features
     * Based on expressjs
     * Supports clustering out of the box
