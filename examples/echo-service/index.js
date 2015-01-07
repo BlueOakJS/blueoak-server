@@ -1,5 +1,4 @@
 exports.metadata = {
-    id: "echo",
     description: "Echo's text to the console",
     dependencies: ['config', 'logger', 'middleware']
 };

@@ -100,6 +100,15 @@ function initWorker() {
 }
 
 
+/**
+ * Returns each of the modules in the given directory.
+ *
+ * It also populates the metadata ID if it doesn't exist based on the name of the file,
+ * e.g. myService.js will have an id of myService.
+ *
+ * @param serviceDir
+ * @returns {Array}
+ */
 function getServicesInDirectory(serviceDir) {
     var serviceList = [];
     if (fs.existsSync(serviceDir)) {
@@ -107,6 +116,10 @@ function getServicesInDirectory(serviceDir) {
         files.forEach(function (file) {
             if (path.extname(file) === '.js') {
                 var mod = require(path.resolve(serviceDir, file));
+
+                //metadata is optional
+                mod.metadata = mod.metadata || {};
+                mod.metadata.id = mod.metadata.id || file.slice(0, -3);
                 serviceList.push(mod);
             }
         });
@@ -122,6 +135,10 @@ function getThirdPartyServices() {
 
     for (var i = 0; i < _.keys(otherServices).length; i++) {
         var mod = require(otherServices[i]);
+
+        //metadata is optional
+        mod.metadata = mod.metadata || {};
+        mod.metadata.id = mod.metadata.id || otherServices[i];
         serviceList.push(mod);
     }
 

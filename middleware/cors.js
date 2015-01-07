@@ -6,7 +6,6 @@
  */
 
 exports.metadata = {
-    id: "cors",
     description: "Adds CORS support"
 };
 

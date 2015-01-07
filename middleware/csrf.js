@@ -1,5 +1,4 @@
 exports.metadata = {
-    id: "csrf",
     description: "Adds CSRF protection to express middleware"
 };
 

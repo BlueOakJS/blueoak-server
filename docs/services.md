@@ -5,7 +5,8 @@ They're the building blocks of most of the capabilities of the server, such as l
 
 ## Anatomy of a Service
 
-At a minimum, services are modules that contain an `init` method and some metadata describing the service.
+At a minimum, services are modules that contain an `init` method.
+They can additionally contain metadata describing the service.
 
 ```js
 
@@ -27,9 +28,11 @@ exports.doSomething = function() {
 ```
 
 ### Metadata
-The module's metadata must be contained in a *metadata* field.
-The metadata must have an *id*, which will be used elsewhere to look up and reference the service.
-Additionally if the service depends on any other services during startup, they should be listed in the dependencies field.
+Additional metadata can be exported through the *metadata* field.
+The *id* is used elsewhere to look up and reference the service.
+If not provided, the id defaults to the file name (minus the .js extension).
+
+If the service depends on any other services during startup, they should be listed in the dependencies field.
 The server will guarantee that the service won't be initialized until the dependent services are initialized.
 
 ### initialization

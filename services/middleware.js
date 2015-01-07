@@ -3,7 +3,6 @@
  * listening on each configured port.
  */
 exports.metadata = {
-    id: "middleware",
     description: "Manages expressjs middleware",
     dependencies: ['config', 'logger']
 };
@@ -23,6 +22,10 @@ exports.init = function(server, cfg, callback) {
         //For each file, load it and then read the id
         files.forEach(function(file) {
             var mod = require(file);
+
+            //metadata is optional
+            mod.metadata = mod.metadata || {};
+            mod.metadata.id = mod.metadata.id || path.basename(file).slice(0, -3);
             idToMod[mod.metadata.id] = mod;
         });
 

@@ -1,5 +1,4 @@
 exports.metadata = {
-    id: "config",
     description: "Configuration service",
     bootstrap: true,
     dependencies: []
