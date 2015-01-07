@@ -3,7 +3,6 @@
  * listening on each configured port.
  */
 exports.metadata = {
-    id: "express",
     description: "ExpressJS service",
     dependencies: ['config', 'logger', 'middleware']
 };

@@ -6,7 +6,6 @@
  */
 
 exports.metadata = {
-    id: "session",
     description: "Enables an HTTP session"
 };
 

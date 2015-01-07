@@ -1,5 +1,4 @@
 exports.metadata = {
-    id: "logger",
     description: "Logging service",
     dependencies: ['config']
 };
