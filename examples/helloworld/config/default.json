@@ -7,7 +7,7 @@
       "cert": "certs/server.crt",
       "passphrase": "devmode"
     },
-    "middleware": ["csrf", "cors", "session"]
+    "middleware": ["csrf", "cors", "session", "bodyParser"]
   },
   "cluster": {
     "maxWorkers": 1
@@ -29,7 +29,7 @@
   },
 
   "csrf": {
-    "allowedOrigins": ["http://localhost:3000"]
+    "allowedOrigins": ["http://localhost:3000", "chrome-extension://fdmmgilgnpjigdojojpjoooidkmcomcm"]
   },
 
   "cors": {
@@ -38,6 +38,10 @@
 
   "session": {
     "keys": ["sessionkey"]
+  },
+
+  "bodyParser": {
+    "json": {}
   }
 
 }
