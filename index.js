@@ -21,6 +21,10 @@ module.exports.init = function (opts, callback) {
         opts = {};
     }
 
+    if (opts.appDir) {
+        global.__appDir = opts.appDir;
+    }
+
     //Load the bootstrap services first (config and logging) since they're only needed for the master
     initServices({bootstrap: true}, function (err) {
         if (err) {
