@@ -128,6 +128,7 @@ describe('DI Loader test4 - dependency injection errors', function () {
 
     afterEach(function () {
         testLoader.unload('service8');
+        testLoader.unload('service9');
     });
 
     it('Should get errors for unmet dependencies', function (done) {
@@ -147,6 +148,133 @@ describe('DI Loader test4 - dependency injection errors', function () {
         testLoader.init(function(err) {
             assert.equal(service8.isInitialized(), true);
             done();
+        });
+    });
+
+    it('Should be able to manually inject a dependency with another dependency', function (done) {
+        testLoader.loadServices(path.resolve(__dirname, 'fixtures/loader/test4')); //app services
+        testLoader.inject('blah', true, ['service9']); //blah now depends on service9, which will also be initialized
+        var service9 = testLoader.get('service9');
+        testLoader.init(function(err) {
+            assert.equal(service9.isInitialized(), true);
+            done();
+        });
+    });
+});
+
+describe('DI Loader test5 - circular dependencies', function () {
+    var testLoader;
+
+    beforeEach(function () {
+        testLoader = loader();
+    });
+
+    afterEach(function () {
+        testLoader.unload('service10');
+        testLoader.unload('service11');
+    });
+
+    it('Should get circular dependency errors', function (done) {
+        testLoader.loadServices(path.resolve(__dirname, 'fixtures/loader/test5')); //app services
+
+        testLoader.init(function(err) {
+            assert.ok(err && err.message.indexOf('Cycle found') > -1); //should cause cycle error
+            done();
+        });
+    });
+
+});
+
+describe('DI Loader test6 - test consumers', function () {
+    var testLoader;
+
+    beforeEach(function () {
+        testLoader = loader();
+    });
+
+    afterEach(function () {
+        testLoader.unload('service20');
+    });
+
+    it('Should be able to initialize consumers', function (done) {
+        testLoader.loadServices(path.resolve(__dirname, 'fixtures/loader/test6/services')); //app services
+        testLoader.loadConsumers(path.resolve(__dirname, 'fixtures/loader/test6/consumers'), 'foo');
+
+        var service20 = testLoader.get('service20');
+        testLoader.init(function(err) {
+            testLoader.initConsumers('foo', function(err) {
+                //both consumers if they were init'd will registered themselves with service20
+                assert.ok(service20.get().indexOf('consumer1') > -1);
+                assert.ok(service20.get().indexOf('consumer2') > -1);
+                done();
+            });
+
+        });
+    });
+
+    it('Should be able to specify an init list', function (done) {
+        testLoader.loadServices(path.resolve(__dirname, 'fixtures/loader/test6/services')); //app services
+        testLoader.loadConsumers(path.resolve(__dirname, 'fixtures/loader/test6/consumers'), 'foo');
+
+        var service20 = testLoader.get('service20');
+        testLoader.init(function(err) {
+            testLoader.initConsumers('foo', ['consumer1'], function(err) {
+                console.log(service20.get());
+                //both consumers if they were init'd will registered themselves with service20
+                assert.ok(service20.get().indexOf('consumer1') > -1);
+                assert.ok(service20.get().indexOf('consumer2') < 0); //consumer2 won't have loaded
+                done();
+            });
+
+        });
+    });
+
+    it('Should be able to have multiple prefixes', function (done) {
+        testLoader.loadServices(path.resolve(__dirname, 'fixtures/loader/test6/services')); //app services
+        testLoader.loadConsumers(path.resolve(__dirname, 'fixtures/loader/test6/consumers'), 'foo');
+        testLoader.loadConsumers(path.resolve(__dirname, 'fixtures/loader/test6/otherConsumers'), 'bar');
+
+        var service20 = testLoader.get('service20');
+        testLoader.init(function(err) {
+            testLoader.initConsumers('foo', function(err) {
+                testLoader.initConsumers('bar', function(err) {
+                    console.log(service20.get());
+                    //both consumers if they were init'd will registered themselves with service20
+                    assert.ok(service20.get().indexOf('consumer1') > -1);
+                    assert.ok(service20.get().indexOf('consumer2') > -1);
+                    assert.ok(service20.get().indexOf('otherConsumer1') > -1);
+                    done();
+                });
+            });
+
+        });
+    });
+
+    it('Should handle async error during consumer init', function (done) {
+        testLoader.loadServices(path.resolve(__dirname, 'fixtures/loader/test6/services')); //app services
+        testLoader.loadConsumers(path.resolve(__dirname, 'fixtures/loader/test6/badConsumers'), 'foo');
+
+        var service20 = testLoader.get('service20');
+        testLoader.init(function(err) {
+            testLoader.initConsumers('foo', ['consumer1'], function(err) {
+                assert.ok(err && err.message.indexOf('bad consumer1') > -1);
+                done();
+            });
+
+        });
+    });
+
+    it('Should handle sync error during consumer init', function (done) {
+        testLoader.loadServices(path.resolve(__dirname, 'fixtures/loader/test6/services')); //app services
+        testLoader.loadConsumers(path.resolve(__dirname, 'fixtures/loader/test6/badConsumers'), 'foo');
+
+        var service20 = testLoader.get('service20');
+        testLoader.init(function(err) {
+            testLoader.initConsumers('foo', ['consumer2'], function(err) {
+                assert.ok(err && err.message.indexOf('bad consumer2') > -1);
+                done();
+            });
+
         });
     });
 });
