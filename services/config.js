@@ -1,9 +1,3 @@
-exports.metadata = {
-    description: "Configuration service",
-    bootstrap: true,
-    dependencies: []
-};
-
 var config = require('config'),
     stripJsonComments = require('strip-json-comments'),
     fs = require('fs'),
@@ -13,7 +7,7 @@ var config = require('config'),
 //These are the default config values for anything not specified in the app's config dir
 var defaults = {};
 
-exports.init = function(server, cfg, callback) {
+exports.init = function(callback) {
 
     fs.readFile(__dirname + '/../defaults.json', function (err, data) {
         if (err) {

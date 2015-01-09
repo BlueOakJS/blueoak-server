@@ -26,7 +26,7 @@ Each field can contain either an array or object.
 
 ### API
 
-To access the config data, use the `config.get(...)` method.
+To access the config data, place the *config* service as an argument in the init method method.
 
 ```json
 {
@@ -37,7 +37,9 @@ To access the config data, use the `config.get(...)` method.
 ```
 
 ```js
-var fooValue = server.config.get('myConfig').foo; //fooValue === "bar"
+exports.init = function(config) {
+  var fooValue = config.get('myConfig').foo; //fooValue === "bar"
+}
 ```
 
 ### Securing Config Files

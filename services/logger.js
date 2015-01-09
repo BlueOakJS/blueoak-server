@@ -1,17 +1,15 @@
-exports.metadata = {
-    description: "Logging service",
-    dependencies: ['config']
-};
 
 var _ = require('lodash'),
     chalk = require('chalk');
 
-exports.init = function(server, cfg, callback) {
+exports.init = function(config, callback) {
     var util = require('util');
+
+    var cfg = config.get('logger');
 
     //Merge the default levels with any custom-configured levels
     var levels = _.unique(cfg.default_levels.concat(cfg.levels || [])); //e.g. 'DEBUG', 'INFO', 'WARN', 'ERROR'
-    var workerCount = server.get('config').get('cluster').maxWorkers; //needed for PID 'auto' option
+    var workerCount = config.get('cluster').maxWorkers; //needed for PID 'auto' option
 
     levels.forEach(function(level) {
         module.exports[level.toLowerCase()] = function() {

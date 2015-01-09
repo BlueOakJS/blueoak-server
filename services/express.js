@@ -2,131 +2,65 @@
  * The express service takes care of creating the express apps, registering handlers, and then starting the server
  * listening on each configured port.
  */
-exports.metadata = {
-    description: "ExpressJS service",
-    dependencies: ['config', 'logger', 'middleware']
-};
-
 var _ = require('lodash'),
-    express = require('express'),
     path = require('path'),
     async = require('async'),
     fs = require('fs'),
     https = require('https');
 
-var logger = null;
+var _logger;
 
-var expressApps = {}; //will be a map of all the registered app names to the app
+exports.init = function(logger, config, middleware, serviceLoader, callback) {
+    _logger = logger;
+    var cfg = config.get('express');
 
-exports.init = function(server, cfg, callback) {
-    logger = server.get('logger');
-
-    var appMap = {};
-
-    async.each(_.keys(cfg), function(appName, appCallback) {
-        var app = express();
-        exports[appName] = app;
-        expressApps[appName] = app;
-        appCallback();
-    }, function(err) {
+    serviceLoader.initConsumers('middleware', cfg.middleware || [], function(err) {
         if (err) {
-            callback(err);
-
-        } else {
-
-            registerMiddleware(server, function(err) {
-               if (err) {
-                   callback(err);
-               } else {
-
-                   registerEndpoints(server, function(err) {
-                       if (err) {
-                           callback(err);
-                       } else {
-                           startExpress(cfg, callback);
-                       }
-                   });
-               }
-            });
-
+            return callback(err);
         }
-    });
 
+        serviceLoader.initConsumers('handlers', function(err) {
+            if (err) {
+                return callback(err);
+            }
+            return startExpress(cfg, middleware.getApp(), callback);
+        });
+
+    });
 };
 
-function registerMiddleware(server, callback) {
-    async.eachSeries(server.get('middleware').getMiddleware(), function (mwMod, mwCallback) {
-        var mwId = mwMod.metadata.id;
-        var cfg = server.get('config').get(mwId);
-        mwMod.init(server, expressApps, cfg, mwCallback);
-    }, function(err) {
-        callback(err);
-    });
+function startExpress(cfg, app, callback) {
+    //Is this ssl-enabled?
+    if (cfg.ssl) {
 
-}
-
-function registerEndpoints(server, callback) {
-    var handlerDir = path.join(global.__appDir, 'handlers');
-    if (fs.existsSync(handlerDir)) {
-        var files = fs.readdirSync(handlerDir);
-        async.each(files, function (file, initCallback) {
-            if (path.extname(file) === '.js') {
-                logger.debug('Begin initializing handler ' + file);
-                var mod = require(path.resolve(handlerDir, file));
-                mod.init(server, module.exports, function () {
-                    logger.debug('Finish initializing handler ' + file);
-                    initCallback();
-                });
-            } else {
-                initCallback();
-            }
-        }, function (err) {
+        var sslOptions = null;
+        try {
+            //Will get an error if one of the files couldn't be read
+            sslOptions = resolveSSLOptions(cfg.ssl);
+        } catch (err) {
+            return callback(new Error('Error reading SSL options: ' + err.message));
+        }
+        var server = https.createServer(sslOptions, app);
+        server.listen(cfg.port, function () {
+            var host = server.address().address;
+            var port = server.address().port;
+            _logger.info('App is listening securely on http://%s:%s', host, port);
+            callback();
+        }).on('error', function (err) {
             callback(err);
         });
     } else {
-        logger.warn('No handlers directory exists.');
-        callback();
+
+        //Non SSL
+        var server = app.listen(cfg.port, function () {
+            var host = server.address().address;
+            var port = server.address().port;
+            _logger.info('App is listening on http://%s:%s', host, port);
+            callback();
+        }).on('error', function (err) {
+            callback(err);
+        });
     }
-}
-
-function startExpress(cfg, callback) {
-    async.each(_.keys(cfg), function(appName, appCallback) {
-        var configForApp = cfg[appName];
-
-        //Is this ssl-enabled?
-        if (configForApp.ssl) {
-
-            var sslOptions = null;
-            try {
-                //Will get an error if one of the files couldn't be read
-                sslOptions = resolveSSLOptions(configForApp.ssl);
-            } catch (err) {
-                return appCallback(new Error('Error reading SSL options: ' + err.message));
-            }
-            var server = https.createServer(sslOptions, exports[appName]);
-            server.listen(configForApp.port, function () {
-                var host = server.address().address;
-                var port = server.address().port;
-                logger.info('App \'%s\' is listening securely on http://%s:%s', appName, host, port);
-                appCallback();
-            }).on('error', function (err) {
-                appCallback(err);
-            });
-        } else {
-
-            //Non SSL
-            var server = exports[appName].listen(configForApp.port, function () {
-                var host = server.address().address;
-                var port = server.address().port;
-                logger.info('App \'%s\' is listening on http://%s:%s', appName, host, port);
-                appCallback();
-            }).on('error', function (err) {
-                appCallback(err);
-            });
-        }
-    }, function(err) {
-        callback(err);
-    });
 }
 
 /**

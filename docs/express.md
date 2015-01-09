@@ -4,72 +4,68 @@ ps-nas is primarily a server for express js applications, and enables the develo
 
 ### Express JS Service
 The ExpressJS service is responsible for loading express and all the handlers.
-It's possible to host multiple express apps on multiple ports with different sets of handlers.
 
 #### Configuring an express app
-There's an express app named *default* hosted on port 3000.  The port can be modified in the config for the express service:
+Express is configured through the *express* section of the config file.
+By default the express app will start on port 3000, but that can be modified.
 
 ```json
 "express": {
-    "default": {
-      "port": 3000 //Change to desired port
-    }
-}
-```
-
-Additional apps can be created with different names.  For example, to add an *admin* app on port 3001, use the config
-
-```json
-"express": {
-    "admin": {
-      "port": 3001
-    }
+    "port": 8080
 }
 ```
 
 #### Adding handlers
 Handlers are automatically loaded from the *handlers* directory of the application.
 
-A Handler is just a module with an init method of the form
+A Handler is just a module with an init method that references the express app through the *app* parameter.
 ```js
-function(server, express, done) {
+function(app, callback) {
     ...
 }
 ```
-**server** is the main server object from which other services can be referenced.  **express** is the express service from which the express apps can be obtained.  **done** is a callback of the form `done(err)` to be called when registration is complete.
 
-Below is an example handler module that registers one endpoint on the *default* app and one on the *admin* app.
+If the handler needs to reference other services, it can do so using thd dependency injection mechanism,
+simply adding a parameter to the init method with the name of the service.
+
+Below is an example handler module that registers one endpoint on the app.
 
  ```js
- module.exports.init = function(server, express, done) {
+ module.exports.init = function(app) {
 
-     express.default.get('/foo', function(req, res) {
+     app.get('/foo', function(req, res) {
          res.status(200).send('Default Endpoint');
      });
 
-     express.admin.get('/bar', function(req, res) {
+     app.get('/bar', function(req, res) {
          res.status(200).send('Admin Endpoint');
       });
-
-     done();
 
  };
 
  ```
 
+Like services, a parameter named *callback* can be used if the handler needs to be registered asynchronously.
+
 ### Middleware Services
 
-Middleware services are special services specifically for express middleware.  Rather than being loaded at server startup based on dependencies, middleware is explicitly loaded by the middleware service based on the order the middleware is listed in *middleware* property of the config.
+Middleware services are special services specifically for express middleware.
+Rather than being loaded at server startup based on dependencies,
+middleware is explicitly loaded by the middleware service based on the order the middleware is listed in *middleware* property of the config.
 
 ```json
+"express": {
   "middleware": ["csrf", "cors", "session"]
+ }
 ```
 
-The service modules themselves are loaded out of the *middleware* directory of the app.  They're similar to normal services except that the `init` method takes an additional *express*  parameter, which is a mapping of application ID (as defined in the express config) to the express js app.
+The middleware modules are loaded out of the *middleware* directory of the app.
+They're similar to normal services except, like handlers, they can reference the express app through the *app* parameter of the init call.
+While middleware services can reference other services using dependency injection, other services won't be able to reference the middleware.
 
 ```js
-exports.init = function(server, express, cfg, callback) {
-   express.default.use(...);
+exports.init = function(app, callback) {
+   app.use(...);
 ```
 
 ### Built-in Middleware Services
@@ -105,14 +101,12 @@ SSL can be enabled through the *ssl* property of the express service configurati
 
 ```json
  "express": {
-    "admin": {
-      "port": "3001",
-      "ssl": {
-        "key": "certs/server.key",
-        "cert": "certs/server.crt",
-        "passphrase": "devmode"
-      }
-    }
-  }
+   "port": "3001",
+   "ssl": {
+     "key": "certs/server.key",
+     "cert": "certs/server.crt",
+     "passphrase": "devmode"
+   }
+ }
 ```
 It supports any of the options supported by [Node's TLS server]( http://nodejs.org/api/tls.html#tls_tls_createserver_options_secureconnectionlistener).  Any file-based options, e.g. *key*, *cert*, *ca*, are resolved relative to the application's root directory.
