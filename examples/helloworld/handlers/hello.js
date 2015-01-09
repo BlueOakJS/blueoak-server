@@ -1,6 +1,5 @@
 
 module.exports.init = function(app, randomizer) {
-
     app.get('/hello', function(req, res) {
         var rcount = req.session.rcount || 0;
         rcount += 1;
@@ -13,7 +12,8 @@ module.exports.init = function(app, randomizer) {
 
     //Use to validate csrf check
     app.post('/hello', function(req, res) {
-        res.status(200).send('POST worked');
+        console.log(typeof req.body, req.body);
+        res.status(200).send('POST worked. Body is ' + req.body);
     });
 
     //Use to validate CORS

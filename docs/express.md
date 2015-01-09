@@ -96,6 +96,30 @@ Enables a cookie-based session.  The session configuration requires one or more 
 
 Once enabled, the session can be accessed through the request object.  See the [cookie-session](https://github.com/expressjs/cookie-session) documentation for more information.
 
+#### Body parser
+Enabled the express [body-parser](https://github.com/expressjs/body-parser) on all routes.
+
+Body parser supports four types: urlencoded, json, raw, text, which each have their own options.
+One or more of the types can be enabled by including the appropriate field in the bodyParser config.
+However, keep in mind that settings like verify and reviver cannot be configured through this service.
+If such functions are needed, it's better to write a custom middleware service for that use.
+
+Additionally there might be situations where it's necessary to use different parsers for different routes.
+That scenario will require a custom solution.
+
+Example to enable and configure both json and urlencoded parser.
+
+```json
+"bodyParser": {
+  "json": {
+    "strict": true
+  },
+
+  "urlencoded": {
+  }
+}
+```
+
 ### SSL
 SSL can be enabled through the *ssl* property of the express service configuration.
 

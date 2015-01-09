@@ -36,7 +36,7 @@ function csrfCheck(req, res, next) {
                 }
             }
 
-            logger.warn('CSRF request failed for origin, %s', req.headers.origin);
+            _logger.warn('CSRF request failed for origin, %s', req.headers.origin);
             return res.sendStatus(400);
         }
     }
