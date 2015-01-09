@@ -219,7 +219,6 @@ describe('DI Loader test6 - test consumers', function () {
         var service20 = testLoader.get('service20');
         testLoader.init(function(err) {
             testLoader.initConsumers('foo', ['consumer1'], function(err) {
-                console.log(service20.get());
                 //both consumers if they were init'd will registered themselves with service20
                 assert.ok(service20.get().indexOf('consumer1') > -1);
                 assert.ok(service20.get().indexOf('consumer2') < 0); //consumer2 won't have loaded
@@ -238,7 +237,6 @@ describe('DI Loader test6 - test consumers', function () {
         testLoader.init(function(err) {
             testLoader.initConsumers('foo', function(err) {
                 testLoader.initConsumers('bar', function(err) {
-                    console.log(service20.get());
                     //both consumers if they were init'd will registered themselves with service20
                     assert.ok(service20.get().indexOf('consumer1') > -1);
                     assert.ok(service20.get().indexOf('consumer2') > -1);
