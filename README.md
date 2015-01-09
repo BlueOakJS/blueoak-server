@@ -16,18 +16,16 @@ This is a prescribed framework for building NodeJS-based middleware.
 
 ### Installation
 
-Until an npm repo is available, the easiest way to install ps-nas is to add the git repo URL to the dependency list in package.json.
-
-```json
-"dependencies": {
-  "ps-nas": "git+https://github.com/PointSource/ps-nas.git"
-}
-```
-
-Alternatively you can clone the git project to a local directory and use `npm link` to link it to your project.
+It can either be installed globally so that it can be launched through the `ps-nas` CLI command.
 
 ```bash
-$ npm link path/to/ps-nas
+$ npm install -g git+https://github.com/PointSource/ps-nas.git
+```
+
+Or it can be installed as a local dependency and launched programmatically.
+
+```bash
+$ npm install git+https://github.com/PointSource/ps-nas.git --save
 ```
 
 ### Directory structure
@@ -46,7 +44,14 @@ At a minimum you need a main node script and a config directory containing a def
 
 ### Usage
 
-Here's an example of starting the server form the main script.
+If installed globally, simply run *ps-nas* from within your project's directory.
+
+```bash
+$ ps-nas
+```
+
+Alternatively, it can be launched programmatically from your own script.
+
 
 ```js
 var server = require('ps-nas');
