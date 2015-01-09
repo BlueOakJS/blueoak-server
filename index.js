@@ -3,15 +3,15 @@ var path = require('path'),
     _ = require('lodash'),
     async = require('async'),
     q = require('q'),
-    cluster = require('cluster')
+    cluster = require('cluster');
+
+var loader = require('./lib/loader');
+var serviceLoader = loader();
 
 var server = module.exports;
 
 //set the app root to the directory the main module was executed from
 global.__appDir = path.normalize(path.join(process.mainModule.filename, '../'));
-
-
-var serviceRegistry = {}; //map service ID to module
 
 //Opts is optional
 module.exports.init = function (opts, callback) {
@@ -21,7 +21,7 @@ module.exports.init = function (opts, callback) {
         opts = {};
     }
 
-    //Load the bootstrap services first
+    //Load the bootstrap services first (config and logging) since they're only needed for the master
     initServices({bootstrap: true}, function (err) {
         if (err) {
             if (cluster.isMaster) {
@@ -37,14 +37,14 @@ module.exports.init = function (opts, callback) {
         var clusterCount = 0;
         if (cluster.isMaster) {
 
-            var clusterConfig = server.get('config').get('cluster');
+            var clusterConfig = serviceLoader.get('config').get('cluster');
 
             // Either set to maxWorkers, or if < 0, use the count of machine's CPUs
             var workerCount = clusterConfig.maxWorkers < 0 ? require('os').cpus().length : clusterConfig.maxWorkers;
 
             // Create a worker for each CPU
             for (var i = 0; i < workerCount; i += 1) {
-                cluster.fork({decryptionKey: server.get('config').decryptionKey});
+                cluster.fork({decryptionKey: serviceLoader.get('config').decryptionKey});
             }
 
             var startupFailed = false;
@@ -99,52 +99,6 @@ function initWorker() {
     });
 }
 
-
-/**
- * Returns each of the modules in the given directory.
- *
- * It also populates the metadata ID if it doesn't exist based on the name of the file,
- * e.g. myService.js will have an id of myService.
- *
- * @param serviceDir
- * @returns {Array}
- */
-function getServicesInDirectory(serviceDir) {
-    var serviceList = [];
-    if (fs.existsSync(serviceDir)) {
-        var files = fs.readdirSync(serviceDir);
-        files.forEach(function (file) {
-            if (path.extname(file) === '.js') {
-                var mod = require(path.resolve(serviceDir, file));
-
-                //metadata is optional
-                mod.metadata = mod.metadata || {};
-                mod.metadata.id = mod.metadata.id || file.slice(0, -3);
-                serviceList.push(mod);
-            }
-        });
-    } else {
-        //TODO: warn directory doesn't exist
-    }
-    return serviceList;
-}
-
-function getThirdPartyServices() {
-    var serviceList = [];
-    var otherServices = server.get('config').get('services'); //array of service module names
-
-    for (var i = 0; i < _.keys(otherServices).length; i++) {
-        var mod = require(otherServices[i]);
-
-        //metadata is optional
-        mod.metadata = mod.metadata || {};
-        mod.metadata.id = mod.metadata.id || otherServices[i];
-        serviceList.push(mod);
-    }
-
-    return serviceList;
-}
-
 /**
  * @param opts
  * @param callback
@@ -157,73 +111,34 @@ function initServices(opts, callback) {
     }
 
     var bootstrap = opts.bootstrap || false;
-    var depCalc = require('./lib/dependencyCalc');
 
-    var serviceList = [];
+    var toInit = null;
 
-    //built in services
-    serviceList = serviceList.concat(getServicesInDirectory(path.resolve(__dirname, 'services')));
-
-    //user services
-    serviceList = serviceList.concat(getServicesInDirectory(path.resolve(global.__appDir, 'services')));
-
-    if (!bootstrap) {
-        serviceList = serviceList.concat(getThirdPartyServices());
+    if (opts.bootstrap) {
+        toInit = ['config', 'logger'];
     }
 
-    var serviceMap = {}; //map service id to module
-    //If we're bootstrapping only load bootstrap services
-    //Otherwise load all services, bootstrap and non bootstrap
-    serviceList.forEach(function(mod) {
-        var serviceId = mod.metadata.id;
-        if (!bootstrap || bootstrap === (mod.metadata.bootstrap || false)) {
-            depCalc.addNode(serviceId, mod.metadata.dependencies);
-            serviceMap[serviceId] = mod;
-        }
-    });
+    serviceLoader.loadServices(path.resolve(__dirname, 'services'));
 
-    var depGroups = [];
-    try {
-        depGroups = depCalc.calcGroups();
-    } catch (err) {
-        //can fail for circular dependencies
-        return callback(err);
+    //inject itself so that services can directly use the service loader
+    serviceLoader.inject('serviceLoader', serviceLoader);
+
+    if (!opts.bootstrap) { //in bootstrap mode we only load the ps-nas services needed by master
+
+        //app will be injected by middleware, so this is a placeholder to force our dependency calculations to be correct
+        serviceLoader.inject('app', {}, ['middleware']);
+
+        serviceLoader.loadServices(path.resolve(global.__appDir, 'services')); //app services
+
+        serviceLoader.loadConsumers(path.resolve(__dirname, 'middleware'), 'middleware'); //ps-nas middleware
+        serviceLoader.loadConsumers(path.resolve(global.__appDir, 'middleware'), 'middleware'); //app middleware
+        serviceLoader.loadConsumers(path.resolve(global.__appDir, 'handlers'), 'handlers'); //app handlers
     }
 
-    //Now init the services in sequence
-    async.eachSeries(depGroups, function (serviceIds, groupCallback) {
 
-        async.each(serviceIds, function (serviceId, serviceCallback) {
-
-            if (!serviceRegistry[serviceId]) { //we might have already added bootstrap services, so check
-
-                //grab config for service as long as it's not the config service
-                var serviceConfig = serviceId === 'config' ? null : server.get('config').get(serviceId);
-
-                serviceMap[serviceId].init(server, serviceConfig, function (err) {
-                    addService(serviceMap[serviceId]);
-                    serviceCallback(err);
-                });
-            } else {
-                //need to callback even though we didn't init anything
-                serviceCallback();
-            }
-        }, function (err) {
-            groupCallback(err);
-        });
-
-    }, function (err) {
+    serviceLoader.init(toInit, function(err) {
         callback(err);
     });
 
 }
-
-function addService(mod) {
-    serviceRegistry[mod.metadata.id] = mod;
-}
-
-module.exports.get = function(serviceId) {
-    return serviceRegistry[serviceId];
-};
-
 

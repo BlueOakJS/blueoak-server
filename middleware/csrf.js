@@ -1,21 +1,13 @@
-exports.metadata = {
-    description: "Adds CSRF protection to express middleware"
-};
-
-var _ = require('lodash');
-
 var whitelist = [];
-var logger = null;
+var _logger = null;
 
-exports.init = function(server, apps, cfg, callback) {
+exports.init = function(app, logger, config, callback) {
 
-    logger = server.get('logger');
+    _logger = logger;
 
-    whitelist = cfg.allowedOrigins;
-    _.keys(apps).forEach(function(appName) {
-        apps[appName].use(csrfCheck);
-        logger.debug('Added CSRF protection to ' + appName);
-    });
+    whitelist = config.get('csrf').allowedOrigins;
+    app.use(csrfCheck);
+    logger.debug('Enabled CSRF protection');
     callback();
 };
 

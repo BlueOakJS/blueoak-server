@@ -1,14 +1,13 @@
 //Default config for my app
 {
   "express": {
-    "admin": {
-      "port": "3001",
-      "ssl": {
-        "key": "certs/server.key",
-        "cert": "certs/server.crt",
-        "passphrase": "devmode"
-      }
-    }
+    "port": "3001",
+    "ssl": {
+      "key": "certs/server.key",
+      "cert": "certs/server.crt",
+      "passphrase": "devmode"
+    },
+    "middleware": ["csrf", "cors", "session"]
   },
   "cluster": {
     "maxWorkers": 1
@@ -28,10 +27,6 @@
   "security": {
     "key": "testkey" //When set, don't prompt during startup for password
   },
-
-  "middleware": ["csrf", "cors", "session"],
-
-  "services": ["echoservice"],
 
   "csrf": {
     "allowedOrigins": ["http://localhost:3000"]
