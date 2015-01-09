@@ -16,13 +16,13 @@ This is a prescribed framework for building NodeJS-based middleware.
 
 ### Installation
 
-It can either be installed globally so that it can be launched through the `ps-nas` CLI command.
+ps-nas can either be installed globally and launched through the `ps-nas` CLI command.
 
 ```bash
 $ npm install -g git+https://github.com/PointSource/ps-nas.git
 ```
 
-Or it can be installed as a local dependency and launched programmatically.
+Or installed as a local dependency and launched programmatically.
 
 ```bash
 $ npm install git+https://github.com/PointSource/ps-nas.git --save
@@ -67,7 +67,7 @@ server.init(function(err) {
 
 ### Next steps
 
-Read through the [docs](./docs) and look at the [helloworld sample app](../examples/helloworld/).
+Read through the [docs](./docs) and look at the [helloworld sample app](./examples/helloworld/).
 
 
 ## Testing
