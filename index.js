@@ -127,10 +127,11 @@ function initServices(opts, callback) {
     //inject itself so that services can directly use the service loader
     serviceLoader.inject('serviceLoader', serviceLoader);
 
+    //app will be injected by middleware, so this is a placeholder to force our dependency calculations to be correct
+    serviceLoader.inject('app', {}, ['middleware']);
+
     if (!opts.bootstrap) { //in bootstrap mode we only load the ps-nas services needed by master
 
-        //app will be injected by middleware, so this is a placeholder to force our dependency calculations to be correct
-        serviceLoader.inject('app', {}, ['middleware']);
 
         serviceLoader.loadServices(path.resolve(global.__appDir, 'services')); //app services
 

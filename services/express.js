@@ -10,7 +10,8 @@ var _ = require('lodash'),
 
 var _logger;
 
-exports.init = function(logger, config, middleware, serviceLoader, callback) {
+//NOTE: reference to 'app' is a sort of hackish way to force express to load as the last service
+exports.init = function(logger, config, app, middleware, serviceLoader, callback) {
     _logger = logger;
     var cfg = config.get('express');
 
