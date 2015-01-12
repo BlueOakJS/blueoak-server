@@ -30,6 +30,12 @@ describe('Security Decryption', function () {
         });
     });
 
+    it('should throw an error for a ', function () {
+        assert.throws(function () {
+            security.decrypt('{bf}X2556cbd22a264f8a641d835bdaf5f8f=', 'key1');
+        });
+    });
+
     it('should throw an error when the string is in an invalid format', function () {
         assert.throws(function () {
             security.decrypt('INVALIDDATA', 'key1');
@@ -92,7 +98,8 @@ describe('Security Config', function () {
         var toTest = [
             //Simple
             {
-                data: unencryptedData
+                data: unencryptedData,
+                data2: "http://blah?time={now}&foo=bar"
             },
 
             //Nested
