@@ -18,6 +18,12 @@
     "port": 3000
   },
 
-  "bodyParser": {
+  "monitor": {
+    "port": 8125, //statsd port
+    "debug": false
+  },
+
+  "express-monitor": {
+    "prefix": "express"
   }
 }

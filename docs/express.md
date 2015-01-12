@@ -120,6 +120,27 @@ Example to enable and configure both json and urlencoded parser.
 }
 ```
 
+#### Monitor
+Use the monitor middleware to enable counts and response time calculations on all express endpoints.
+It will convert the route to a namespace and record information about the request, including the request type and status code.
+For example, a GET request to a route */foo/:bar* will cause a monitoring event of *express.response_time.GET__foo_bar:11|ms*.
+
+The prefix used when recording the stats can be configured.  By default it's set to *express*.
+
+```json
+"express-monitor": {
+  "prefix": "myPrefix"
+}
+```
+
+Alternatively express monitoring can be enabled on specific routes by using the `getExpressHelper` method of the monitor service.
+
+```js
+app.get('/hello', monitor.getExpressHelper('myPrefix'), function(req, res) {
+  ...
+}
+```
+
 ### SSL
 SSL can be enabled through the *ssl* property of the express service configuration.
 

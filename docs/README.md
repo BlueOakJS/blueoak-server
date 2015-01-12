@@ -4,6 +4,7 @@
 * [Services](services.md) - Creating and using services
 * [Logging](logger.md) - Using the logging service
 * [Express JS](express.md) - Hosting express applications
+* [Monitoring](monitor.md) - Using the monitoring service
 * [Clustering](clustering.md) - Enabling vertical clustering
 
 ### Example applications
