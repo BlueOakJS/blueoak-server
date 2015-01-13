@@ -1,6 +1,6 @@
 
 module.exports.init = function(app, randomizer, monitor) {
-    app.get('/hello', monitor.getExpressHelper('hello_ENDPOINT'), function(req, res) {
+    app.get('/hello', monitor.express('hello_ENDPOINT'), function(req, res) {
         var rcount = req.session.rcount || 0;
         rcount += 1;
         req.session.rcount = rcount;

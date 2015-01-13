@@ -9,15 +9,14 @@ The port defaults to 8125.  The *debug* parameter can be enabled to log all moni
 
 ```json
 "monitor": {
-  "host": "localhost",
-  "debug": true
+  "host": "localhost"
 }
 ```
 
 ### API
 
-The monitoring service uses the [Node StatsD client](https://github.com/msiebuhr/node-statsd-client).
-So check out those docs for additional API details.
+The monitoring service uses the [Node StatsD client](https://github.com/sivy/node-statsd).
+Check out their documentation for more details.
 
 To use the monitoring service, include the *monitor* parameter in your init method.
 
@@ -26,6 +25,8 @@ exports.init = function(monitor) {
     monitor.increment('some.stat.value');
 }
 ```
+
+The service provides several ways to record stats.
 
 #### increment
 Increment a counter by 1, or by the optional value.
@@ -50,32 +51,29 @@ Set a counter to a specific value.
 monitor.gauge('some.value', 99); //set counter to 99
 ```
 
-#### gaugeDelta
-Modify a counter by a given amount.
+#### unique
+Counts unique occurrences of a stat
 
 ```js
-monitor.gaugeDelta('some.value', -5); //substract 5
+monitor.unique('some.value', 'foobar');
 ```
 
 #### timing
 Record the duration of an event.
 
 ```js
-var startTime = new Date();
-setTimeout(function() {
-    monitor.timing('some.time', startTime); //should be ~1000
-}, 1000);
+monitor.timing('some.time', 55); //record 55 ms
 ```
 
-#### getExpressHelper
+#### express
 Use to get an express function that can be added to a route.
 
 ```js
-app.get('/hello', monitor.getExpressHelper('myPrefix'), function(req, res) {
+app.get('/hello', monitor.express('myPrefix'), function(req, res) {
   ...
 }
 ```
 
 ### Express JS
-In addition to the getExpressHelper function, there's also a middleware service for enabling monitoring on all routes.
+In addition to the express function, there's also a middleware service for enabling monitoring on all routes.
 See the ps-nas express middleware document for information on integrating with express.

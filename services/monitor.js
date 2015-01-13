@@ -1,16 +1,16 @@
-var SDC = require('statsd-client'),
+var StatsD = require('node-statsd'),
     _ = require('lodash');
 
-var sdc;
+var client;
 var enabled = false;
-var methodsToExpose = ['increment', 'decrement', 'gauge', 'gaugeDelta', 'timing'];
+var methodsToExpose = ['increment', 'decrement', 'set', 'unique', 'gauge', 'histogram', 'timing'];
 
 exports.init = function(config, logger) {
     var cfg = config.get('monitor');
     if (!cfg.host) { //have to have a host in order to monitor
         logger.info('Monitoring is disabled.');
     } else {
-        sdc = new SDC({host: cfg.host, port: cfg.port, debug: cfg.debug});
+        client = new StatsD(cfg);
         enabled = true;
     }
 
@@ -18,7 +18,7 @@ exports.init = function(config, logger) {
     methodsToExpose.forEach(function(name) {
         if (enabled) {
             exports[name] = function() {
-                sdc[name].apply(sdc, arguments);
+                client[name].apply(client, arguments);
             };
         } else {
             exports[name] = function() {}; //no-op
@@ -30,6 +30,55 @@ exports.enabled = function() {
     return enabled;
 };
 
-exports.getExpressHelper = function(prefix, options) {
-    return sdc.helpers.getExpressMiddleware(prefix, options);
-};
+
+//based off of https://github.com/uber/express-statsd
+exports.express = function(prefix, genRoute) {
+    return function (req, res, next) {
+        var startTime = new Date().getTime();
+
+        // Function called on response finish that sends stats to statsd
+        function sendStats() {
+            var key = '';
+            if (genRoute) {
+                routeName = req.route.path;
+                if (Object.prototype.toString.call(routeName) === '[object RegExp]') {
+                    // Might want to do some sanitation here?
+                    routeName = routeName.source;
+                }
+
+                if (routeName === '/') routeName = 'root.';
+                routeName = req.method + routeName;
+                routeName = routeName.replace(/:/g, '').replace(/^\/|\/$/g, '').replace(/\//g, ".");
+                key = prefix + '.' + routeName + '.';
+            } else {
+                key = prefix + '.';
+            }
+
+            // Status Code
+            var statusCode = res.statusCode || 'unknown_status';
+            client.increment(key + statusCode);
+
+            // Response Time
+            var duration = new Date().getTime() - startTime;
+            client.timing(key + 'response_time', duration);
+
+            cleanup();
+        }
+
+        // Function to clean up the listeners we've added
+        function cleanup() {
+            res.removeListener('finish', sendStats);
+            res.removeListener('error', cleanup);
+            res.removeListener('close', cleanup);
+        }
+
+        // Add response listeners
+        res.once('finish', sendStats);
+        res.once('error', cleanup);
+        res.once('close', cleanup);
+
+        if (next) {
+            next();
+        }
+    };
+}
