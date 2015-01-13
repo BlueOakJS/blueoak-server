@@ -19,8 +19,7 @@
   },
 
   "monitor": {
-    "port": 8125, //statsd port
-    "debug": false
+    "port": 8125 //statsd port
   },
 
   "express-monitor": {
