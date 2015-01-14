@@ -45,7 +45,7 @@ function startExpress(cfg, app, callback) {
         server.listen(cfg.port, function () {
             var host = server.address().address;
             var port = server.address().port;
-            _logger.info('App is listening securely on http://%s:%s', host, port);
+            _logger.info('App is listening securely on https://%s:%s', host, port);
             callback();
         }).on('error', function (err) {
             callback(err);
