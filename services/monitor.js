@@ -1,5 +1,6 @@
 var StatsD = require('node-statsd'),
-    _ = require('lodash');
+    _ = require('lodash'),
+    onHeaders = require('on-headers');
 
 var client;
 var enabled = false;
@@ -31,22 +32,28 @@ exports.enabled = function() {
 };
 
 
-//based off of https://github.com/uber/express-statsd
 exports.express = function(prefix, genRoute) {
     return function (req, res, next) {
+
         var startTime = new Date().getTime();
 
-        // Function called on response finish that sends stats to statsd
-        function sendStats() {
+        onHeaders(res, function() {
+            if (!req.route) {
+                return next(); //happens on things like favicon
+            }
+
+            var duration = new Date().getTime() - startTime;
             var key = '';
             if (genRoute) {
-                routeName = req.route.path;
+                var routeName = req.route.path;
                 if (Object.prototype.toString.call(routeName) === '[object RegExp]') {
                     // Might want to do some sanitation here?
                     routeName = routeName.source;
                 }
 
-                if (routeName === '/') routeName = 'root.';
+                if (routeName === '/') {
+                    routeName = 'root.';
+                }
                 routeName = req.method + routeName;
                 routeName = routeName.replace(/:/g, '').replace(/^\/|\/$/g, '').replace(/\//g, ".");
                 key = prefix + '.' + routeName + '.';
@@ -61,24 +68,11 @@ exports.express = function(prefix, genRoute) {
             // Response Time
             var duration = new Date().getTime() - startTime;
             client.timing(key + 'response_time', duration);
+        });
 
-            cleanup();
-        }
-
-        // Function to clean up the listeners we've added
-        function cleanup() {
-            res.removeListener('finish', sendStats);
-            res.removeListener('error', cleanup);
-            res.removeListener('close', cleanup);
-        }
-
-        // Add response listeners
-        res.once('finish', sendStats);
-        res.once('error', cleanup);
-        res.once('close', cleanup);
 
         if (next) {
             next();
         }
     };
-}
+};
