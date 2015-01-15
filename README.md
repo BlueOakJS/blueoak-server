@@ -1,7 +1,7 @@
 ps-nas
 ======
 
-PointSource Node App Server reference implementation.
+PointSource Node App Server (Sprout Server) reference implementation.
 
 This is a prescribed framework for building NodeJS-based middleware.
 
@@ -17,17 +17,11 @@ This is a prescribed framework for building NodeJS-based middleware.
 
 ### Installation
 
-ps-nas can either be installed globally and launched through the `ps-nas` CLI command.
-
 ```bash
-$ npm install -g git+https://github.com/PointSource/ps-nas.git
+$ npm install ps-nas
 ```
 
-Or installed as a local dependency and launched programmatically.
-
-```bash
-$ npm install git+https://github.com/PointSource/ps-nas.git --save
-```
+If installed globally (using the -g option), a `ps-nas` command will be available on the path for launching the server.
 
 ### Directory structure
 
@@ -43,6 +37,8 @@ At a minimum you need a main node script and a config directory containing a def
         services/
         middleware/
 
+A [Yeoman generator](https://github.com/PointSource/generator-sprout-server) for setting up a project is also available.
+
 ### Usage
 
 If installed globally, simply run *ps-nas* from within your project's directory.
@@ -51,7 +47,7 @@ If installed globally, simply run *ps-nas* from within your project's directory.
 $ ps-nas
 ```
 
-Alternatively, it can be launched programmatically from your own script.
+Alternatively, it can be launched programmatically from your own js script.
 
 
 ```js
@@ -65,6 +61,9 @@ server.init(function(err) {
     }
 });
 ```
+
+The programmatic approach works well during development with tools like nodemon,
+which monitor for file changes and automatically restart the server.
 
 ### Next steps
 
