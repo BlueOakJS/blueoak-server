@@ -15,12 +15,12 @@ exports.init = function(logger, config, app, middleware, serviceLoader, callback
     _logger = logger;
     var cfg = config.get('express');
 
-    serviceLoader.initConsumers('middleware', cfg.middleware || [], function(err) {
+    serviceLoader.initConsumers('middleware', cfg.middleware || [], function initMiddlewareCallback(err) {
         if (err) {
             return callback(err);
         }
 
-        serviceLoader.initConsumers('handlers', function(err) {
+        serviceLoader.initConsumers('handlers', function initHandlersCallback(err) {
             if (err) {
                 return callback(err);
             }

@@ -89,6 +89,7 @@ function initWorker() {
 
     //Use this callback to notify back to the cluster master that we're started, either successfully or with error
     var callback = function (err) {
+        console.warn(err.stack);
         var message = {cmd: 'startupComplete', procId: process.pid};
         if (err) {
             message.error = err.message;
