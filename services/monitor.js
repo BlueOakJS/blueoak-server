@@ -39,7 +39,7 @@ exports.express = function(prefix, genRoute) {
 
         onHeaders(res, function() {
             if (!req.route) {
-                return next(); //happens on things like favicon
+                return;
             }
 
             var duration = new Date().getTime() - startTime;
