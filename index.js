@@ -49,9 +49,13 @@ module.exports.init = function (opts, callback) {
             //If there's only one worker defined, then it's easier to just run everything on the master
             //That avoid issues with trying to connect a debugger during development
             if (clusterConfig.maxWorkers === 1) {
-                initWorker();
                 serviceLoader.get('logger').info('Clustering is disabled');
-                return;
+                process.env.decryptionKey = serviceLoader.get('config').decryptionKey;
+                return initServices(function (err) {
+                    if (err) {
+                        return callback(err);
+                    }
+                });
             }
 
             // Create a worker for each CPU

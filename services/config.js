@@ -17,7 +17,10 @@ exports.init = function(callback) {
 
         //We only ever want to check for a password in the cluster scenario, and then let the master
         //pass the password to the individual workers
-        if (cluster.isMaster) {
+        //
+        //if process.env.decryptionKey is set, we're in single worker mode.
+        //So even though we are a master, act more like a worker.
+        if (cluster.isMaster && !process.env.decryptionKey) {
             //Check if any of the config has encrypted data, in which case we need to prompt for a password
             if (security.containsEncryptedData(config)) {
                 getPassword(function(err, result) {
