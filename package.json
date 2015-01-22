@@ -28,5 +28,13 @@
   },
   "devDependencies": {
     "mocha": "^2.0.1"
-  }
+  },
+  "files": [
+    "bin",
+    "lib",
+    "middleware",
+    "services",
+    "defaults.json",
+    "index.js"
+  ]
 }
