@@ -46,6 +46,14 @@ module.exports.init = function (opts, callback) {
             // Either set to maxWorkers, or if < 0, use the count of machine's CPUs
             var workerCount = clusterConfig.maxWorkers < 0 ? require('os').cpus().length : clusterConfig.maxWorkers;
 
+            //If there's only one worker defined, then it's easier to just run everything on the master
+            //That avoid issues with trying to connect a debugger during development
+            if (clusterConfig.maxWorkers === 1) {
+                initWorker();
+                serviceLoader.get('logger').info('Clustering is disabled');
+                return;
+            }
+
             // Create a worker for each CPU
             for (var i = 0; i < workerCount; i += 1) {
                 cluster.fork({decryptionKey: serviceLoader.get('config').decryptionKey});
