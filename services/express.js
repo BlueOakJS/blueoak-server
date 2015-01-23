@@ -6,14 +6,15 @@ var _ = require('lodash'),
     path = require('path'),
     async = require('async'),
     fs = require('fs'),
-    https = require('https');
+    https = require('https'),
+    di = require('../lib/di');
 
 var _logger;
 
-//NOTE: reference to 'app' is a sort of hackish way to force express to load as the last service
-exports.init = function(logger, config, app, middleware, serviceLoader, callback) {
+exports.init = function(logger, config, middleware, serviceLoader, callback) {
     _logger = logger;
     var cfg = config.get('express');
+
 
     serviceLoader.initConsumers('middleware', cfg.middleware || [], function initMiddlewareCallback(err) {
         if (err) {
@@ -29,6 +30,19 @@ exports.init = function(logger, config, app, middleware, serviceLoader, callback
 
     });
 };
+
+//Express service is a little different in that it can't start until all the services
+//needed by handlers and middleware are loaded.
+//This will dynamically look up all the middleware and handlers and return their dependencies
+exports.getDependencies = function(serviceLoader) {
+    var mods = serviceLoader.getConsumers('middleware').concat(serviceLoader.getConsumers('handlers'));
+    var params = [];
+    for (var i = 0; i < mods.length; i++) {
+        params = params.concat(di.getParamNames(mods[i].init));
+    }
+    return _.unique(params);
+};
+
 
 function startExpress(cfg, app, callback) {
     //Is this ssl-enabled?
