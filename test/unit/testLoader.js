@@ -275,4 +275,21 @@ describe('DI Loader test6 - test consumers', function () {
 
         });
     });
+
+    it('Should be able to specify explicit dependencies through getDependencies', function (done) {
+        testLoader.loadServices(path.resolve(__dirname, 'fixtures/loader/test7'));
+        testLoader.inject('serviceLoader', testLoader);
+        var service12 = testLoader.get('service12');
+        var service13 = testLoader.get('service13');
+        var service14 = testLoader.get('service14');
+        var service15 = testLoader.get('service15');
+
+        testLoader.init(function(err) {
+            assert.equal(service12.isInitialized(), true);
+            assert.equal(service13.isInitialized(), true);
+            assert.equal(service14.isInitialized(), true);
+            assert.equal(service15.isInitialized(), true);
+            done();
+        });
+    });
 });
