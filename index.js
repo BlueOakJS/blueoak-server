@@ -53,6 +53,7 @@ module.exports.init = function (opts, callback) {
                 process.env.decryptionKey = serviceLoader.get('config').decryptionKey;
                 return initServices(function (err) {
                     if (err) {
+                        console.warn(err.stack);
                         return callback(err);
                     }
                 });
