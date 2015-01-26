@@ -9,7 +9,6 @@ This is a prescribed framework for building NodeJS-based middleware.
     * Based on expressjs
     * Supports clustering out of the box
     * Service framework with dependency injection
-    * Config and logging services
     * Encrypted config support
     * Built in logging and monitoring
 

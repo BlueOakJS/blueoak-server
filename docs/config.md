@@ -1,6 +1,6 @@
 # Config Service
 
-Configuration is stored in JSON files with the *config* directory of the application.
+Configuration is stored in JSON files within the *config* directory of the application.
 The config service is based off of the [node-config](https://github.com/lorenwest/node-config) project. Comments are allowed in the JSON files.
 
 There will be at least a *defaults.json* config file, but additional environment-specific files can be added and merged in automatically.
