@@ -19,6 +19,7 @@
     "cookie-session": "^1.1.0",
     "cors": "^2.5.2",
     "express": "^4.10.6",
+    "express-static": "^1.0.3",
     "lodash": "^2.4.1",
     "node-statsd": "^0.1.1",
     "on-headers": "^1.0.0",
