@@ -1,6 +1,6 @@
 {
   "name": "ps-nas",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "PointSource Node App Server",
   "main": "index.js",
   "scripts": {
