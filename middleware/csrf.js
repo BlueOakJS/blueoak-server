@@ -7,7 +7,7 @@ exports.init = function(app, logger, config, callback) {
 
     whitelist = config.get('csrf').allowedOrigins;
     app.use(csrfCheck);
-    logger.debug('Enabled CSRF protection');
+    logger.debug('Enabled CSRF protection.');
     callback();
 };
 

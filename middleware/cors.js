@@ -15,6 +15,6 @@ exports.init = function(app, config, logger, callback) {
     cfg = config.get('cors');
     allowedOrigins = cfg.allowOrigin;
     app.use(cors(cfg));
-    logger.debug('Enabled CORS');
+    logger.debug('Enabled CORS.');
     callback();
 };
