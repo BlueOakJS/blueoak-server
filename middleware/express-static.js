@@ -19,10 +19,14 @@ var path = require('path'),
 
 var logger = null;
 
-exports.init = function(app, config, logger, callback) {
-  cfg = config.get('express-static');
-  var docsDir = path.resolve(global.__appDir, cfg.docs);
-  logger.info('Serving content from: %s', docsDir);
-  app.use(es(docsDir));
-  callback();
+exports.init = function(app, config, logger) {
+  var cfg = config.get('express-static');
+  if (!cfg.docs) {
+    logger.warn('No document root is configured for express-static.');
+  } else {
+    var docsDir = path.resolve(global.__appDir, cfg.docs);
+    logger.debug('Enabled static file hosting.');
+    logger.info('Serving content from: %s.', docsDir);
+    app.use(es(docsDir));
+  }
 };
