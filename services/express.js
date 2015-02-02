@@ -16,16 +16,26 @@ exports.init = function(logger, config, middleware, serviceLoader, callback) {
     var cfg = config.get('express');
 
 
+    //middleware
     serviceLoader.initConsumers('middleware', cfg.middleware || [], function initMiddlewareCallback(err) {
         if (err) {
             return callback(err);
         }
 
+        //handlers
         serviceLoader.initConsumers('handlers', function initHandlersCallback(err) {
             if (err) {
                 return callback(err);
             }
-            return startExpress(cfg, middleware.getApp(), callback);
+
+            //middleware$, middleware that comes after handlers, like error handlers
+            serviceLoader.initConsumers('middleware', cfg['middleware$'] || [], function initPostHandlerCallback(err) {
+                if (err) {
+                    return callback(err);
+                }
+                return startExpress(cfg, middleware.getApp(), callback);
+            });
+
         });
 
     });
