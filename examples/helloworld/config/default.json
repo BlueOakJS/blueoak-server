@@ -7,7 +7,8 @@
       "cert": "certs/server.crt",
       "passphrase": "devmode"
     },
-    "middleware": ["express-monitor", "csrf", "cors", "session", "bodyParser"]
+    "middleware": ["express-monitor", "csrf", "cors", "session", "bodyParser"],
+    "middleware$": ["errors"]
   },
   "cluster": {
     "maxWorkers": 1
