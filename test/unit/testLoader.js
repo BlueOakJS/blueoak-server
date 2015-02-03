@@ -202,7 +202,7 @@ describe('DI Loader test6 - test consumers', function () {
 
         var service20 = testLoader.get('service20');
         testLoader.init(function(err) {
-            testLoader.initConsumers('foo', function(err) {
+            testLoader.initConsumers('foo', null, function(err) {
                 //both consumers if they were init'd will registered themselves with service20
                 assert.ok(service20.get().indexOf('consumer1') > -1);
                 assert.ok(service20.get().indexOf('consumer2') > -1);
@@ -235,8 +235,8 @@ describe('DI Loader test6 - test consumers', function () {
 
         var service20 = testLoader.get('service20');
         testLoader.init(function(err) {
-            testLoader.initConsumers('foo', function(err) {
-                testLoader.initConsumers('bar', function(err) {
+            testLoader.initConsumers('foo', null, function(err) {
+                testLoader.initConsumers('bar', null, function(err) {
                     //both consumers if they were init'd will registered themselves with service20
                     assert.ok(service20.get().indexOf('consumer1') > -1);
                     assert.ok(service20.get().indexOf('consumer2') > -1);
@@ -334,6 +334,37 @@ describe('DI Loader test8 - test camel case', function () {
             assert.equal(service15.isInitialized(), true);
             assert.equal(serviceOne.isInitialized(), true);
             done();
+        });
+    });
+
+});
+
+describe('DI Loader test9 - test param mappers', function () {
+    var testLoader;
+
+    beforeEach(function () {
+        testLoader = loader();
+    });
+
+    afterEach(function () {
+        testLoader.unload('service30');
+    });
+
+    it('Should let me remap the param name during init consumers', function (done) {
+        testLoader.loadServices(path.resolve(__dirname, 'fixtures/loader/test9/services')); //app services
+        testLoader.loadConsumers(path.resolve(__dirname, 'fixtures/loader/test9/consumers'), 'foo');
+
+        var service30 = testLoader.get('service30');
+        testLoader.init(function(err) {
+            testLoader.initConsumers('foo', ['consumer10'], function(serviceId, mod) {
+                if (serviceId === 'blah') {
+                    return 'service30';
+                }
+                return serviceId;
+            }, function(err) {
+                done();
+            });
+
         });
     });
 

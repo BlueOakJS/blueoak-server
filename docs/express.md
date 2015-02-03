@@ -25,7 +25,7 @@ function(app, callback) {
 }
 ```
 
-If the handler needs to reference other services, it can do so using thd dependency injection mechanism,
+If the handler needs to reference other services, it can do so using the dependency injection mechanism,
 simply adding a parameter to the init method with the name of the service.
 
 Below is an example handler module that registers one endpoint on the app.
@@ -46,6 +46,26 @@ Below is an example handler module that registers one endpoint on the app.
  ```
 
 Like services, a parameter named *callback* can be used if the handler needs to be registered asynchronously.
+
+##### Sub apps
+[Sub apps](http://expressjs.com/4x/api.html#app.mountpath), i.e. express apps that are mounted to a separate context root,
+are handled by putting handlers in subfolders.
+
+For example, suppose the following file is placed in *handlers/hello/file.js*.
+
+ ```js
+ module.exports.init = function(app) {
+
+     app.get('/test', function(req, res) {
+         res.status(200).send('Hello world');
+     });
+
+ };
+
+ ```
+
+ Rather than being accessed through host:port/test, it's accessed through host:port/hello/test because it's nested in
+ the *hello* folder.
 
 ### Middleware Services
 
