@@ -14,7 +14,6 @@
     "maxWorkers": 1
   },
   "logger": {
-    "levels": ["USEFUL"]
   },
   "randomizer": {
     "min": 0,

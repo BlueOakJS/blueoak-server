@@ -42,14 +42,14 @@ module.exports.init = function (opts, callback) {
         if (cluster.isMaster) {
 
             var clusterConfig = serviceLoader.get('config').get('cluster');
-
+            var logger = serviceLoader.get('logger');
             // Either set to maxWorkers, or if < 0, use the count of machine's CPUs
             var workerCount = clusterConfig.maxWorkers < 0 ? require('os').cpus().length : clusterConfig.maxWorkers;
 
             //If there's only one worker defined, then it's easier to just run everything on the master
             //That avoid issues with trying to connect a debugger during development
             if (clusterConfig.maxWorkers === 1) {
-                serviceLoader.get('logger').info('Clustering is disabled');
+                logger.info('Clustering is disabled');
                 process.env.decryptionKey = serviceLoader.get('config').decryptionKey;
                 return initServices(function (err) {
                     if (err) {
@@ -61,7 +61,16 @@ module.exports.init = function (opts, callback) {
 
             // Create a worker for each CPU
             for (var i = 0; i < workerCount; i += 1) {
-                cluster.fork({decryptionKey: serviceLoader.get('config').decryptionKey});
+                var worker = cluster.fork({decryptionKey: serviceLoader.get('config').decryptionKey});
+
+                worker.on('message', function(msg) {
+                    try {
+                        var obj = JSON.parse(msg);
+                        logger[obj.level].apply(logger, obj.args);
+                    } catch(err) {
+                        logger.info(msg);
+                    }
+                });
             }
 
             var startupFailed = false;

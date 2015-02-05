@@ -9,13 +9,14 @@ exports.init = function(logger, config, echoservice, callback) {
     url = 'http://www.random.org/integers/?num=1&min=' + min + '&max=' + max + '&col=1&base=10&format=plain&rnd=new';
     _logger = logger;
     _echoservice = echoservice;
+    logger.info('started randomizer service', {url: url});
     callback();
 };
 
 exports.get = function(callback) {
 
     //custom log level
-    _logger.useful('request URL:  ' +  url);
+    _logger.info('request URL:  ' +  url);
     request.get({url: url}, function(err, response, body) {
         _echoservice.echo('Sending number ' + body);
         callback(Number(body));

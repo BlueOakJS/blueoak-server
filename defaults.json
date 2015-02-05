@@ -1,9 +1,17 @@
 {
   "logger": {
-    "default_levels": ["DEBUG", "INFO", "WARN", "ERROR"],
-    "color": true,
-    "showPID": "auto", //auto will check for the worker count
-    "timestamp": "iso" //ether iso, none/false, ms
+    "levels": { "silly": 0, "debug": 1, "verbose": 2, "info": 3, "warn": 4, "error": 5 },
+    "colors": { "silly": "magenta", "debug": "cyan", "verbose": "blue", "info": "green", "warn": "yellow", "error": "red" },
+    "transports": [
+      {
+        "package": "winston",
+        "field": "transports.Console",
+        "options": {
+          "level": "debug",
+          "colorize": true
+        }
+      }
+    ]
   },
 
   "cluster": {
