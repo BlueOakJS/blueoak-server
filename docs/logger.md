@@ -1,5 +1,7 @@
 # Logger
-The logging service is a basic logger that logs to stdout.  By default it supports levels of debug, info, warn, and error.
+The logging service uses [winston](https://github.com/winstonjs/winston).
+Out of the box log levels debug, verbose, info, warn, and error are supported.
+
 
 ```js
   var logger = server.get('logger');
@@ -11,24 +13,54 @@ The logging service is a basic logger that logs to stdout.  By default it suppor
 
 ### Configuration
 
-#### Custom levels
-Additional log levels can be specified in the logger config.  The levels will be lowercased when registered.
-
-The example below will create a `logger.foo(...)` method on the logger.
+#### Configuring transports
+Additional transports can be used in place of the default console transport.
+Here you can see a mongodb transport being used.
 
 ```json
-{
-  "logging": {
-    "levels": ["FOO"]
+ "logger": {
+    "transports": [
+      {
+        "package": "winston-mongodb",
+        "field": "MongoDB",
+        "options": {
+          "db": "test"
+        }
+      }
+    ]
   }
-}
+ ```
+
+A transport requires a package, field, and options.
+The package will be loaded through `require`, the specified field will than be added to the logger with the given options.
+
+For example, to use the file transport, the config might look like
+
+```json
+ "logger": {
+    "transports": [
+      {
+        "package": "winston",
+        "field": "transports.File",
+        "options": {
+          "filename": "foo.log"
+        }
+      }
+    ]
+  }
 ```
 
-#### Formatting options
+Or to use the console transport with a different log level
 
-The default format of the log messages is **(<PID>) <LEVEL> [<TIMESTAMP>] <message>**
-
-The format can be customized with the following config options:
-* color - true/false.  Enable or disable color coding of messages.  Defaults to true
-* showPID - true/false/'auto'.  Whether to show the PID.  If set to auto, PID will only be shown when there's more than one worker.  Defaults to auto.
-* timestamp - 'iso'/'ms'/'none'. Formats the timestamp to either an ISO date, milliseconds time, or disable.  Defaults to iso.
+```json
+    "transports": [
+      {
+        "package": "winston",
+        "field": "transports.Console",
+        "options": {
+          "level": "info",
+          "colorize": true
+        }
+      }
+    ]
+```
