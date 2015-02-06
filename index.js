@@ -43,6 +43,7 @@ module.exports.init = function (opts, callback) {
 
             var clusterConfig = serviceLoader.get('config').get('cluster');
             var logger = serviceLoader.get('logger');
+            printVersion(logger);
             // Either set to maxWorkers, or if < 0, use the count of machine's CPUs
             var workerCount = clusterConfig.maxWorkers < 0 ? require('os').cpus().length : clusterConfig.maxWorkers;
 
@@ -170,3 +171,8 @@ function initServices(opts, callback) {
 
 }
 
+function printVersion(logger) {
+    var packageFile = path.resolve(require.resolve('ps-nas'), '../package.json');
+    var json = JSON.parse(fs.readFileSync(packageFile));
+    logger.info('Starting %s v%s', json.name, json.version);
+}
