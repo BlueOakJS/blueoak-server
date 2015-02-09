@@ -50,3 +50,22 @@ Any service module can be played in the *services* directory of the application 
 A third-party service is a service whose code lives outside of the application or ps-nas.
 The service most live somewhere in the node_modules (preferably included in the application's package.json and installed with npm).
 During startup the third-party service will be loaded through a normal `require(...)` call.
+
+## Accessing services outside of services
+Suppose you have an ordinary module that's loading via `require`, and you need to be able to access a service like the logger.
+
+You can use the global `services` object to get the logger.
+
+```js
+    var logger = services.get('logger');
+```
+
+However, this can be tricky because a required module will likely be loaded before all the services have initialized.
+To better handle that case, a callback can be specified to make the call asynchronous.
+The callback won't be called until after the specified module has been initialized.
+
+```js
+    services.get('logger', function(logger) {
+        logger.info('It worked!');
+    });
+```

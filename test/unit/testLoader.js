@@ -369,3 +369,47 @@ describe('DI Loader test9 - test param mappers', function () {
     });
 
 });
+
+describe('DI Loader test10 - test services.get', function () {
+    var testLoader, services;
+
+    beforeEach(function () {
+        testLoader = loader();
+        services = testLoader.getRegistry();
+    });
+
+    afterEach(function () {
+        testLoader.unload('service19');
+        testLoader.unload('service18');
+    });
+
+    it('Should be able to get a service from the registry synchronously', function (done) {
+        testLoader.loadServices(path.resolve(__dirname, 'fixtures/loader/test10')); //app services
+
+        var service19 = services.get('service19');
+        assert.equal(service19.isInitialized(), false);
+
+        testLoader.init(['service19'], function(err) {
+            service19 = services.get('service19');
+            assert.equal(service19.isInitialized(), true);
+            done();
+        });
+    });
+
+    it('Should be able to get a service from the registry asynchronously', function (done) {
+        testLoader.loadServices(path.resolve(__dirname, 'fixtures/loader/test10')); //app services
+
+        var service18 = services.get('service18');
+        assert.equal(service18.isInitialized(), false);
+
+        //try async get
+        services.get('service18', function(mod) {
+            assert.equal(mod.isInitialized(), true);
+            done();
+        });
+
+        testLoader.init(['service18'], function(err) {
+        });
+    });
+
+});
