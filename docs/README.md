@@ -6,6 +6,9 @@
 * [Express JS](express.md) - Hosting express applications
 * [Monitoring](monitor.md) - Using the monitoring service
 * [Clustering](clustering.md) - Enabling vertical clustering
+* [FAQs](faq.md) - Frequently asked questions
+* [Production](production.md) - Running ps-nas in production environments
+
 
 ### Example applications
 
