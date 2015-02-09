@@ -8,6 +8,8 @@ var path = require('path'),
 var loader = require('./lib/loader');
 var serviceLoader = loader();
 
+global.services = serviceLoader.getRegistry();
+
 var server = module.exports;
 
 //set the app root to the directory the main module was executed from
