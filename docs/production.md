@@ -12,10 +12,10 @@ and using a load balancer to direct traffic to each server.
 - Use a tool like forever.js or PM2 to keep the server running.
 
 - Decide on a logging strategy.  There are a variety of ways to handle logging.
-1. Log to stdout (default) and pipe the output to a file. Use tools like logrotate to manage the logs
-2. Use the winston file transport to log to files and manage log rotation
-3. Use the [syslog transport](https://github.com/winstonjs/winston-syslog) to log to syslog.
-4. Use a cloud-based logging service like papertrail, which can be configured using transports.
+  1. Log to stdout (default) and pipe the output to a file. Use tools like logrotate to manage the logs
+  2. Use the winston file transport to log to files and manage log rotation
+  3. Use the [syslog transport](https://github.com/winstonjs/winston-syslog) to log to syslog.
+  4. Use a cloud-based logging service like papertrail, which can be configured using transports.
 
 - Set up a web server/reverse proxy in front of Node.js (Apache, nginx, IIS).
 The DevOps teams will typically have things they like to enable in the web server,
