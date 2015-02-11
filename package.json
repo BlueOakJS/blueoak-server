@@ -20,10 +20,12 @@
     "express": "^4.10.6",
     "express-static": "^1.0.3",
     "lodash": "^2.4.1",
+    "node-cache": "^1.1.0",
     "node-statsd": "^0.1.1",
     "on-headers": "^1.0.0",
     "prompt": "^0.2.14",
     "q": "^1.1.2",
+    "redis": "^0.12.1",
     "strip-json-comments": "^1.0.2",
     "winston": "^0.9.0"
   },
