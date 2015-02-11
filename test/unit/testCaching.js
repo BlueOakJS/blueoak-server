@@ -20,17 +20,7 @@ function getConfigService(cfg) {
 
 describe('Redis Test', function () {
 
-
-    beforeEach(function () {
-
-    });
-
-    afterEach(function () {
-
-    });
-
     it('If host and port config is undefined, redis client will be null', function (done) {
-        var config = getConfigService({});
         util.initService(redis, {}, function() {
             assert.equal(redis.getClient(), null);
             done();
@@ -73,6 +63,19 @@ describe('Cache test', function () {
         services = null;
     });
 
+    it('If type is redis, we should get a redis interface', function (done) {
+        util.initService(cache, {cache: {type: 'redis'}}, function(err) {
+            assert.equal(cache.getClient(), redis.getClient());
+            done();
+        });
+    });
+
+    it('If type is not redis, we should not get a redis interface', function (done) {
+        util.initService(cache, {cache: {type: 'blah'}}, function(err) {
+            assert.ok(cache.getClient() !== redis.getClient());
+            done();
+        });
+    });
 
     it('Should be able to store single strings in the redis cache', function (done) {
         if (!redisRunning) {

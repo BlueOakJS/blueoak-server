@@ -59,6 +59,10 @@ exports.cacheInterface = {
                 callback();
             }
         });
+    },
+
+    getClient: function() {
+        return client;
     }
 
 };
