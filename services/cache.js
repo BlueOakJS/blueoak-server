@@ -11,10 +11,10 @@ exports.init = function (logger, config) {
     }
 
     //now we want to export the functions on the interface
-    var methodsToExpose = ['get', 'set'];
+    var methodsToExpose = ['get', 'set', 'getClient'];
     methodsToExpose.forEach(function(method) {
         exports[method] = function() {
-            interface[method].apply(interface, arguments);
+            return interface[method].apply(interface, arguments);
         };
     });
 };
@@ -60,12 +60,11 @@ var nodeCacheInterface = function (client) {
             //callback is optional
             callback = callback || function() {};
             client.set(key, val, ttl, callback);
+        },
+
+        getClient: function() {
+            return client;
         }
+
     };
 };
-
-//Just in case someone has a good reason to access the underlying client
-exports.getClient = function() {
-    return client;
-}
-
