@@ -144,6 +144,45 @@ describe('Cache test', function () {
 
     });
 
+    it('Setting a ttl should cause expiration in redis cache', function (done) {
+        this.timeout(3000);
+        if (!redisRunning) {
+            console.warn('Redis is not running--skipping');
+            return done();
+        }
+
+        util.initService(cache, {cache: {type: 'redis'}}, function() {
+            cache.set('foo', 'bar', 2, function() { //2 seconds
+                setTimeout(function() {
+                    cache.get('foo', function(err, result) {
+                        assert.equal(result, null);
+                        done();
+                    });
+                }, 2500);
+            });
+        });
+    });
+
+    it('Setting a large ttl will prevent expiration in redis cache', function (done) {
+        this.timeout(3000);
+        if (!redisRunning) {
+            console.warn('Redis is not running--skipping');
+            return done();
+        }
+
+        util.initService(cache, {cache: {type: 'redis'}}, function() {
+            cache.set('foo', 'bar', 3, function() { //3 sec
+                setTimeout(function() {
+                    cache.get('foo', function(err, result) {
+                        assert.equal(result, 'bar');
+                        done();
+                    });
+                }, 2500); //not enough time to cause expiration
+            });
+        });
+    });
+
+
     it('Should be able to store single strings in the node cache', function (done) {
         util.initService(cache, {}, function() {
             cache.set('foo', 'bar', function () {
@@ -184,6 +223,36 @@ describe('Cache test', function () {
                     assert.equal(result.hello, 'world');
                     done();
                 });
+            });
+        });
+    });
+
+    it('Setting a ttl should cause expiration in node cache', function (done) {
+        this.timeout(3000);
+
+        util.initService(cache, {}, function() {
+            cache.set('foo', 'bar', 2, function() { //2 seconds
+                setTimeout(function() {
+                    cache.get('foo', function(err, result) {
+                        assert.equal(result, null);
+                        done();
+                    });
+                }, 2500);
+            });
+        });
+    });
+
+    it('Setting a large ttl will prevent expiration in node cache', function (done) {
+        this.timeout(3000);
+
+        util.initService(cache, {}, function() {
+            cache.set('foo', 'bar', 3, function() { //3 sec
+                setTimeout(function() {
+                    cache.get('foo', function(err, result) {
+                        assert.equal(result, 'bar');
+                        done();
+                    });
+                }, 2500); //not enough time to cause expiration
             });
         });
     });
