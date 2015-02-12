@@ -26,6 +26,7 @@
     "prompt": "^0.2.14",
     "q": "^1.1.2",
     "redis": "^0.12.1",
+    "stack-trace": "0.0.9",
     "strip-json-comments": "^1.0.2",
     "winston": "^0.9.0"
   },

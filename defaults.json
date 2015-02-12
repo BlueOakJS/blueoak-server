@@ -11,7 +11,8 @@
           "colorize": true
         }
       }
-    ]
+    ],
+    "showLocation": true
   },
 
   "cluster": {
