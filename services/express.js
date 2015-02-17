@@ -15,26 +15,6 @@ exports.init = function(logger, config, middleware, serviceLoader, callback) {
     _logger = logger;
     var cfg = config.get('express');
 
-    //This is a param mapper that maps a given dependency id to another id.
-    //Normally handlers depend on 'app'.  But to support sub apps, we will re-map
-    //app to a route-specific express instance.
-    //Which also means we have to handle injecting that express app into the service loader using the ID app-<route>
-    function routeMapper(serviceId, mod) {
-
-        if (serviceId === 'app') {
-            var reg = /(.*)\.(.*)\.(.*)/;
-            var match = reg.exec(mod.__id);
-            if (match) {
-                var routePath = match[2];
-                serviceLoader.inject('app-' + routePath, middleware.getApp(routePath));
-                return 'app-' + routePath;
-            }
-
-        }
-
-        return serviceId;
-    }
-
 
     //middleware
     serviceLoader.initConsumers('middleware', cfg.middleware || [], function initMiddlewareCallback(err) {
@@ -43,7 +23,7 @@ exports.init = function(logger, config, middleware, serviceLoader, callback) {
         }
 
         //handlers
-        serviceLoader.initConsumers('handlers', null, routeMapper, function initHandlersCallback(err) {
+        serviceLoader.initConsumers('handlers', function initHandlersCallback(err) {
             if (err) {
                 return callback(err);
             }
@@ -60,7 +40,6 @@ exports.init = function(logger, config, middleware, serviceLoader, callback) {
 
     });
 };
-
 
 //Express service is a little different in that it can't start until all the services
 //needed by handlers and middleware are loaded.
