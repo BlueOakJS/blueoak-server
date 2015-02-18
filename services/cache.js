@@ -53,7 +53,7 @@ exports.init = function (logger, monitor, config) {
                     return callback(null, null);
                 }
             }
-            callback(err,success);
+            callback(err,result);
         }
 
         return interface.get(key, cb);
