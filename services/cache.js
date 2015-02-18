@@ -76,11 +76,7 @@ exports.init = function (logger, monitor, config) {
             }
             callback(err,success);
         }
-        if(cfg.type == 'redis') {
-          return interface.set(key,value,cb);
-        } else {
-          return interface.set(key,value,ttl,cb);
-        }
+        return interface.set(key,value,ttl,cb);
     }
 };
 
