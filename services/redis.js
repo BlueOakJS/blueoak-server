@@ -15,12 +15,18 @@ exports.init = function (logger, config, callback) {
     client.on('error', function (err) {
         client.end();
         return callback(err);
-    });
 
+    });
 
     client.on('connect', function () {
         logger.info('Connected to redis on %s:%s',  cfg.host, cfg.port);
         callback();
+        callback = function(err) { //if we lose connection, error callback is called again
+            logger.warn(err);
+
+            //TODO: Need implement reconnect
+            //logger.info('Attempting to reconnect to redis');
+        };
     });
 
 };
@@ -49,6 +55,7 @@ exports.cacheInterface = {
 
         //redis doesn't handle JSON data, so stringify it ourselves
         val = JSON.stringify(val);
+
         client.set(key, val, function() {
             if (ttl) {
                 //we also have to explicitly set the expiration in a separate call
