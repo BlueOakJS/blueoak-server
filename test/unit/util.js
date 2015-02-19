@@ -19,11 +19,16 @@ var logger = {};
     logger[method] = function() {}; //no-op
 });
 
+//create a mock monitor
+var monitor = {};
+['increment', 'decrement', 'set', 'unique', 'gauge', 'histogram', 'timing'].forEach(function(method) {
+    monitor[method] = function() {}; //no-op
+});
 
 //This will simulate the normal dependency injection
 //pass in a service module, a set of config to inject into the config service,
 //and an optional mapping of additional injections
-//config and logger are handled automatically, anything else needs to be included in the injections map
+//config, logger, and monitor are handled automatically, anything else needs to be included in the injections map
 //callback is optional as well
 exports.initService = function(module, config, injections, callback) {
     //injections is optional
@@ -42,6 +47,7 @@ exports.initService = function(module, config, injections, callback) {
 
     injections.config = getConfigService(config);
     injections.logger = logger;
+    injections.monitor = monitor;
 
     var args = [];
     di.getParamNames(module.init).forEach(function(name) {
