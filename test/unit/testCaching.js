@@ -4,20 +4,6 @@ var assert = require("assert"),
     cache = require('../../services/cache'),
     util = require('./util');
 
-var logger = {
-    info: function() {
-    }
-};
-
-
-function getConfigService(cfg) {
-    return {
-        get: function(id) {
-            return cfg[id] || {};
-        }
-    };
-}
-
 describe('Redis Test', function () {
 
     it('If host and port config is undefined, redis client will be null', function (done) {
