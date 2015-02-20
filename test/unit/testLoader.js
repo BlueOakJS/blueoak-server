@@ -383,3 +383,34 @@ describe('DI Loader test10 - test services.get', function () {
     });
 
 });
+
+
+describe('DI Loader test11 - load from subdirectories', function () {
+    var testLoader;
+
+    beforeEach(function () {
+        testLoader = loader();
+    });
+
+    afterEach(function () {
+        testLoader.unload('service21');
+    });
+
+    it('Should recurse at most 1 directory deep into subdirs', function (done) {
+        testLoader.loadServices(path.resolve(__dirname, 'fixtures/loader/test11/services')); //app services
+        testLoader.loadConsumers(path.resolve(__dirname, 'fixtures/loader/test11/consumers'), 'foo');
+
+        var service21 = testLoader.get('service21');
+        testLoader.init(function (err) {
+            testLoader.initConsumers('foo', function (err) {
+                //both consumer4 if it was init'd will registered with service21
+                assert.ok(service21.get().indexOf('consumer5') > -1);
+
+                //service22 won't exist because it didn't recurse deep enough
+                assert.ok(!testLoader.get('service22'));
+                done();
+            });
+
+        });
+    });
+});
