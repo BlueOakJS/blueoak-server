@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-var server = require('ps-nas');
+var server = require('sprout-server');
 
 server.init({
     appDir: process.cwd()

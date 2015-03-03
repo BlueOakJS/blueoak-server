@@ -56,7 +56,7 @@ The format for encrypted values is `{cipher}value=`, e.g. `{aes-256-cbc}cf3d490f
 }
 ```
 #### Generating Encrypted Config
-A tool is provided, ps-nas/bin/encrypt.js, for encrypting values.
+A tool is provided, sprout-server/bin/encrypt.js, for encrypting values.
 
 Typical usage is `encrypt.js -c <cipher> <key> <data>`.  The default cipher is aes-256-cbc.
 

@@ -1,6 +1,6 @@
 # Express
 
-ps-nas is primarily a server for express js applications, and enables the development of express apps through a combination of services, handlers, and middlware.
+sprout-server is primarily a server for express js applications, and enables the development of express apps through a combination of services, handlers, and middlware.
 
 ### Express JS Service
 The ExpressJS service is responsible for loading express and all the handlers.

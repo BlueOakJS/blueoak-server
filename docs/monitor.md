@@ -76,4 +76,4 @@ app.get('/hello', monitor.express('myPrefix'), function(req, res) {
 
 ### Express JS
 In addition to the express function, there's also a middleware service for enabling monitoring on all routes.
-See the ps-nas express middleware document for information on integrating with express.
+See the sprout-server express middleware document for information on integrating with express.

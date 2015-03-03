@@ -1,7 +1,7 @@
 {
-  "name": "ps-nas",
+  "name": "sprout-server",
   "version": "0.2.4",
-  "description": "PointSource Node App Server",
+  "description": "PointSource Sprout Server",
   "main": "index.js",
   "scripts": {
     "test": "mocha test/unit"
@@ -9,7 +9,7 @@
   "author": "",
   "license": "ISC",
   "bin": {
-    "ps-nas": "bin/ps-nas.js"
+    "sprout-server": "bin/sprout-server.js"
   },
   "dependencies": {
     "async": "^0.9.0",
