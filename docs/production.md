@@ -1,4 +1,4 @@
-## ps-nas in Production
+## sprout-server in Production
 
 - Create a separate config file for your production environments.
 The [configuration](config.md) docs contain information about setting up a additional config files

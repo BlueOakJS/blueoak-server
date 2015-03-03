@@ -47,7 +47,7 @@ After initialization, other services can reference the service through dependenc
 Any service module can be played in the *services* directory of the application and will be automatically loaded.
 
 ## Third-party services
-A third-party service is a service whose code lives outside of the application or ps-nas.
+A third-party service is a service whose code lives outside of the application or sprout-server.
 The service most live somewhere in the node_modules (preferably included in the application's package.json and installed with npm).
 During startup the third-party service will be loaded through a normal `require(...)` call.
 

@@ -2,7 +2,7 @@
 
 Express is great but doesn't provide a very rigid structure for setting up an application.
 It encourages configuration to be in code rather than config files.
-With ps-nas you get the best of both worlds--
+With sprout-server you get the best of both worlds--
 all the power of express but with improved configuration and a lot of the boilerplate removed.
 
 ### When should I use a service versus a plain old module?

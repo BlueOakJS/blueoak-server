@@ -1,7 +1,7 @@
-ps-nas
+sprout-server
 ======
 
-PointSource Node App Server (Sprout Server) reference implementation.
+PointSource Sprout Server.
 
 This is a prescribed framework for building NodeJS-based middleware.
 
@@ -17,10 +17,10 @@ This is a prescribed framework for building NodeJS-based middleware.
 ### Installation
 
 ```bash
-$ npm install ps-nas
+$ npm install sprout-server 
 ```
 
-If installed globally (using the -g option), a `ps-nas` command will be available on the path for launching the server.
+If installed globally (using the -g option), a `sprout-server` command will be available on the path for launching the server.
 
 ### Directory structure
 
@@ -40,17 +40,17 @@ A [Yeoman generator](https://github.com/PointSource/generator-sprout-server) for
 
 ### Usage
 
-If installed globally, simply run *ps-nas* from within your project's directory.
+If installed globally, simply run *sprout-server* from within your project's directory.
 
 ```bash
-$ ps-nas
+$ sprout-server 
 ```
 
 Alternatively, it can be launched programmatically from your own js script.
 
 
 ```js
-var server = require('ps-nas');
+var server = require('sprout-server');
 
 server.init(function(err) {
     if (err) {

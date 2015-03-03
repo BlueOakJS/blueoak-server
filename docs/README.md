@@ -1,4 +1,4 @@
-# ps-nas documentation
+# sprout-server documentation
 
 * [Configuration](config.md) - Creating and securing configuration
 * [Services](services.md) - Creating and using services
@@ -7,9 +7,9 @@
 * [Monitoring](monitor.md) - Using the monitoring service
 * [Clustering](clustering.md) - Enabling vertical clustering
 * [FAQs](faq.md) - Frequently asked questions
-* [Production](production.md) - Running ps-nas in production environments
+* [Production](production.md) - Running in production environments
 
 
 ### Example applications
 
-The [helloworld](../examples/helloworld/) application shows examples of many of the features provided by ps-nas.
+The [helloworld](../examples/helloworld/) application shows examples of many of the features provided by sprout-server.

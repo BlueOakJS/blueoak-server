@@ -156,12 +156,12 @@ function initServices(opts, callback) {
     //app will be injected by middleware, so this is a placeholder to force our dependency calculations to be correct
     serviceLoader.inject('app', {}, ['middleware']);
 
-    if (!opts.bootstrap) { //in bootstrap mode we only load the ps-nas services needed by master
+    if (!opts.bootstrap) { //in bootstrap mode we only load the sprout services needed by master
 
 
         serviceLoader.loadServices(path.resolve(global.__appDir, 'services')); //app services
 
-        serviceLoader.loadConsumers(path.resolve(__dirname, 'middleware'), 'middleware'); //ps-nas middleware
+        serviceLoader.loadConsumers(path.resolve(__dirname, 'middleware'), 'middleware'); //sprout middleware
         serviceLoader.loadConsumers(path.resolve(global.__appDir, 'middleware'), 'middleware'); //app middleware
         serviceLoader.loadConsumers(path.resolve(global.__appDir, 'handlers'), 'handlers'); //app handlers
     }
@@ -174,7 +174,7 @@ function initServices(opts, callback) {
 }
 
 function printVersion(logger) {
-    var packageFile = path.resolve(require.resolve('ps-nas'), '../package.json');
+    var packageFile = path.resolve(require.resolve('sprout-server'), '../package.json');
     var json = JSON.parse(fs.readFileSync(packageFile));
     logger.info('Starting %s v%s', json.name, json.version);
 }
