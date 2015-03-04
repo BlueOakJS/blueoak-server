@@ -15,32 +15,12 @@ exports.init = function(logger, config, middleware, serviceLoader, callback) {
     _logger = logger;
     var cfg = config.get('express');
 
-
-    //middleware
-    serviceLoader.initConsumers('middleware', cfg.middleware || [], function initMiddlewareCallback(err) {
-        if (err) {
-            return callback(err);
-        }
-
-        //handlers
-        serviceLoader.initConsumers('handlers', function initHandlersCallback(err) {
-            if (err) {
-                return callback(err);
-            }
-
-            registerDeclarativeRoutes(middleware.getApp(), config.get('routes'), serviceLoader, logger);
-
-            //middleware$, middleware that comes after handlers, like error handlers
-            serviceLoader.initConsumers('middleware', cfg['middleware$'] || [], function initPostHandlerCallback(err) {
-                if (err) {
-                    return callback(err);
-                }
-                return startExpress(cfg, middleware.getApp(), callback);
-            });
-
-        });
-
+    //handlers
+    serviceLoader.initConsumers('handlers', function initHandlersCallback(err) {
+        registerDeclarativeRoutes(middleware.getApp(), config.get('routes'), serviceLoader, logger);
+        callback(err);
     });
+
 };
 
 /*
@@ -92,11 +72,12 @@ function registerDeclarativeRoutes(app, routes, serviceLoader, logger) {
 
 }
 
+
 //Express service is a little different in that it can't start until all the services
 //needed by handlers and middleware are loaded.
 //This will dynamically look up all the middleware and handlers and return their dependencies
 exports.getDependencies = function(serviceLoader) {
-    var mods = serviceLoader.getConsumers('middleware').concat(serviceLoader.getConsumers('handlers'));
+    var mods = serviceLoader.getConsumers('handlers');
     var params = [];
     for (var i = 0; i < mods.length; i++) {
         params = params.concat(di.getParamNames(mods[i].init));
