@@ -2,10 +2,13 @@ var config = require('config'),
     stripJsonComments = require('strip-json-comments'),
     fs = require('fs'),
     cluster = require('cluster'),
-    security = require('../lib/security');
+    security = require('../lib/security'),
+    path = require('path');
 
 //These are the default config values for anything not specified in the app's config dir
 var defaults = {};
+
+var individualKeyCache = {}; //when we load a specific key file, e.g. routes.json, store the content here
 
 exports.init = function(callback) {
 
@@ -52,10 +55,46 @@ exports.init = function(callback) {
 
 };
 
+
 exports.get = function(key) {
     var val = defaults[key] || {};
+    val = config.util.extendDeep(val, loadFromIndividualConfigFile(key));
     return config.util.extendDeep(val, config[key]);
 };
+
+//For every requested config key, check if there's a json file by that name in the config dir.
+//If there is, load the contents and return it so that it can be merged in.
+function loadFromIndividualConfigFile(key) {
+    key = key.replace(/\/|\\/g, ''); //forward and backslashes are unsafe when resolving filenames
+
+    if (individualKeyCache[key]) {
+        return individualKeyCache[key];
+    } else {
+        var toLoad = path.resolve(global.__appDir, 'config/' + key + '.json');
+
+        var content = '{}';
+        try {
+            content = fs.readFileSync(toLoad);
+        } catch (err) {
+            //file must not exists
+        }
+
+        var json = {};
+        try {
+            var json = JSON.parse(content);
+        } catch (err) {
+            console.warn('Error parsing JSON for %s', toLoad);
+        }
+
+        security.decryptObject(json, function (str) {
+            //Decryption function
+            return security.decrypt(str, process.env.decryptionKey);
+        });
+        individualKeyCache[key] = json;
+
+        return individualKeyCache[key];
+    }
+}
 
 
 function getPassword(callback) {
