@@ -19,7 +19,7 @@
     "cors": "^2.5.2",
     "express": "^4.10.6",
     "express-static": "^1.0.3",
-    "lodash": "^2.4.1",
+    "lodash": "^3.3.1",
     "node-cache": "^1.1.0",
     "node-statsd": "^0.1.1",
     "on-headers": "^1.0.0",
