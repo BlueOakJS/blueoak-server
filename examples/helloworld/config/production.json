@@ -1,0 +1,5 @@
+{
+  "cluster": {
+    "maxWorkers": -1
+  }
+}

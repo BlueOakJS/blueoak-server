@@ -1,0 +1,8 @@
+{
+  "get /test/route": {
+    "handler": "foo.bar"
+  },
+  "get /test/route2": {
+    "handler": "foo.bar"
+  }
+}
