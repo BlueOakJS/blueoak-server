@@ -163,6 +163,8 @@ function initServices(opts, callback) {
 
         serviceLoader.loadConsumers(path.resolve(__dirname, 'middleware'), 'middleware'); //sprout middleware
         serviceLoader.loadConsumers(path.resolve(global.__appDir, 'middleware'), 'middleware'); //app middleware
+
+        serviceLoader.loadConsumers(path.resolve(__dirname, 'handlers'), 'handlers'); //sprout handlers
         serviceLoader.loadConsumers(path.resolve(global.__appDir, 'handlers'), 'handlers'); //app handlers
     }
 
