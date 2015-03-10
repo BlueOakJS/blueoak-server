@@ -249,14 +249,6 @@ describe('Array validation test', function () {
             items: {
                 type: 'number'
             },
-            uniqueItems: "false"
-        }, '1,2,3,3').status, SUCCESS);
-
-        assert.equal(swaggerUtil.validateParameterType({
-            type: 'array',
-            items: {
-                type: 'number'
-            },
             uniqueItems: true
         }, '1,2,3,3').status, FAIL);
     });
