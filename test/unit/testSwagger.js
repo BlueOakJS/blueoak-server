@@ -179,3 +179,169 @@ describe('Boolean validation test', function () {
         }, null).status, FAIL);
     });
 });
+
+describe('Array validation test', function () {
+
+    it('Validate maxItems is honored', function () {
+        assert.equal(swaggerUtil.validateParameterType({
+            type: 'array',
+            items: {
+                type: 'number'
+            },
+            maxItems: 3
+        }, '1,2,3').status, SUCCESS);
+
+        assert.equal(swaggerUtil.validateParameterType({
+            type: 'array',
+            items: {
+                type: 'number'
+            },
+            maxItems: 2
+        }, '1,2,3').status, FAIL);
+
+    });
+
+    it('Validate minItems is honored', function () {
+        assert.equal(swaggerUtil.validateParameterType({
+            type: 'array',
+            items: {
+                type: 'number'
+            },
+            minItems: 3
+        }, '1,2,3').status, SUCCESS);
+
+        assert.equal(swaggerUtil.validateParameterType({
+            type: 'array',
+            items: {
+                type: 'number'
+            },
+            minItems: 4
+        }, '1,2,3').status, FAIL);
+    });
+
+    it('Validate uniqueItems is honored', function () {
+        assert.equal(swaggerUtil.validateParameterType({
+            type: 'array',
+            items: {
+                type: 'number'
+            },
+            uniqueItems: true
+        }, '1,2,3').status, SUCCESS);
+
+        assert.equal(swaggerUtil.validateParameterType({
+            type: 'array',
+            items: {
+                type: 'number'
+            },
+            uniqueItems: 'true'
+        }, '1,2,3').status, SUCCESS);
+
+        assert.equal(swaggerUtil.validateParameterType({
+            type: 'array',
+            items: {
+                type: 'number'
+            },
+            uniqueItems: false
+        }, '1,2,3,3').status, SUCCESS);
+
+        assert.equal(swaggerUtil.validateParameterType({
+            type: 'array',
+            items: {
+                type: 'number'
+            },
+            uniqueItems: "false"
+        }, '1,2,3,3').status, SUCCESS);
+
+        assert.equal(swaggerUtil.validateParameterType({
+            type: 'array',
+            items: {
+                type: 'number'
+            },
+            uniqueItems: true
+        }, '1,2,3,3').status, FAIL);
+    });
+
+    it('Validate items is honored', function () {
+        assert.equal(swaggerUtil.validateParameterType({
+            type: 'array',
+            items: {
+                type: 'number'
+            }
+        }, '1,2,3').status, SUCCESS);
+
+        assert.equal(swaggerUtil.validateParameterType({
+            type: 'array',
+            items: {
+                type: 'string',
+                maxLength: 4
+            }
+        }, '1234,1234').status, SUCCESS);
+
+        assert.equal(swaggerUtil.validateParameterType({
+            type: 'array',
+            items: {
+                type: 'string',
+                maxLength: 2
+            },
+            uniqueItems: true
+        }, '123,123').status, FAIL);
+    });
+
+    it('Validate collectionFormat is honored', function () {
+
+        //default csv
+        assert.equal(swaggerUtil.validateParameterType({
+            type: 'array',
+            items: {
+                type: 'number'
+            },
+            minItems: 2,
+            maxItems: 2
+        }, '1,2').status, SUCCESS);
+
+        //explicit csv
+        assert.equal(swaggerUtil.validateParameterType({
+            type: 'array',
+            items: {
+                type: 'number'
+            },
+            collectionFormat: 'csv',
+            minItems: 2,
+            maxItems: 2
+        }, '1,2').status, SUCCESS);
+
+        //explicit ssv
+        assert.equal(swaggerUtil.validateParameterType({
+            type: 'array',
+            items: {
+                type: 'number'
+            },
+            collectionFormat: 'ssv',
+            minItems: 2,
+            maxItems: 2
+        }, '1 2').status, SUCCESS);
+
+        //explicit tsv
+        assert.equal(swaggerUtil.validateParameterType({
+            type: 'array',
+            items: {
+                type: 'number'
+            },
+            collectionFormat: 'tsv',
+            minItems: 2,
+            maxItems: 2
+        }, '1\t2').status, SUCCESS);
+
+        //explicit pipes
+        assert.equal(swaggerUtil.validateParameterType({
+            type: 'array',
+            items: {
+                type: 'number'
+            },
+            collectionFormat: 'pipes',
+            minItems: 2,
+            maxItems: 2
+        }, '1|2').status, SUCCESS);
+
+    });
+});
