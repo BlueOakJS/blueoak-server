@@ -335,5 +335,27 @@ describe('Array validation test', function () {
             maxItems: 2
         }, '1|2').status, SUCCESS);
 
+        //explicit multi
+        assert.equal(swaggerUtil.validateParameterType({
+            type: 'array',
+            items: {
+                type: 'number'
+            },
+            collectionFormat: 'multi',
+            minItems: 2,
+            maxItems: 2
+        }, ['1','2']).status, SUCCESS);
+
+        //explicit multi
+        assert.equal(swaggerUtil.validateParameterType({
+            type: 'array',
+            items: {
+                type: 'number'
+            },
+            collectionFormat: 'multi',
+            minItems: 1,
+            maxItems: 1
+        }, '1').status, SUCCESS); //only one query param was used
+
     });
 });
