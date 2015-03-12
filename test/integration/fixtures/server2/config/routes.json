@@ -1,0 +1,17 @@
+{
+  "get /endpoint2": {
+    "handler": "handler2.get"
+  },
+  "put /endpoint2": {
+    "handler": "handler2.put"
+  },
+  "post /endpoint2": {
+    "handler": "handler2.post"
+  },
+  "delete /endpoint2": {
+    "handler": "handler2.delete"
+  },
+  "all /endpoint3": {
+    "handler": "handler2.all"
+  }
+}
