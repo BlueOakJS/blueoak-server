@@ -9,8 +9,8 @@ var express = require('express'),
 var app = null;
 
 exports.init = function(config, serviceLoader, callback) {
-
     app = express();
+    
     serviceLoader.inject('app', app);
 
     var cfg = config.get('express');

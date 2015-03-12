@@ -57,8 +57,8 @@ module.exports.init = function (opts, callback) {
                 return initServices(function (err) {
                     if (err) {
                         console.warn(err.stack);
-                        return callback(err);
                     }
+                    return callback(err);
                 });
             }
 
@@ -110,22 +110,61 @@ module.exports.init = function (opts, callback) {
     });
 };
 
+//master will send a 'stop' message to all the workers when it's time to stop
+process.on('message', function(msg) {
+    if (msg === 'stop') {
+        stopServices();
+    }
+});
+
+
+//gracefully handle ctrl+c
+process.on('SIGINT', function() {
+    module.exports.stop();
+});
+
+//Stop the server
+module.exports.stop = function () {
+    stopServices();
+
+    Object.keys(cluster.workers).forEach(function (id) {
+        cluster.workers[id].send('stop');
+    });
+
+
+    //Just in case there's anything still running
+    //process.exit();
+};
+
+function stopServices() {
+    //TODO: we should have a generic way of stopping all services
+
+    //stop services on workers, or a master if it's a 1-worker cluster
+    if (!cluster.isMaster || (cluster.isMaster && _.keys(cluster.workers).length === 0)) {
+
+        //try to do a graceful shutdown
+        global.services.get('express').stop();
+        global.services.get('cache').stop();
+
+        //and kill whatever is left
+        process.exit();
+    }
+}
+
 function initWorker() {
 
     //Use this callback to notify back to the cluster master that we're started, either successfully or with error
     var callback = function (err) {
-        console.warn(err.stack);
         var message = {cmd: 'startupComplete', procId: process.pid};
         if (err) {
+            console.warn(err.stack);
             message.error = err.message;
         }
         process.send(message);
     };
 
     initServices(function (err) {
-        if (err) {
-            return callback(err);
-        }
+        return callback(err);
     });
 }
 

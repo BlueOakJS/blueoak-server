@@ -12,6 +12,10 @@ exports.init = function (monitor, config) {
         interface = require('../lib/nodeCacheInterface');
     }
 
+    exports.stop = function() {
+        interface.stop();
+    };
+
     exports.getClient = function () {
         return interface['getClient'].apply(interface, arguments);
     };
