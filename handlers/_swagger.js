@@ -70,6 +70,7 @@ exports.init = function (app, config, logger, serviceLoader, callback) {
                             return logger.warn('Could not find handler function "%s" for module "%s"', methodData.operationId, handlerName);
                         }
 
+                        logger.debug('Wiring up route %s %s to %s.%s', key, routePath, handlerName, methodData.operationId);
                         registerRoute(app, key, routePath, methodData, handlerFunc, logger);
 
                     }
@@ -86,7 +87,6 @@ exports.init = function (app, config, logger, serviceLoader, callback) {
 };
 
 function registerRoute(app, method, path, data, handlerFunc, logger) {
-   // console.log('register route', method, path, data);
 
     var allowedTypes = data.produces;
 
@@ -134,7 +134,7 @@ function setDefaultHeaders(req, data, logger) {
     var parameters = data.parameters;
     for (var i = 0; i < parameters.length; i++) {
         var parm = parameters[i];
-        if (parm.in === 'query') {
+        if (parm.in === 'header') {
             if (parm.default && typeof(req.query[parm.name]) === 'undefined') {
                 req.headers[parm.name] = swaggerUtil.cast(parm, parm.default);
             }
