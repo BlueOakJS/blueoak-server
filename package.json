@@ -4,7 +4,8 @@
   "description": "PointSource Sprout Server",
   "main": "index.js",
   "scripts": {
-    "test": "mocha test/unit"
+    "test": "mocha --check-leaks  --globals services test/unit",
+    "test-cov": "istanbul cover node_modules/mocha/bin/_mocha --report lcovonly -- test/unit"
   },
   "author": "",
   "license": "ISC",
@@ -33,6 +34,7 @@
     "winston": "^0.9.0"
   },
   "devDependencies": {
+    "istanbul": "^0.3.7",
     "mocha": "^2.0.1"
   },
   "files": [
