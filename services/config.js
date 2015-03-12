@@ -1,9 +1,9 @@
-var config = require('config'),
-    stripJsonComments = require('strip-json-comments'),
+var stripJsonComments = require('strip-json-comments'),
     fs = require('fs'),
     cluster = require('cluster'),
     security = require('../lib/security'),
-    path = require('path');
+    path = require('path'),
+    config = null;
 
 //These are the default config values for anything not specified in the app's config dir
 var defaults = {};
@@ -11,6 +11,8 @@ var defaults = {};
 var individualKeyCache = {}; //when we load a specific key file, e.g. routes.json, store the content here
 
 exports.init = function(callback) {
+    process.env.NODE_CONFIG_DIR = path.resolve(global.__appDir, 'config');
+    config = require('config');
 
     fs.readFile(__dirname + '/../defaults.json', function (err, data) {
         if (err) {
