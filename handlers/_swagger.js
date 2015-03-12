@@ -60,8 +60,6 @@ exports.init = function (app, config, logger, serviceLoader, callback) {
                             return logger.warn('Missing operationId in route "%s"', routePath);
                         }
 
-                        //console.log(routePath, key, methodData);
-
                         var handlerMod = _.findWhere(consumers, {__id: handlerName});
                         if (!handlerMod) {
                             return logger.warn('Could not find handler module named "%s".', handlerName);
@@ -88,7 +86,7 @@ exports.init = function (app, config, logger, serviceLoader, callback) {
 };
 
 function registerRoute(app, method, path, data, handlerFunc, logger) {
-    console.log('register route', method, path, data);
+   // console.log('register route', method, path, data);
 
     var allowedTypes = data.produces;
 
@@ -99,8 +97,8 @@ function registerRoute(app, method, path, data, handlerFunc, logger) {
             return;
         }
 
-
         setDefaultQueryParams(req, data, logger);
+        setDefaultHeaders(req, data, logger);
 
         //Wrap the set function, which is responsible for setting headers
         //Validate that the content-type is correct per the swagger definition
@@ -131,6 +129,19 @@ function setDefaultQueryParams(req, data, logger) {
     }
 }
 
+//Any header with a default that's not already defined will be set to the default value
+function setDefaultHeaders(req, data, logger) {
+    var parameters = data.parameters;
+    for (var i = 0; i < parameters.length; i++) {
+        var parm = parameters[i];
+        if (parm.in === 'query') {
+            if (parm.default && typeof(req.query[parm.name]) === 'undefined') {
+                req.headers[parm.name] = swaggerUtil.cast(parm, parm.default);
+            }
+        }
+    }
+}
+
 
 function validateParameters(req, res, data, logger) {
 
@@ -141,35 +152,45 @@ function validateParameters(req, res, data, logger) {
         if (parm.in === 'query') {
 
             if (parm.required && typeof(req.query[parm.name]) === 'undefined') {
-                logger.warn('Missing query parameter "%s" for operation "%s"', parm.name, data.operationId)
+                logger.warn('Missing query parameter "%s" for operation "%s"', parm.name, data.operationId);
                 res.status(403).send('Missing query parameter "' + parm.name + '".');
                 return false;
 
             } else if (typeof req.query[parm.name] !== 'undefined') {
-                console.log('validating query', parm.name);
                 var result = swaggerUtil.validateParameterType(parm, req.query[parm.name]);
-                console.log(result);
 
                 if (result.status !== 'success') {
                     res.status(403).send('Invalid query parameter "' + parm.name + '": ' + result.cause.message);
                     return false;
                 }
             }
+
         } else if (parm.in === 'header') {
+
+            if (parm.required && typeof(req.get(parm.name)) === 'undefined') {
+                logger.warn('Missing header "%s" for operation "%s"', parm.name, data.operationId);
+                res.status(403).send('Missing header "' + parm.name + '".');
+                return false;
+
+            } else if (typeof req.get(parm.name) !== 'undefined') {
+                var result = swaggerUtil.validateParameterType(parm, req.get(parm.name));
+
+                if (result.status !== 'success') {
+                    res.status(403).send('Invalid header "' + parm.name + '": ' + result.cause.message);
+                    return false;
+                }
+            }
 
         } else if (parm.in === 'path') {
 
-            console.log('validating path', parm.name);
             var result = swaggerUtil.validateParameterType(parm, req.params[parm.name]);
-            console.log(result);
-
             if (result.status !== 'success') {
                 res.status(403).send('Invalid query parameter "' + parm.name + '": ' + result.cause.message);
                 return false;
             }
 
         } else if (parm.in === 'formData') {
-
+            //TODO: validate form data
         } else if (parm.in === 'body') {
             console.log('validating body', req.body, parm.schema);
             var result = swaggerUtil.validateJSONType(parm.schema, req.body);
@@ -187,7 +208,7 @@ function validateParameters(req, res, data, logger) {
 function wrapCall(obj, funcName, toCall) {
     var origFunc = obj[funcName];
     obj[funcName] = function() {
-        toCall.apply(obj, arguments)
+        toCall.apply(obj, arguments);
         return origFunc.apply(obj, arguments);
     };
 }
