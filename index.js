@@ -146,8 +146,9 @@ function stopServices() {
         global.services.get('express').stop();
         global.services.get('cache').stop();
 
+        //disabling this for now because it prevents us from testing properly - it exists the test
         //and kill whatever is left
-        process.exit();
+        //process.exit();
     }
 }
 

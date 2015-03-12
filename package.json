@@ -35,7 +35,8 @@
   },
   "devDependencies": {
     "istanbul": "^0.3.7",
-    "mocha": "^2.0.1"
+    "mocha": "^2.0.1",
+    "request": "^2.53.0"
   },
   "files": [
     "bin",
