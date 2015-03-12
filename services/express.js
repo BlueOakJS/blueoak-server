@@ -10,6 +10,7 @@ var _ = require('lodash'),
     di = require('../lib/di');
 
 var _logger;
+var server;
 
 exports.init = function(logger, config, middleware, serviceLoader, callback) {
     _logger = logger;
@@ -26,7 +27,11 @@ exports.init = function(logger, config, middleware, serviceLoader, callback) {
 
 };
 
-
+exports.stop = function() {
+    if (server) {
+        server.close();
+    }
+};
 
 //Express service is a little different in that it can't start until all the services
 //needed by handlers and middleware are loaded.
@@ -52,7 +57,7 @@ function startExpress(cfg, app, callback) {
         } catch (err) {
             return callback(new Error('Error reading SSL options: ' + err.message));
         }
-        var server = https.createServer(sslOptions, app);
+        server = https.createServer(sslOptions, app);
         server.listen(cfg.port, function () {
             var host = server.address().address;
             var port = server.address().port;
@@ -64,7 +69,7 @@ function startExpress(cfg, app, callback) {
     } else {
 
         //Non SSL
-        var server = app.listen(cfg.port, function () {
+        server = app.listen(cfg.port, function () {
             var host = server.address().address;
             var port = server.address().port;
             _logger.info('App is listening on http://%s:%s', host, port);

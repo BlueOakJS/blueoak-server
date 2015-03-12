@@ -28,8 +28,8 @@ exports.init = function (logger, config, callback) {
             //logger.info('Attempting to reconnect to redis');
         };
     });
-
 };
+
 
 exports.cacheInterface = {
 
@@ -66,6 +66,10 @@ exports.cacheInterface = {
                 callback();
             }
         });
+    },
+
+    stop: function() {
+        client.quit();
     },
 
     getClient: function() {
