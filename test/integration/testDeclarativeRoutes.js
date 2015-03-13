@@ -1,20 +1,17 @@
 var sprout = require('../../index'),
     path = require('path'),
     request = require('request'),
-    assert = require('assert');
+    assert = require('assert'),
+    util = require('./launchUtil');
 
 describe('SERVER2 - test declarative routes', function () {
 
     before(function (done) {
-        sprout.init({
-            appDir: path.resolve(process.cwd(), 'test/integration/fixtures/server2')
-        }, function(err) {
-            done(err);
-        });
+        util.launch('server2', done);
     });
 
-    after(function () {
-        sprout.stop();
+    after(function (done) {
+        util.finish(done);
     });
 
     it('GET /endpoint2', function (done) {

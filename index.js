@@ -121,6 +121,7 @@ process.on('message', function(msg) {
 //gracefully handle ctrl+c
 process.on('SIGINT', function() {
     module.exports.stop();
+    process.exit();
 });
 
 //Stop the server
@@ -133,7 +134,7 @@ module.exports.stop = function () {
 
 
     //Just in case there's anything still running
-    //process.exit();
+    process.exit();
 };
 
 function stopServices() {
@@ -146,9 +147,8 @@ function stopServices() {
         global.services.get('express').stop();
         global.services.get('cache').stop();
 
-        //disabling this for now because it prevents us from testing properly - it exists the test
         //and kill whatever is left
-        //process.exit();
+        process.exit();
     }
 }
 

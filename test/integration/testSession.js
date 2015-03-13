@@ -1,0 +1,34 @@
+var sprout = require('../../index'),
+    path = require('path'),
+    request = require('request').defaults({jar: true}), //need cookies enabled since this is cookie session
+    assert = require('assert'),
+    util = require('./launchUtil');
+
+describe('SERVER1 - test simple REST calls', function () {
+
+    before(function (done) {
+        util.launch('server3', done);
+    });
+
+    after(function (done) {
+        util.finish(done);
+    });
+
+
+    it('Should let me put and retrieve data from the session', function (done) {
+        //the post sets session data
+        request.post({url: 'http://localhost:5000/session', json: {foo: 'bar'}}, function(err, resp, body) {
+            assert.ok(!err);
+
+            //get retrieves session data
+            request.get('http://localhost:5000/session', function(err, resp, body) {
+                assert.ok(!err);
+                var data = JSON.parse(body);
+                assert.equal('bar', data.foo);
+                done();
+            });
+        });
+    });
+
+
+});

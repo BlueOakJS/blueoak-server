@@ -1,20 +1,16 @@
-var sprout = require('../../index'),
-    path = require('path'),
+var path = require('path'),
     request = require('request'),
-    assert = require('assert');
+    assert = require('assert'),
+    util = require('./launchUtil');
 
 describe('SERVER1 - test simple REST calls', function () {
 
     before(function (done) {
-        sprout.init({
-            appDir: path.resolve(process.cwd(), 'test/integration/fixtures/server1')
-        }, function(err) {
-            done(err);
-        });
+        util.launch('server1', done);
     });
 
-    after(function () {
-        sprout.stop();
+    after(function (done) {
+        util.finish(done);
     });
 
     it('GET /endpoint1', function (done) {
