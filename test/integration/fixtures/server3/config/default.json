@@ -1,0 +1,18 @@
+{
+  "express": {
+    "port": "5000",
+    "middleware": ["session", "bodyParser"]
+  },
+
+  "cluster": {
+    "maxWorkers": 1
+  },
+
+  "session": {
+    "keys": ["sessionkey"]
+  },
+
+  "bodyParser": {
+    "json": {}
+  }
+}
