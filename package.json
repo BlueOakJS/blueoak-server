@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "mocha --check-leaks  --globals services test/unit",
+    "test-integration": "mocha test/integration",
     "test-cov": "istanbul cover node_modules/mocha/bin/_mocha --report lcovonly -- test/unit"
   },
   "author": "",
