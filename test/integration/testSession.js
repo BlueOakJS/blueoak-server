@@ -4,7 +4,7 @@ var sprout = require('../../index'),
     assert = require('assert'),
     util = require('./launchUtil');
 
-describe('SERVER1 - test simple REST calls', function () {
+describe('SERVER3 - test session support', function () {
 
     before(function (done) {
         util.launch('server3', done);
