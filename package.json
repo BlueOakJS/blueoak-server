@@ -43,6 +43,7 @@
     "bin",
     "lib",
     "middleware",
+    "handlers",
     "services",
     "defaults.json",
     "index.js"
