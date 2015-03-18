@@ -185,7 +185,7 @@ function validateParameters(req, res, data, logger) {
 
             var result = swaggerUtil.validateParameterType(parm, req.params[parm.name]);
             if (result.status !== 'success') {
-                res.status(403).send('Invalid query parameter "' + parm.name + '": ' + result.cause.message);
+                res.status(403).send('Invalid path parameter "' + parm.name + '": ' + result.cause.message);
                 return false;
             }
 
@@ -197,7 +197,7 @@ function validateParameters(req, res, data, logger) {
             console.log(result);
 
             if (result.status !== 'success') {
-                res.status(403).send('Invalid query parameter "' + parm.name + '": ' + result.cause.message);
+                res.status(403).send('Invalid field "' + parm.name + '": ' + result.cause.message);
                 return false;
             }
         }
