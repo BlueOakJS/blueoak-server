@@ -104,7 +104,6 @@ function processSwaggerFile(api, filename, callback) {
 
         });
 
-
-        //generateStubs(jsPath, ast, api, callback);
+        callback();
     });
 }
