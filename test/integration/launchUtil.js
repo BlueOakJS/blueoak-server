@@ -3,8 +3,16 @@ var path = require('path'),
 
 var lastLaunch = null;
 
-exports.launch = function(fixtureName, done) {
-    lastLaunch = child_process.execFile(path.resolve(__dirname, '../../bin/sprout-server.js'), [],
+exports.launch = function(fixtureName, opts, done) {
+
+    //opts is optional
+    if (!done) {
+        done = opts;
+        opts = {
+            exec: '../../bin/sprout-server.js'
+        };
+    }
+    lastLaunch = child_process.execFile(path.resolve(__dirname, opts.exec), [],
         {'cwd': path.resolve(__dirname, 'fixtures/' + fixtureName)},
         function(err, stdout, stderr) {
             if (err) {

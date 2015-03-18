@@ -1,0 +1,32 @@
+{
+  "express": {
+    "port": "5000",
+    "middleware": ["session", "bodyParser"]
+  },
+
+  "cluster": {
+    "maxWorkers": 1
+  },
+
+  "session": {
+    "keys": ["sessionkey"]
+  },
+
+  "bodyParser": {
+    "json": {}
+  },
+
+  "logger": {
+    "transports": [
+      {
+        "package": "winston",
+        "field": "transports.Console",
+        "options": {
+          "level": "debug",
+          "colorize": true,
+          "timestamp": true
+        }
+      }
+    ]
+  }
+}
