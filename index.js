@@ -197,10 +197,12 @@ function initServices(opts, callback) {
     serviceLoader.inject('app', {}, ['middleware']);
 
     if (!opts.bootstrap) { //in bootstrap mode we only load the sprout services needed by master
+        var config = serviceLoader.get('config');
 
-
+        serviceLoader.loadServiceModules(config.get('services'));
         serviceLoader.loadServices(path.resolve(global.__appDir, 'services')); //app services
 
+        serviceLoader.loadConsumerModules(config.get('handlers'));
         serviceLoader.loadConsumers(path.resolve(__dirname, 'middleware'), 'middleware'); //sprout middleware
         serviceLoader.loadConsumers(path.resolve(global.__appDir, 'middleware'), 'middleware'); //app middleware
 
