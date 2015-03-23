@@ -1,0 +1,10 @@
+//Default config for my app
+{
+  "express": {
+    "port": "3000"
+  },
+  "cluster": {
+    "maxWorkers": 1
+  }
+
+}
