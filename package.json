@@ -4,7 +4,7 @@
   "description": "PointSource Sprout Server",
   "main": "index.js",
   "scripts": {
-    "test": "mocha --check-leaks  --globals services test/unit",
+    "test": "mocha --check-leaks --reporter xunit-file --globals services test/unit test/integration",
     "test-integration": "mocha test/integration",
     "test-cov": "istanbul cover node_modules/mocha/bin/_mocha --report lcovonly -- test/unit"
   },
@@ -40,7 +40,8 @@
   "devDependencies": {
     "istanbul": "^0.3.7",
     "mocha": "^2.0.1",
-    "request": "^2.53.0"
+    "request": "^2.53.0",
+    "xunit-file": "0.0.6"
   },
   "files": [
     "bin",
