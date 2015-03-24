@@ -1,5 +1,5 @@
 {
-  "name": "echoservice",
+  "name": "echo-service",
   "version": "1.0.0",
   "description": "Echo Service",
   "main": "index.js",
