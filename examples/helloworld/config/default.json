@@ -41,15 +41,6 @@
   "monitor": {
     "host": "localhost",
     "debug": true
-  },
-
-  "handlers": [ //optional list of additional handler modules
-    "blah"
-  ],
-
-  "services": [ //optional list of additional service modules
-    "my-service"
-  ]
-
+  }
 
 }

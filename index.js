@@ -202,7 +202,7 @@ function initServices(opts, callback) {
         serviceLoader.loadServiceModules(config.get('services'));
         serviceLoader.loadServices(path.resolve(global.__appDir, 'services')); //app services
 
-        serviceLoader.loadConsumerModules(config.get('handlers'));
+        serviceLoader.loadConsumerModules('handlers', config.get('handlers'));
         serviceLoader.loadConsumers(path.resolve(__dirname, 'middleware'), 'middleware'); //sprout middleware
         serviceLoader.loadConsumers(path.resolve(global.__appDir, 'middleware'), 'middleware'); //app middleware
 

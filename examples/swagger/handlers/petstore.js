@@ -1,9 +1,12 @@
 
+var logger = services.get('logger');
+
 exports.findPets = function(req, res, next) {
     res.status(200).json({});
 };
 
 exports.findPetById = function(req, res, next) {
+    logger.debug('Fetching pet %s', req.params.id);
     res.status(200).json({});
 };
 
