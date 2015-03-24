@@ -1,12 +1,6 @@
 //Default config for my app
 {
   "express": {
-    "port": "3001",
-    "ssl": {
-      "key": "certs/server.key",
-      "cert": "certs/server.crt",
-      "passphrase": "devmode"
-    },
     "middleware": ["csrf", "cors", "session", "bodyParser"],
     "middleware$": ["errors"]
   },

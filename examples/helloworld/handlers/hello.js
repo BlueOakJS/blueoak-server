@@ -36,10 +36,4 @@ module.exports.init = function(app, randomizer, monitor) {
         next(new Error('I found an error!'));
     });
 
-
-    app.get('/admin', function(req, res) {
-        res.status(200).send('Secure connection? ' + req.secure);
-    });
-
-
 };
