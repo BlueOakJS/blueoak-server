@@ -4,9 +4,10 @@
   "description": "PointSource Sprout Server",
   "main": "index.js",
   "scripts": {
-    "test": "mocha --check-leaks --reporter xunit-file --globals services test/unit",
+    "test": "JUNIT_REPORT_PATH=tests-report.xml mocha --check-leaks --reporter mocha-jenkins-reporter --globals services test/unit",
     "test-integration": "mocha test/integration",
-    "test-cov": "istanbul cover node_modules/mocha/bin/_mocha --report lcovonly -- test/unit"
+    "test-cov": "istanbul cover node_modules/mocha/bin/_mocha --report lcovonly -- test/unit",
+    "posttest": "publish"
   },
   "author": "",
   "license": "ISC",
@@ -25,6 +26,7 @@
     "express": "^4.10.6",
     "express-static": "^1.0.3",
     "lodash": "^3.3.1",
+    "mocha-jenkins-reporter": "^0.1.6",
     "node-cache": "^1.1.0",
     "node-statsd": "^0.1.1",
     "on-headers": "^1.0.0",
@@ -40,8 +42,8 @@
   "devDependencies": {
     "istanbul": "^0.3.7",
     "mocha": "^2.0.1",
-    "request": "^2.53.0",
-    "xunit-file": "0.0.6"
+    "publish": "^0.3.2",
+    "request": "^2.53.0"
   },
   "files": [
     "bin",
