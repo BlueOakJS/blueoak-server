@@ -1,3 +1,4 @@
+/* Copyright © 2015 PointSource, LLC. All rights reserved. */
 //Provides a cache service that can support multiple underlying interfaces
 //if the "type" field is set to "redis", we use a redis interface,
 //otherwise we default to a node-cache interface.

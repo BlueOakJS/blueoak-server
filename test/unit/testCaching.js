@@ -1,3 +1,4 @@
+/* Copyright © 2015 PointSource, LLC. All rights reserved. */
 var assert = require("assert"),
     path = require('path'),
     redis = require('../../services/redis'),

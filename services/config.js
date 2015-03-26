@@ -1,3 +1,4 @@
+/* Copyright © 2015 PointSource, LLC. All rights reserved. */
 var stripJsonComments = require('strip-json-comments'),
     fs = require('fs'),
     cluster = require('cluster'),

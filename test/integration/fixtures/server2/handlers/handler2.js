@@ -1,3 +1,4 @@
+/* Copyright © 2015 PointSource, LLC. All rights reserved. */
 
 module.exports.get = function(req, res) {
     res.status(200).json({name: 'endpoint2'});

@@ -1,3 +1,4 @@
+/* Copyright © 2015 PointSource, LLC. All rights reserved. */
 var sprout = require('../../index'),
     path = require('path'),
     request = require('request'),

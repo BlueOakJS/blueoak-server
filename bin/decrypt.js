@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-
+/* Copyright © 2015 PointSource, LLC. All rights reserved. */
 var security = require('../lib/security')
 
 

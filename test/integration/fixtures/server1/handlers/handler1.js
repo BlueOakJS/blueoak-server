@@ -1,3 +1,4 @@
+/* Copyright © 2015 PointSource, LLC. All rights reserved. */
 
 module.exports.init = function(app) {
     app.get('/endpoint1', function(req, res) {

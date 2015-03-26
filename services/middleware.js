@@ -1,3 +1,4 @@
+/* Copyright © 2015 PointSource, LLC. All rights reserved. */
 /*
  * The express service takes care of creating the express apps, registering handlers, and then starting the server
  * listening on each configured port.

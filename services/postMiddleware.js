@@ -1,3 +1,4 @@
+/* Copyright © 2015 PointSource, LLC. All rights reserved. */
 /*
  * post middleware runs after all the express handlers have been registered.
  *
