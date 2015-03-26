@@ -9,8 +9,6 @@
     "test-cov": "istanbul cover node_modules/mocha/bin/_mocha --report lcovonly -- test/unit",
     "posttest": "publish"
   },
-  "author": "",
-  "license": "ISC",
   "bin": {
     "sprout-server": "bin/sprout-server.js"
   },
