@@ -4,7 +4,7 @@
   "description": "PointSource Sprout Server",
   "main": "index.js",
   "scripts": {
-    "test": "JUNIT_REPORT_PATH=tests-report.xml mocha --check-leaks --reporter mocha-jenkins-reporter --globals services test/unit",
+    "test": "JUNIT_REPORT_PATH=tests-report.xml mocha --check-leaks --reporter mocha-jenkins-reporter --globals services,__appDir test/unit",
     "test-integration": "mocha test/integration",
     "test-cov": "istanbul cover node_modules/mocha/bin/_mocha --report lcovonly -- test/unit",
     "posttest": "publish"
