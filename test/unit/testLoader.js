@@ -1,3 +1,4 @@
+/* Copyright © 2015 PointSource, LLC. All rights reserved. */
 var assert = require("assert"),
     loader = require('../../lib/loader'),
     path = require('path');

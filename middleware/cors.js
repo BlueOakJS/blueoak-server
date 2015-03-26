@@ -1,3 +1,4 @@
+/* Copyright © 2015 PointSource, LLC. All rights reserved. */
 /*
  * Use the node-cors library to enable CORS on all express.js apps and endpoints.
  *

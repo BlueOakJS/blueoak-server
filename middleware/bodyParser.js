@@ -1,3 +1,4 @@
+/* Copyright © 2015 PointSource, LLC. All rights reserved. */
 /**
  * Enables the body-parser middleware: https://github.com/expressjs/body-parser
  *

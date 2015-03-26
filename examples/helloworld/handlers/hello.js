@@ -1,3 +1,4 @@
+/* Copyright © 2015 PointSource, LLC. All rights reserved. */
 
 module.exports.init = function(app, randomizer, monitor) {
     app.get('/hello', monitor.express('hello_ENDPOINT'), function(req, res) {

@@ -1,3 +1,4 @@
+/* Copyright © 2015 PointSource, LLC. All rights reserved. */
 //Uses random.org to generate a random integer
 var request = require('request');
 var url, _logger;

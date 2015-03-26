@@ -1,3 +1,4 @@
+/* Copyright © 2015 PointSource, LLC. All rights reserved. */
 var _ = require('lodash');
 
 exports.init = function(app, config, serviceLoader, logger) {

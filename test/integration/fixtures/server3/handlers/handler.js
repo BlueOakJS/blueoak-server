@@ -1,3 +1,4 @@
+/* Copyright © 2015 PointSource, LLC. All rights reserved. */
 
 module.exports.init = function(app) {
     app.get('/session', function(req, res, next) {
