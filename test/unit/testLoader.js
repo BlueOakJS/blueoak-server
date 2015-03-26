@@ -312,7 +312,6 @@ describe('DI Loader test7 - test dynamic dependencies', function () {
 
 });
 
-
 describe('DI Loader test8 - test camel case', function () {
     var testLoader;
 
@@ -340,8 +339,7 @@ describe('DI Loader test8 - test camel case', function () {
 
 });
 
-
-describe('DI Loader test10 - test services.get', function () {
+describe('DI Loader test10 - test services get', function () {
     var testLoader, services;
 
     beforeEach(function () {
@@ -384,7 +382,6 @@ describe('DI Loader test10 - test services.get', function () {
     });
 
 });
-
 
 describe('DI Loader test11 - load from subdirectories', function () {
     var testLoader;
