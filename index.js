@@ -46,7 +46,9 @@ module.exports.init = function (opts, callback) {
 
             var clusterConfig = serviceLoader.get('config').get('cluster');
             var logger = serviceLoader.get('logger');
+
             printVersion(logger);
+
             // Either set to maxWorkers, or if < 0, use the count of machine's CPUs
             var workerCount = clusterConfig.maxWorkers < 0 ? require('os').cpus().length : clusterConfig.maxWorkers;
 
@@ -61,48 +63,16 @@ module.exports.init = function (opts, callback) {
                     }
                     return callback(err);
                 });
-            }
-
-            // Create a worker for each CPU
-            for (var i = 0; i < workerCount; i += 1) {
-                var worker = cluster.fork({decryptionKey: serviceLoader.get('config').decryptionKey});
-
-                worker.on('message', function(msg) {
-                    try {
-                        var obj = JSON.parse(msg);
-                        logger[obj.level].apply(logger, obj.args);
-                    } catch(err) {
-                        logger.info(msg);
-                    }
+            } else {
+                async.timesSeries(workerCount, function(n, next) {
+                    forkWorker(next);
+                }, function(err, result) {
+                    callback(err);
+                    cluster.on('exit', function(worker, code, signal) {
+                        logger.info('Worked %d stopped (%s). Restarting', worker.process.pid, signal || code);
+                    });
                 });
             }
-
-            var startupFailed = false;
-            Object.keys(cluster.workers).forEach(function (id) {
-                cluster.workers[id].on('message', function (msg) {
-                    if (msg.cmd === 'startupComplete') {
-                        clusterCount++;
-                    }
-
-                    if (msg.error) {
-                        //Kill all the clusters
-                        for (var id in cluster.workers) {
-                            cluster.workers[id].kill();
-                        }
-
-                        //Callback with the error
-                        startupFailed = true;
-                        callback(new Error(msg.error));
-
-                    }
-
-                    if (clusterCount === workerCount) {
-                        if (!startupFailed) { //prevent callback from being called twice, once with error and once without
-                            callback();
-                        }
-                    }
-                });
-            });
 
         } else {
             initWorker();
@@ -110,6 +80,29 @@ module.exports.init = function (opts, callback) {
 
     });
 };
+
+function forkWorker(callback) {
+    var logger = serviceLoader.get('logger');
+    var worker = cluster.fork({decryptionKey: serviceLoader.get('config').decryptionKey});
+
+    worker.on('message', function(msg) {
+        try {
+            var obj = JSON.parse(msg);
+            logger[obj.level].apply(logger, obj.args);
+        } catch(err) {
+            logger.info(msg);
+        }
+
+        if (msg.cmd === 'startupComplete') {
+            if (msg.error) {
+                //Callback with the error
+                return callback(new Error(msg.error));
+            } else {
+                callback();
+            }
+        }
+    });
+}
 
 //master will send a 'stop' message to all the workers when it's time to stop
 process.on('message', function(msg) {
@@ -122,17 +115,48 @@ process.on('message', function(msg) {
 //gracefully handle ctrl+c
 process.on('SIGINT', function() {
     module.exports.stop();
-    process.exit();
 });
+
+
+/*
+ * On SIGHUP (restart) if we're in a clustered setup, we restart each worker process in sequence.
+ * This will give us better uptime since there will always be a worker process available.
+ * We also wait for a graceful shutdown of each worker so that existing requests are handled.
+ */
+process.on('SIGHUP', function() {
+
+    var logger = serviceLoader.get('logger');
+
+    if (isClusteredMaster()) {
+        logger.info('Restarting worker processes.');
+        var ids = _.map(cluster.workers, function(key, val) {
+            return val;
+        });
+
+        //kill and restart each worker in series
+        //This should give us 100% uptime as there will always be a worker available
+        async.eachSeries(ids, function(id, next) {
+            cluster.workers[id].send('stop');
+            forkWorker(next);
+        }, function(err, result) {
+           logger.info('Restart complete');
+        });
+    } else if (cluster.isMaster) {
+        logger.warn('Ignoring SIGHUP');
+    }
+
+});
+
 
 //Stop the server
 module.exports.stop = function () {
     stopServices();
 
-    Object.keys(cluster.workers).forEach(function (id) {
-        cluster.workers[id].send('stop');
-    });
-
+    if (isClusteredMaster()) {
+        Object.keys(cluster.workers).forEach(function (id) {
+            cluster.workers[id].send('stop');
+        });
+    }
 
     //Just in case there's anything still running
     process.exit();
@@ -142,15 +166,25 @@ function stopServices() {
     //TODO: we should have a generic way of stopping all services
 
     //stop services on workers, or a master if it's a 1-worker cluster
-    if (!cluster.isMaster || (cluster.isMaster && _.keys(cluster.workers).length === 0)) {
+    if (!isClusteredMaster()) {
 
-        //try to do a graceful shutdown
-        global.services.get('express').stop();
-        global.services.get('cache').stop();
+        //try to do a graceful shutdown, note the express shutdown is async since it waits for requests to complete
+        global.services.get('express').stop(function() {
+            global.services.get('cache').stop();
 
-        //and kill whatever is left
-        process.exit();
+            //and kill whatever is left
+            process.exit();
+        });
+
     }
+}
+
+/*
+ * Returns true if this is a master server that has clustered workers.
+ * Otherwise return false, i.e. for worker processes or single-process masters.
+ */
+function isClusteredMaster() {
+    return cluster.isMaster && _.keys(cluster.workers).length > 0;
 }
 
 function initWorker() {
