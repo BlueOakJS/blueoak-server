@@ -28,9 +28,13 @@ exports.init = function(logger, config, middleware, serviceLoader, callback) {
 
 };
 
-exports.stop = function() {
+exports.stop = function(callback) {
     if (server) {
-        server.close();
+        server.close(callback);
+    } else {
+        if (callback) {
+            callback();
+        }
     }
 };
 
