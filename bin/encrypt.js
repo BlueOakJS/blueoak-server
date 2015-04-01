@@ -41,8 +41,9 @@ function pad(str) {
     if (str === defaultCipher) {
         str = '*' + str + '*';
     }
-    while (str.length < 23)
+    while (str.length < 23) {
         str = str + ' ';
+    }
     return str;
 }
 
