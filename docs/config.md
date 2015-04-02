@@ -7,7 +7,6 @@ There will be at least a *defaults.json* config file, but additional environment
 For example, a config file named *production.json* will be merged in as long as the $NODE_ENV is set to production.
 See the [node-config](https://github.com/lorenwest/node-config/wiki/Configuration-Files) docs for more detailed information.
 
-
 ### Service Config
 Typically each service has its own top-level field in the config, e.g. *logger* for the logger service and *express* for the express service.
 
@@ -69,5 +68,34 @@ The key can either be specified as an environment variable, `decryptionKey`, or 
   "security": {
     "key": "myKey"
   }
+}
+```
+
+### Separating Config Into Individual Files
+Blocks of config can be placed into separate files.
+
+For example, suppose there's a block of config called *service1*.
+
+```json
+ "service1": {
+    "foo": "bar"
+  }
+```
+
+Additional config data can instead be placed into a file named *service1.json*.
+
+```json
+{
+  "key": "value" 
+}
+```
+
+Any config from the other config files will be merged with the content from service1.json.
+In the above case, the final config for service1 will be
+
+```json
+{
+  "foo": "bar",
+  "key": "value" 
 }
 ```
