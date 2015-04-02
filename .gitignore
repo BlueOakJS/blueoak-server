@@ -1,3 +1,4 @@
 node_modules
 tests-report.xml
 !test/unit/**/node_modules
+.idea
