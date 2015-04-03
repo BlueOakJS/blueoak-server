@@ -253,7 +253,6 @@ function initServices(opts, callback) {
 }
 
 function printVersion(logger) {
-    var packageFile = path.resolve(__dirname, 'package.json');
-    var json = JSON.parse(fs.readFileSync(packageFile));
-    logger.info('Starting %s v%s', json.name, json.version);
+    var pkg = require('./package.json')
+    logger.info('Starting %s v%s', pkg.name, pkg.version);
 }
