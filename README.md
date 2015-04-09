@@ -66,7 +66,7 @@ which monitor for file changes and automatically restart the server.
 
 ### Next steps
 
-Read through the [docs](./docs) and look at the [helloworld sample app](./examples/helloworld/).
+Read through the [docs](https://github.com/PointSource/sprout-cli/wiki/Sprout-Server) and look at the [helloworld sample app](./examples/helloworld/).
 
 
 ## Testing
