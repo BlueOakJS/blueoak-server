@@ -8,8 +8,12 @@ exports.init = function (logger, config, callback) {
 
     if (cfg.host && cfg.port) {
         logger.info('Redis service is enabled');
-    } else {
+    } else if (config.get('cache').type === 'redis') {
+        //TODO: Should probably have a way to fail if someone is accessing the redis service directly
+        //with config is missing, vs accessing it through cache service
         return callback(new Error('Must specify host and port for Redis'));
+    } else {
+        return callback();
     }
 
     client = redis.createClient(cfg.port, cfg.host, cfg.options);
