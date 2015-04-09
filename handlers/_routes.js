@@ -13,8 +13,6 @@ exports.init = function(app, config, serviceLoader, logger) {
  */
 function registerDeclarativeRoutes(app, routes, serviceLoader, logger) {
 
-    var consumers = serviceLoader.getConsumers('handlers');
-
     _.keys(routes).forEach(function(routePath) {
         //routePath should be of form "<method> path"
         var parts = routePath.split(' ');
@@ -40,7 +38,7 @@ function registerDeclarativeRoutes(app, routes, serviceLoader, logger) {
             return logger.warn('Invalid handler reference "%s"', parts[1]);
         }
 
-        var handlerMod = _.findWhere(consumers, {__id: handlerParts[0]});
+        var handlerMod = serviceLoader.getConsumer('handlers', handlerParts[0]);
         if (!handlerMod) {
             return logger.warn('Could not find handler module named "%s".', handlerParts[0]);
         }

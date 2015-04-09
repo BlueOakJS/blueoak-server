@@ -11,7 +11,6 @@ var httpMethods = ['get', 'put', 'post', 'delete', 'options', 'head', 'patch'];
 
 exports.init = function (app, config, logger, serviceLoader, callback) {
     var cfg = config.get('swagger');
-    var consumers = serviceLoader.getConsumers('handlers');
 
     //default to true
     var useBasePath = cfg.useBasePath || cfg.useBasePath === undefined;
@@ -61,7 +60,7 @@ exports.init = function (app, config, logger, serviceLoader, callback) {
                             return logger.warn('Missing operationId in route "%s"', routePath);
                         }
 
-                        var handlerMod = _.findWhere(consumers, {__id: handlerName});
+                        var handlerMod = serviceLoader.getConsumer('handlers', handlerName);
                         if (!handlerMod) {
                             return logger.warn('Could not find handler module named "%s".', handlerName);
                         }
