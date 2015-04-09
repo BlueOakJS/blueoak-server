@@ -33,5 +33,5 @@ exports.getDependencies = function(serviceLoader) {
         params = params.concat(di.getParamNames(mods[i].init));
     }
     var result = _.unique(params);
-    return _.remove(result, 'app');
+    return  _.without(result, 'app');
 };
