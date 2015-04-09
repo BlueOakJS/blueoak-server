@@ -9,7 +9,7 @@ exports.init = function (logger, config, callback) {
     if (cfg.host && cfg.port) {
         logger.info('Redis service is enabled');
     } else {
-        return callback();
+        return callback(new Error('Must specify host and port for Redis'));
     }
 
     client = redis.createClient(cfg.port, cfg.host, cfg.options);
