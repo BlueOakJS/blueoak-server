@@ -89,4 +89,13 @@ describe('SERVER2 - test declarative routes', function () {
         });
     });
 
+    it('GET /endpoint4', function (done) {
+        request.get('http://localhost:5000/endpoint4', function(err, resp, body) {
+            assert.ok(!err)
+            var json = JSON.parse(body);
+            assert.equal('endpoint4', json.name);
+            done();
+        });
+    });
+
 });

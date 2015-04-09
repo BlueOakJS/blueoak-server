@@ -13,5 +13,8 @@
   },
   "all /endpoint3": {
     "handler": "handler2.all"
+  },
+  "get /endpoint4": {
+    "handler": "camelCase.get"
   }
 }
