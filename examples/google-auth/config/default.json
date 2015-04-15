@@ -30,6 +30,6 @@
   },
 
   "google-jwt": {
-    "enabled": true
+    "clientId": "107463652566-jo264sjf04n1uk17i2ijdqbs2tuu2rf0.apps.googleusercontent.com"
   }
 }
