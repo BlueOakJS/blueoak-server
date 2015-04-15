@@ -243,6 +243,9 @@ function initServices(opts, callback) {
 
         serviceLoader.loadConsumers(path.resolve(__dirname, 'handlers'), 'handlers'); //sprout handlers
         serviceLoader.loadConsumers(path.resolve(global.__appDir, 'handlers'), 'handlers'); //app handlers
+
+        serviceLoader.loadConsumers(path.resolve(global.__appDir, 'auth'), 'auth'); //app authenticators
+        serviceLoader.loadConsumers(path.resolve(__dirname, 'auth'), 'auth'); //sprout authenticators
     }
 
 

@@ -1,9 +1,9 @@
 /* Copyright © 2015 PointSource, LLC. All rights reserved. */
 var _ = require('lodash');
 
-exports.init = function(app, config, serviceLoader, logger) {
+exports.init = function(app, config, serviceLoader, auth, logger) {
     var routes = config.get('routes');
-    registerDeclarativeRoutes(app, routes, serviceLoader, logger);
+    registerDeclarativeRoutes(app, routes, serviceLoader, auth, logger);
 };
 
 
@@ -11,7 +11,7 @@ exports.init = function(app, config, serviceLoader, logger) {
  * Load the "routes" config and register all the routes.
  * Any errors that might occur because of mis-configured routes will be logged.
  */
-function registerDeclarativeRoutes(app, routes, serviceLoader, logger) {
+function registerDeclarativeRoutes(app, routes, serviceLoader, auth, logger) {
 
     _.keys(routes).forEach(function(routePath) {
         //routePath should be of form "<method> path"
@@ -48,8 +48,21 @@ function registerDeclarativeRoutes(app, routes, serviceLoader, logger) {
             return logger.warn('Could not find handler function "%s" for module "%s"', handlerParts[1], handlerParts[0]);
         }
 
+        var middleware = [];
+
+        var authName = routes[routePath].auth;
+        if (authName) {
+            var authCallback = auth.get(authName);
+            if (!authCallback) {
+                logger.warn('Could not find auth of type "%s"', authName);
+            } else {
+                middleware.push(authCallback);
+            }
+        }
+
+        middleware.push(handlerFunc);
         //register the route and handler function with express
-        app[parts[0]].call(app, parts[1], handlerFunc);
+        app[parts[0]].call(app, parts[1], middleware);
     });
 
 }
