@@ -7,11 +7,13 @@ var _ = require('lodash'),
     getPem = require('rsa-pem-from-mod-exp');
 
 var _discovery = null, _certs, _pems = {};
+var _cfg = null;
 
 module.exports.init = function (app, logger, config, auth, callback) {
 
     var cfg = config.get('google-jwt');
-    if (cfg.enabled === true) {
+    _cfg = cfg;
+    if (cfg.clientId) {
 
         //get the discovery data, which we need to look up certificates
         request.get('https://accounts.google.com/.well-known/openid-configuration', function (err, resp, body) {
@@ -64,10 +66,12 @@ module.exports.authenticate = function (req, res, next) {
             var pem = _pems[kid];
             jwt.verify(bearer, pem, {
                 issuer: _discovery.issuer,
-                algorithms: _discovery.id_token_signing_alg_values_supported
+                algorithms: _discovery.id_token_signing_alg_values_supported,
+                audience: _cfg.clientId
             }, function (err, decoded) {
+                //console.log(decoded)
                 if (err) {
-                    return next(err);
+                    return res.status(401).send(err.message);
                 }
                 req.user = {
                     email: decoded.email,
