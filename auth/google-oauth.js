@@ -21,7 +21,7 @@ var _ = require('lodash'),
 
 var _logger, _cfg;
 
-module.exports.init = function(app, logger, config, auth) {
+module.exports.init = function(app, logger, config) {
 
     _logger = logger;
 

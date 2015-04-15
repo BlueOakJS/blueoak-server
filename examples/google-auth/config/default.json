@@ -27,5 +27,9 @@
     "clientId": "107463652566-jo264sjf04n1uk17i2ijdqbs2tuu2rf0.apps.googleusercontent.com",
     "clientSecret": "4MY4PJdwA2gKjvAm3wOTCyss",
     "profile": true
+  },
+
+  "google-jwt": {
+    "enabled": true
   }
 }
