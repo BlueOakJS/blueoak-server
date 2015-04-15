@@ -1,0 +1,6 @@
+{
+  "get /something": {
+    "handler": "test.getSomething",
+    "auth": "google-oauth"
+  }
+}
