@@ -48,6 +48,8 @@ module.exports.init = function (app, logger, config, auth, callback) {
                 callback();
             });
         });
+    } else {
+        callback(); //nothing to do
     }
 
 
