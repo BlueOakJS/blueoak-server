@@ -15,6 +15,8 @@ module.exports.init = function (app, logger, config, auth, callback) {
     _cfg = cfg;
     if (cfg.clientId) {
 
+        logger.warn('Using experimental google-jwt auth');
+
         //get the discovery data, which we need to look up certificates
         request.get('https://accounts.google.com/.well-known/openid-configuration', function (err, resp, body) {
             if (err) {

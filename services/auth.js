@@ -40,5 +40,8 @@ function registerCallbacks(logger, serviceLoader) {
 }
 
 module.exports.get = function(name) {
+    if (!callbacks[name]) {
+        throw new Error('Cannot find auth named ' + name);
+    }
     return callbacks[name];
 }
