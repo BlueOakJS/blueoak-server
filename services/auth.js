@@ -14,19 +14,22 @@
 
 var callbacks = {};
 
-module.exports.init = function(logger, middleware, serviceLoader, callback) { //dep on middleware ensures it starts after middleware
+module.exports.init = function(logger, config, app, middleware, serviceLoader, events, callback) { //dep on middleware ensures it starts after middleware
     logger.info("Starting auth services");
 
     serviceLoader.initConsumers('auth', function initAuthCallback(err) {
+
         //registerDeclarativeRoutes(middleware.getApp(), config.get('routes'), serviceLoader, logger);
         if (err) {
             return callback(err);
         }
 
         registerCallbacks(logger, serviceLoader);
+
         callback();
     });
 }
+
 
 function registerCallbacks(logger, serviceLoader) {
     var authList = serviceLoader.getConsumers('auth');
@@ -34,7 +37,7 @@ function registerCallbacks(logger, serviceLoader) {
         if (auther.authenticate) {
             callbacks[auther.__id] = auther.authenticate;
         } else {
-            logger.warn('%s does not contain an authenticate method.', auther.__id);
+            logger.error('%s does not contain an authenticate method.', auther.__id);
         }
     });
 }
