@@ -1,0 +1,9 @@
+{
+  "get /something": {
+    "handler": "test.getSomething"
+  },
+
+  "get /something2": {
+    "handler": "test.getSomething2"
+  }
+}

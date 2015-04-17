@@ -3,7 +3,7 @@ var _ = require('lodash');
 
 exports.init = function(app, config, serviceLoader, auth, logger) {
     var routes = config.get('routes');
-    registerDeclarativeRoutes(app, routes, serviceLoader, auth, logger);
+    registerDeclarativeRoutes(app, config, routes, serviceLoader, auth, logger);
 };
 
 
@@ -11,7 +11,9 @@ exports.init = function(app, config, serviceLoader, auth, logger) {
  * Load the "routes" config and register all the routes.
  * Any errors that might occur because of mis-configured routes will be logged.
  */
-function registerDeclarativeRoutes(app, routes, serviceLoader, auth, logger) {
+function registerDeclarativeRoutes(app, config, routes, serviceLoader, auth, logger) {
+
+    var cfg = config.get('auth');
 
     _.keys(routes).forEach(function(routePath) {
         //routePath should be of form "<method> path"
@@ -50,7 +52,9 @@ function registerDeclarativeRoutes(app, routes, serviceLoader, auth, logger) {
 
         var middleware = [];
 
-        var authName = routes[routePath].auth;
+        var authName = routes[routePath].auth || cfg.provider;
+
+
         if (authName) {
             var authCallback = auth.get(authName);
             if (!authCallback) {
