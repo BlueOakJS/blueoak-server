@@ -412,3 +412,45 @@ describe('DI Loader test11 - load from subdirectories', function () {
         });
     });
 });
+
+describe('DI Loader test1.1 - test events', function () {
+
+    var testLoader;
+
+    beforeEach(function(){
+        testLoader = loader();
+        var EventEmitter = require('events').EventEmitter;
+        testLoader.inject('events', new EventEmitter());
+    });
+
+    afterEach(function(){
+
+        testLoader.unload('service1');
+        testLoader.unload('service2');
+    });
+
+
+    it('Should get XX:init:done events when services are initialized', function (done) {
+        testLoader.loadServices(path.resolve(__dirname, 'fixtures/loader/test1')); //app services
+
+        var service1 = testLoader.get('service1');
+        var service2 = testLoader.get('service2');
+
+        var s1init = false;
+        var s2init = false;
+
+        testLoader.get('events').on('service1:init:done', function() {
+            s1init = true;
+        });
+
+        testLoader.get('events').on('service1:init:done', function() {
+            s2init = true;
+        });
+
+        testLoader.init(function() {
+            assert.ok(s1init && s2init);
+            done();
+        });
+    });
+
+});
