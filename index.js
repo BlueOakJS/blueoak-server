@@ -225,6 +225,9 @@ function initServices(opts, callback) {
 
     serviceLoader.loadServices(path.resolve(__dirname, 'services'));
 
+    var EventEmitter = require('events').EventEmitter;
+    serviceLoader.inject('events', new EventEmitter());
+
     //inject itself so that services can directly use the service loader
     serviceLoader.inject('serviceLoader', serviceLoader);
 
