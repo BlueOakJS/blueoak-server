@@ -35,7 +35,7 @@ module.exports.init = function (opts, callback) {
                 return callback(err);
             } else {
                 //TODO: Don't like having to duplicate the startupComplete message
-                var message = {cmd: 'startupComplete', procId: process.pid};
+                var message = {cmd: 'startupComplete', pid: process.pid};
                 message.error = err.message;
                 process.send(message);
             }
@@ -191,7 +191,7 @@ function initWorker() {
 
     //Use this callback to notify back to the cluster master that we're started, either successfully or with error
     var callback = function (err) {
-        var message = {cmd: 'startupComplete', procId: process.pid};
+        var message = {cmd: 'startupComplete', pid: process.pid};
         if (err) {
             console.warn(err.stack);
             message.error = err.message;
