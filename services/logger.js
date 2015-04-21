@@ -18,7 +18,14 @@ exports.init = function(config) {
 
     winston.addColors(cfg.colors);
 
-    setupTransports(cfg, logger);
+    //first attempt to load a code-based logger from <app>/logger.js
+    //If that doesn't work we'll continue to use the normal config
+    try {
+        var extLogger = require(global.__appDir + '/' + 'logger');
+        extLogger.init(logger);
+    } catch (err) {
+        setupTransports(cfg, logger);
+    }
 
     _.keys(cfg.levels).forEach(function(level) {
 
@@ -81,6 +88,7 @@ function getLocation() {
 }
 
 function setupTransports(cfg, logger) {
+
     //dynamically add transports based on the config
     //Each transport will have a package, which is the package name of the transport, e.g. winston-papertrail
     //and a field, which is the field within the transport containing the instance, e.g. Papertrail
@@ -112,4 +120,5 @@ function setupTransports(cfg, logger) {
         });
         logger.add(obj, transport.options);
     });
+
 }
