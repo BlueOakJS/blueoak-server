@@ -60,12 +60,15 @@ module.exports.authenticate = function(req, res, next) {
             next();
         } else {
             var profile = req.session.auth.profile;
-            getToken({
+            var tokenData = {
                 refresh_token: req.session.auth.refresh_token,
                 client_id: _cfg.clientId,
                 client_secret: _cfg.clientSecret,
-                grant_type: 'refresh_token'
-            }, function (err, authData) {
+                grant_type: 'refresh_token',
+                redirect_uri: _cfg.redirectURI
+            };
+
+            getToken(tokenData, function (err, authData) {
                 if (err) {
                     return next(err);
                 }
@@ -105,12 +108,15 @@ function authCodeCallback(req, res, next) {
         return res.status(400).send('Missing auth code');
     }
 
-    getToken({
+    var tokenData = {
         code: req.query.code,
         client_id: _cfg.clientId,
         client_secret: _cfg.clientSecret,
-        grant_type: 'authorization_code'
-    }, function (err, authData) {
+        grant_type: 'authorization_code',
+        redirect_uri: _cfg.redirectURI
+    };
+
+    getToken(tokenData, function (err, authData) {
         if (err) {
             res.status(err.statusCode).send(err.message);
         } else {
@@ -137,7 +143,7 @@ function authCodeCallback(req, res, next) {
  * Makes a call to the google token service using the given data
  *
  * Data should either have a grant type of refresh_token or authorization_code
- * Callback is of the form callback(err, result) where result contains some auth data, such ass
+ * Callback is of the form callback(err, result) where result contains some auth data, such as
  * id, email, access_token, expiration, and refresh_token
  * @param data
  * @param callback
