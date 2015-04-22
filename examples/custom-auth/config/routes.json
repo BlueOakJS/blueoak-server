@@ -4,6 +4,8 @@
   },
 
   "get /something2": {
-    "handler": "test.getSomething2"
+    "handler": "test.getSomething2",
+    "auth": "get-age",
+    "validate": "$user.profile.age > 20"
   }
 }

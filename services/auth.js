@@ -11,6 +11,7 @@
  *
  * In general apps shouldn't ever need to directly access the auth service.
  */
+var vm = require('vm');
 
 var callbacks = {};
 
@@ -37,7 +38,7 @@ function registerCallbacks(logger, serviceLoader) {
         if (auther.authenticate) {
             callbacks[auther.__id] = auther.authenticate;
         } else {
-            logger.error('%s does not contain an authenticate method.', auther.__id);
+            logger.error('%s does not contain an authenticate or roles method.', auther.__id);
         }
     });
 }
@@ -47,4 +48,29 @@ module.exports.get = function(name) {
         throw new Error('Cannot find auth named ' + name);
     }
     return callbacks[name];
+}
+
+//Returns middleware that will evalute the given expression.
+//Expressions are evaluated in a sandbox.
+//Currently the request's user data is the only thing exposed to the validator (via $user object).
+//If expression returns true, the request is allowed.  Otherwise it returns 401.
+module.exports.validate = function(expression) {
+    return function(req, res, next) {
+        var sandbox = {
+            "$user": req.user
+        };
+
+        try {
+            var result = vm.runInNewContext(expression, sandbox);
+            if (result === true) {
+                return next();
+            } else {
+                return res.sendStatus(401);
+            }
+        } catch (err) {
+            services.get('logger').error("Error evaluating validator expression %s: %s", expression, err.toString());
+            return res.sendStatus(500);
+        }
+
+    }
 }

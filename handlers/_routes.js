@@ -1,7 +1,7 @@
 /* Copyright © 2015 PointSource, LLC. All rights reserved. */
 var _ = require('lodash');
 
-exports.init = function(app, config, serviceLoader, auth, logger) {
+exports.init = function (app, config, serviceLoader, auth, logger) {
     var routes = config.get('routes');
     registerDeclarativeRoutes(app, config, routes, serviceLoader, auth, logger);
 };
@@ -15,7 +15,7 @@ function registerDeclarativeRoutes(app, config, routes, serviceLoader, auth, log
 
     var cfg = config.get('auth');
 
-    _.keys(routes).forEach(function(routePath) {
+    _.keys(routes).forEach(function (routePath) {
         //routePath should be of form "<method> path"
         var parts = routePath.split(' ');
         if (parts.length !== 2) {
@@ -52,19 +52,30 @@ function registerDeclarativeRoutes(app, config, routes, serviceLoader, auth, log
 
         var middleware = [];
 
-        var authName = routes[routePath].auth || cfg.provider;
+        var authNames = [];
+        authNames = authNames.concat(cfg.provider || []);
+        authNames = authNames.concat(routes[routePath].auth || []);
 
+        if (authNames.length > 0) {
+            authNames.forEach(function (name) {
+                var authCallback = auth.get(name);
+                if (!authCallback) {
+                    logger.warn('Could not find auth of type "%s"', name);
+                } else {
+                    middleware.push(authCallback);
+                }
+            });
+        }
 
-        if (authName) {
-            var authCallback = auth.get(authName);
-            if (!authCallback) {
-                logger.warn('Could not find auth of type "%s"', authName);
-            } else {
-                middleware.push(authCallback);
-            }
+        //Set up custom validator function on the route
+        if (routes[routePath].validate) {
+            logger.warn('Using experimental validators.  This might change in the future.');
+            var expression = routes[routePath].validate;
+            middleware.push(auth.validate(expression));
         }
 
         middleware.push(handlerFunc);
+
         //register the route and handler function with express
         app[parts[0]].call(app, parts[1], middleware);
     });
