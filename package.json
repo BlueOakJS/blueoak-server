@@ -53,6 +53,7 @@
     "middleware",
     "handlers",
     "services",
+    "auth",
     "defaults.json",
     "index.js"
   ]
