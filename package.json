@@ -34,6 +34,7 @@
     "prompt": "^0.2.14",
     "q": "^1.1.2",
     "redis": "^0.12.1",
+    "request": "^2.55.0",
     "rsa-pem-from-mod-exp": "^0.8.4",
     "stack-trace": "0.0.9",
     "strip-json-comments": "^1.0.2",
@@ -44,8 +45,7 @@
   "devDependencies": {
     "istanbul": "^0.3.7",
     "mocha": "^2.0.1",
-    "publish": "^0.3.2",
-    "request": "^2.53.0"
+    "publish": "^0.3.2"
   },
   "files": [
     "bin",
