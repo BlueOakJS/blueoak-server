@@ -9,6 +9,7 @@ var methodsToExpose = ['increment', 'decrement', 'set', 'unique', 'gauge', 'hist
 
 exports.init = function(config, logger) {
     var cfg = config.get('monitor');
+
     if (!cfg.host) { //have to have a host in order to monitor
         logger.info('Monitoring is disabled.');
     } else {
@@ -34,6 +35,9 @@ exports.enabled = function() {
 
 
 exports.express = function(prefix, genRoute) {
+    if (!enabled) {
+        return [];  //make this a no-op if monitoring is disabled
+    }
     return function (req, res, next) {
 
         var startTime = new Date().getTime();
