@@ -1,6 +1,6 @@
 {
   "name": "sprout-server",
-  "version": "0.5.4",
+  "version": "0.5.5",
   "description": "PointSource Sprout Server",
   "main": "index.js",
   "scripts": {
