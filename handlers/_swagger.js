@@ -51,6 +51,10 @@ exports.init = function (app, config, logger, serviceLoader, callback) {
                 if (useBasePath) {
                     routePath = basePath + routePath;
                 }
+                
+                if(data["x-handler"]){
+                    handlerName = data["x-handler"];
+                }
 
                 //loop for http method keys, like get an post
                 _.keys(data).forEach(function(key) {
