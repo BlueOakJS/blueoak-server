@@ -71,7 +71,7 @@ exports.init = function (app, config, logger, serviceLoader, callback) {
                         }
 
                         logger.debug('Wiring up route %s %s to %s.%s', key, routePath, handlerName, methodData.operationId);
-                        registerRoute(app, key, routePath, methodData, methodData.produces || api.produces || [], handlerFunc, logger);
+                        registerRoute(app, key, routePath, methodData, methodData.produces || api.produces || null, handlerFunc, logger);
 
                     }
                 });
@@ -99,15 +99,17 @@ function registerRoute(app, method, path, data, allowedTypes, handlerFunc, logge
         setDefaultHeaders(req, data, logger);
 
         //Wrap the set function, which is responsible for setting headers
-        //Validate that the content-type is correct per the swagger definition
-        wrapCall(res, 'set', function(name, value) {
-            if (name === 'Content-Type') {
-                var type = value.split(';')[0]; //parse off the optional encoding
-                if (!_.contains(allowedTypes, type)) {
-                    logger.warn('Invalid content type specified: ' + type + '. Expecting one of ' + allowedTypes);
+        if(allowedTypes){
+            //Validate that the content-type is correct per the swagger definition
+            wrapCall(res, 'set', function(name, value) {
+                if (name === 'Content-Type') {
+                    var type = value.split(';')[0]; //parse off the optional encoding
+                    if (!_.contains(allowedTypes, type)) {
+                        logger.warn('Invalid content type specified: ' + type + '. Expecting one of ' + allowedTypes);
+                    }
                 }
-            }
-        });
+            });
+        }
 
         handlerFunc(req, res, next);
 
