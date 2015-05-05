@@ -9,7 +9,7 @@ var _ = require('lodash'),
 
 var httpMethods = ['get', 'put', 'post', 'delete', 'options', 'head', 'patch'];
 
-exports.init = function (app, config, logger, serviceLoader, callback) {
+exports.init = function (app, auth, config, logger, serviceLoader, callback) {
     var cfg = config.get('swagger');
 
     //default to true
@@ -71,7 +71,7 @@ exports.init = function (app, config, logger, serviceLoader, callback) {
                         }
 
                         logger.debug('Wiring up route %s %s to %s.%s', key, routePath, handlerName, methodData.operationId);
-                        registerRoute(app, key, routePath, methodData, methodData.produces || api.produces || null, handlerFunc, logger);
+                        registerRoute(app, auth, key, routePath, methodData, methodData.produces || api.produces || null, handlerFunc, logger);
 
                     }
                 });
@@ -86,10 +86,10 @@ exports.init = function (app, config, logger, serviceLoader, callback) {
 
 };
 
-function registerRoute(app, method, path, data, allowedTypes, handlerFunc, logger) {
+function registerRoute(app, auth, method, path, data, allowedTypes, handlerFunc, logger) {
+    var authMiddleware = auth.getAuthMiddleware();
 
-    app[method].call(app, path, function(req, res, next) {
-
+    app[method].call(app, path, authMiddleware, function(req, res, next) {
 
         if (!validateParameters(req, res, data, logger)) {
             return;

@@ -14,9 +14,11 @@
 var vm = require('vm');
 
 var callbacks = {};
+var cfg = null;
 
-module.exports.init = function(logger, config, app, middleware, serviceLoader, events, callback) { //dep on middleware ensures it starts after middleware
+module.exports.init = function(logger, config, app, middleware, serviceLoader, callback) { //dep on middleware ensures it starts after middleware
     logger.info("Starting auth services");
+    cfg = config.get('auth');
 
     serviceLoader.initConsumers('auth', function initAuthCallback(err) {
 
@@ -29,6 +31,25 @@ module.exports.init = function(logger, config, app, middleware, serviceLoader, e
 
         callback();
     });
+}
+
+//Look up the middleware functions for the global auth, as well as
+//any specified under additionalAuthNames, e.g. names of auth on individual routes.
+//Return an array of middleware functions
+module.exports.getAuthMiddleware = function(additionalAuthNames) {
+    var middleware = [];
+    var authNames = [];
+    authNames = authNames.concat(cfg.provider || []);
+    authNames = authNames.concat(additionalAuthNames || []);
+
+    if (authNames.length > 0) {
+        authNames.forEach(function (name) {
+            var authCallback = exports.get(name);
+            middleware.push(authCallback);
+        });
+    }
+
+    return middleware;
 }
 
 
