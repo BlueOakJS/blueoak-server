@@ -50,22 +50,7 @@ function registerDeclarativeRoutes(app, config, routes, serviceLoader, auth, log
             return logger.warn('Could not find handler function "%s" for module "%s"', handlerParts[1], handlerParts[0]);
         }
 
-        var middleware = [];
-
-        var authNames = [];
-        authNames = authNames.concat(cfg.provider || []);
-        authNames = authNames.concat(routes[routePath].auth || []);
-
-        if (authNames.length > 0) {
-            authNames.forEach(function (name) {
-                var authCallback = auth.get(name);
-                if (!authCallback) {
-                    logger.warn('Could not find auth of type "%s"', name);
-                } else {
-                    middleware.push(authCallback);
-                }
-            });
-        }
+        var middleware = auth.getAuthMiddleware(routes[routePath].auth);
 
         //Set up custom validator function on the route
         if (routes[routePath].validate) {
