@@ -224,11 +224,11 @@ function initServices(opts, callback) {
     if (bootstrap) {
         project.bootstrap(function(err) {
             callback(err);
-        })
+        });
     } else {
         project.initProject(function(err) {
             callback(err);
-        })
+        });
     }
 
 }
