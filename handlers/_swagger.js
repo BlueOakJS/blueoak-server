@@ -71,7 +71,7 @@ exports.init = function (app, config, logger, serviceLoader, callback) {
                         }
 
                         logger.debug('Wiring up route %s %s to %s.%s', key, routePath, handlerName, methodData.operationId);
-                        registerRoute(app, key, routePath, methodData, handlerFunc, logger);
+                        registerRoute(app, key, routePath, methodData, methodData.produces || api.produces || [], handlerFunc, logger);
 
                     }
                 });
@@ -86,9 +86,7 @@ exports.init = function (app, config, logger, serviceLoader, callback) {
 
 };
 
-function registerRoute(app, method, path, data, handlerFunc, logger) {
-
-    var allowedTypes = data.produces;
+function registerRoute(app, method, path, data, allowedTypes, handlerFunc, logger) {
 
     app[method].call(app, path, function(req, res, next) {
 
