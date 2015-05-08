@@ -50,7 +50,15 @@ function registerDeclarativeRoutes(app, config, routes, serviceLoader, auth, log
             return logger.warn('Could not find handler function "%s" for module "%s"', handlerParts[1], handlerParts[0]);
         }
 
-        var middleware = auth.getAuthMiddleware(routes[routePath].auth);
+        //Some other projects have defined their own auth scheme.
+        //As a temporary workaround, we ignore auth if the auth field is using their scheme,
+        //which is an object instead of a string or array.
+        var middleware = [];
+        if (routes[routePath].auth && !_.isPlainObject(routes[routePath].auth)) {
+            middleware = auth.getAuthMiddleware(routes[routePath].auth);
+        } else {
+            console.log("Ignoring auth")
+        }
 
         //Set up custom validator function on the route
         if (routes[routePath].validate) {
