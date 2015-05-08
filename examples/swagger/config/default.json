@@ -2,11 +2,17 @@
 {
   "express": {
     "port": "3000",
-    "middleware": ["csrf", "cors"]
+    "middleware": ["cors", "bodyParser"],
+    "middleware$": ["errors"]
   },
   "cors": {
     "origin": "http://editor.swagger.io"
   },
+
+  "bodyParser": {
+    "json": {}
+  },
+
   "cluster": {
     "maxWorkers": 1
   }
