@@ -3,8 +3,8 @@ var assert = require("assert"),
     swaggerUtil = require('../../lib/swaggerUtil'),
     path = require('path');
 
-var FAIL = 'failed';
-var SUCCESS = 'success';
+var FAIL = false;
+var SUCCESS = true;
 
 describe('String validation test', function () {
 
@@ -12,56 +12,56 @@ describe('String validation test', function () {
         assert.equal(swaggerUtil.validateParameterType({
             type: 'string',
             maxLength: 8
-        }, '12345678').status, SUCCESS);
+        }, '12345678').valid, SUCCESS);
 
         assert.equal(swaggerUtil.validateParameterType({
             type: 'string',
             maxLength: 8
-        }, '').status, SUCCESS);
+        }, '').valid, SUCCESS);
 
         assert.equal(swaggerUtil.validateParameterType({
             type: 'string',
             maxLength: 0
-        }, '1').status, FAIL);
+        }, '1').valid, FAIL);
 
         assert.equal(swaggerUtil.validateParameterType({
             type: 'string',
             maxLength: 8
-        }, '123456789').status, FAIL);
+        }, '123456789').valid, FAIL);
     });
 
     it('Validate minLength is honored', function () {
         assert.equal(swaggerUtil.validateParameterType({
             type: 'string',
             minLength: 8
-        }, '12345678').status, SUCCESS);
+        }, '12345678').valid, SUCCESS);
 
         assert.equal(swaggerUtil.validateParameterType({
             type: 'string',
             minLength: 8
-        }, '123456789').status, SUCCESS);
+        }, '123456789').valid, SUCCESS);
 
         assert.equal(swaggerUtil.validateParameterType({
             type: 'string',
             minLength: 8
-        }, '1234567').status, FAIL);
+        }, '1234567').valid, FAIL);
     });
 
     it('Validate pattern is honored', function () {
         assert.equal(swaggerUtil.validateParameterType({
             type: 'string',
             pattern: '.*'
-        }, 'sadfasdfs').status, SUCCESS);
+        }, 'sadfasdfs').valid, SUCCESS);
 
         assert.equal(swaggerUtil.validateParameterType({
             type: 'string',
             pattern: '^[0-9]{1,3}$'
-        }, '1').status, SUCCESS);
+        }, '1').valid, SUCCESS);
 
         assert.equal(swaggerUtil.validateParameterType({
             type: 'string',
             pattern: '^[0-9]{1,3}$'
-        }, '1000').status, FAIL);
+        }, '1000').valid, FAIL);
     });
 
 });
@@ -72,15 +72,15 @@ describe('Number validation test', function () {
     it('Validate number', function () {
         assert.equal(swaggerUtil.validateParameterType({
             type: 'number'
-        }, 4).status, SUCCESS);
+        }, 4).valid, SUCCESS);
 
         assert.equal(swaggerUtil.validateParameterType({
             type: 'number'
-        }, "7").status, SUCCESS);
+        }, "7").valid, SUCCESS);
 
         assert.equal(swaggerUtil.validateParameterType({
             type: 'number'
-        }, "foo").status, FAIL);
+        }, "foo").valid, FAIL);
     });
 
 
@@ -88,12 +88,12 @@ describe('Number validation test', function () {
         assert.equal(swaggerUtil.validateParameterType({
             type: 'number',
             multipleOf: 2
-        }, 4).status, SUCCESS);
+        }, 4).valid, SUCCESS);
 
         assert.equal(swaggerUtil.validateParameterType({
             type: 'number',
             multipleOf: 3
-        }, 7).status, FAIL);
+        }, 7).valid, FAIL);
     });
 
     it('Validate maximum is honored', function () {
@@ -102,24 +102,24 @@ describe('Number validation test', function () {
         assert.equal(swaggerUtil.validateParameterType({
             type: 'number',
             maximum: 2
-        }, 2).status, SUCCESS);
+        }, 2).valid, SUCCESS);
 
         assert.equal(swaggerUtil.validateParameterType({
             type: 'number',
             maximum: 2,
             exclusiveMaximum: false
-        }, 2).status, SUCCESS);
+        }, 2).valid, SUCCESS);
 
         assert.equal(swaggerUtil.validateParameterType({
             type: 'number',
             maximum: 20,
-        }, 10).status, SUCCESS);
+        }, 10).valid, SUCCESS);
 
         assert.equal(swaggerUtil.validateParameterType({
             type: 'number',
             exclusiveMaximum: true,
             maximum: 2
-        }, 2).status, FAIL);
+        }, 2).valid, FAIL);
 
     });
 
@@ -129,24 +129,24 @@ describe('Number validation test', function () {
         assert.equal(swaggerUtil.validateParameterType({
             type: 'number',
             minimum: 2
-        }, 2).status, SUCCESS);
+        }, 2).valid, SUCCESS);
 
         assert.equal(swaggerUtil.validateParameterType({
             type: 'number',
             minimum: 2,
             exclusiveMinimum: false
-        }, 2).status, SUCCESS);
+        }, 2).valid, SUCCESS);
 
         assert.equal(swaggerUtil.validateParameterType({
             type: 'number',
             minimum: 20,
-        }, 30).status, SUCCESS);
+        }, 30).valid, SUCCESS);
 
         assert.equal(swaggerUtil.validateParameterType({
             type: 'number',
             exclusiveMinimum: true,
             minimum: 2
-        }, 2).status, FAIL);
+        }, 2).valid, FAIL);
 
     });
 
@@ -157,27 +157,27 @@ describe('Boolean validation test', function () {
     it('Validate boolean', function () {
         assert.equal(swaggerUtil.validateParameterType({
             type: 'boolean'
-        }, true).status, SUCCESS);
+        }, true).valid, SUCCESS);
 
         assert.equal(swaggerUtil.validateParameterType({
             type: 'boolean'
-        }, 'true').status, SUCCESS);
+        }, 'true').valid, SUCCESS);
         
         assert.equal(swaggerUtil.validateParameterType({
             type: 'boolean'
-        }, false).status, SUCCESS);
+        }, false).valid, SUCCESS);
 
         assert.equal(swaggerUtil.validateParameterType({
             type: 'boolean'
-        }, 'false').status, SUCCESS);
+        }, 'false').valid, SUCCESS);
 
         assert.equal(swaggerUtil.validateParameterType({
             type: 'boolean'
-        }, 'foo').status, FAIL);
+        }, 'foo').valid, FAIL);
 
         assert.equal(swaggerUtil.validateParameterType({
             type: 'boolean'
-        }, null).status, FAIL);
+        }, null).valid, FAIL);
     });
 });
 
@@ -190,7 +190,7 @@ describe('Array validation test', function () {
                 type: 'number'
             },
             maxItems: 3
-        }, '1,2,3').status, SUCCESS);
+        }, '1,2,3').valid, SUCCESS);
 
         assert.equal(swaggerUtil.validateParameterType({
             type: 'array',
@@ -198,7 +198,7 @@ describe('Array validation test', function () {
                 type: 'number'
             },
             maxItems: 2
-        }, '1,2,3').status, FAIL);
+        }, '1,2,3').valid, FAIL);
 
     });
 
@@ -209,7 +209,7 @@ describe('Array validation test', function () {
                 type: 'number'
             },
             minItems: 3
-        }, '1,2,3').status, SUCCESS);
+        }, '1,2,3').valid, SUCCESS);
 
         assert.equal(swaggerUtil.validateParameterType({
             type: 'array',
@@ -217,7 +217,7 @@ describe('Array validation test', function () {
                 type: 'number'
             },
             minItems: 4
-        }, '1,2,3').status, FAIL);
+        }, '1,2,3').valid, FAIL);
     });
 
     it('Validate uniqueItems is honored', function () {
@@ -227,7 +227,7 @@ describe('Array validation test', function () {
                 type: 'number'
             },
             uniqueItems: true
-        }, '1,2,3').status, SUCCESS);
+        }, '1,2,3').valid, SUCCESS);
 
         assert.equal(swaggerUtil.validateParameterType({
             type: 'array',
@@ -235,7 +235,7 @@ describe('Array validation test', function () {
                 type: 'number'
             },
             uniqueItems: 'true'
-        }, '1,2,3').status, SUCCESS);
+        }, '1,2,3').valid, SUCCESS);
 
         assert.equal(swaggerUtil.validateParameterType({
             type: 'array',
@@ -243,7 +243,7 @@ describe('Array validation test', function () {
                 type: 'number'
             },
             uniqueItems: false
-        }, '1,2,3,3').status, SUCCESS);
+        }, '1,2,3,3').valid, SUCCESS);
 
         assert.equal(swaggerUtil.validateParameterType({
             type: 'array',
@@ -251,7 +251,7 @@ describe('Array validation test', function () {
                 type: 'number'
             },
             uniqueItems: true
-        }, '1,2,3,3').status, FAIL);
+        }, '1,2,3,3').valid, FAIL);
     });
 
     it('Validate items is honored', function () {
@@ -260,7 +260,7 @@ describe('Array validation test', function () {
             items: {
                 type: 'number'
             }
-        }, '1,2,3').status, SUCCESS);
+        }, '1,2,3').valid, SUCCESS);
 
         assert.equal(swaggerUtil.validateParameterType({
             type: 'array',
@@ -268,7 +268,7 @@ describe('Array validation test', function () {
                 type: 'string',
                 maxLength: 4
             }
-        }, '1234,1234').status, SUCCESS);
+        }, '1234,1234').valid, SUCCESS);
 
         assert.equal(swaggerUtil.validateParameterType({
             type: 'array',
@@ -277,7 +277,7 @@ describe('Array validation test', function () {
                 maxLength: 2
             },
             uniqueItems: true
-        }, '123,123').status, FAIL);
+        }, '123,123').valid, FAIL);
     });
 
     it('Validate collectionFormat is honored', function () {
@@ -290,7 +290,7 @@ describe('Array validation test', function () {
             },
             minItems: 2,
             maxItems: 2
-        }, '1,2').status, SUCCESS);
+        }, '1,2').valid, SUCCESS);
 
         //explicit csv
         assert.equal(swaggerUtil.validateParameterType({
@@ -301,7 +301,7 @@ describe('Array validation test', function () {
             collectionFormat: 'csv',
             minItems: 2,
             maxItems: 2
-        }, '1,2').status, SUCCESS);
+        }, '1,2').valid, SUCCESS);
 
         //explicit ssv
         assert.equal(swaggerUtil.validateParameterType({
@@ -312,7 +312,7 @@ describe('Array validation test', function () {
             collectionFormat: 'ssv',
             minItems: 2,
             maxItems: 2
-        }, '1 2').status, SUCCESS);
+        }, '1 2').valid, SUCCESS);
 
         //explicit tsv
         assert.equal(swaggerUtil.validateParameterType({
@@ -323,7 +323,7 @@ describe('Array validation test', function () {
             collectionFormat: 'tsv',
             minItems: 2,
             maxItems: 2
-        }, '1\t2').status, SUCCESS);
+        }, '1\t2').valid, SUCCESS);
 
         //explicit pipes
         assert.equal(swaggerUtil.validateParameterType({
@@ -334,7 +334,7 @@ describe('Array validation test', function () {
             collectionFormat: 'pipes',
             minItems: 2,
             maxItems: 2
-        }, '1|2').status, SUCCESS);
+        }, '1|2').valid, SUCCESS);
 
         //explicit multi
         assert.equal(swaggerUtil.validateParameterType({
@@ -345,7 +345,7 @@ describe('Array validation test', function () {
             collectionFormat: 'multi',
             minItems: 2,
             maxItems: 2
-        }, ['1','2']).status, SUCCESS);
+        }, ['1','2']).valid, SUCCESS);
 
         //explicit multi
         assert.equal(swaggerUtil.validateParameterType({
@@ -356,7 +356,7 @@ describe('Array validation test', function () {
             collectionFormat: 'multi',
             minItems: 1,
             maxItems: 1
-        }, '1').status, SUCCESS); //only one query param was used
+        }, '1').valid, SUCCESS); //only one query param was used
 
     });
 });

@@ -4,7 +4,8 @@ var _ = require('lodash'),
     path = require('path'),
     async = require('async'),
     fs = require('fs'),
-    swaggerUtil = require('../lib/swaggerUtil');
+    swaggerUtil = require('../lib/swaggerUtil'),
+    VError = require('verror');
 
 
 var httpMethods = ['get', 'put', 'post', 'delete', 'options', 'head', 'patch'];
@@ -95,27 +96,28 @@ function registerRoute(app, auth, method, path, data, allowedTypes, handlerFunc,
 
     app[method].call(app, path, authMiddleware, function(req, res, next) {
 
-        if (!validateParameters(req, res, data, logger)) {
-            return;
-        }
+        validateParameters(req, data, logger, function(err) {
+            if (err) {
+                return next(err);
+            }
+            setDefaultQueryParams(req, data, logger);
+            setDefaultHeaders(req, data, logger);
 
-        setDefaultQueryParams(req, data, logger);
-        setDefaultHeaders(req, data, logger);
-
-        //Wrap the set function, which is responsible for setting headers
-        if(allowedTypes){
-            //Validate that the content-type is correct per the swagger definition
-            wrapCall(res, 'set', function(name, value) {
-                if (name === 'Content-Type') {
-                    var type = value.split(';')[0]; //parse off the optional encoding
-                    if (!_.contains(allowedTypes, type)) {
-                        logger.warn('Invalid content type specified: ' + type + '. Expecting one of ' + allowedTypes);
+            //Wrap the set function, which is responsible for setting headers
+            if(allowedTypes){
+                //Validate that the content-type is correct per the swagger definition
+                wrapCall(res, 'set', function(name, value) {
+                    if (name === 'Content-Type') {
+                        var type = value.split(';')[0]; //parse off the optional encoding
+                        if (!_.contains(allowedTypes, type)) {
+                            logger.warn('Invalid content type specified: ' + type + '. Expecting one of ' + allowedTypes);
+                        }
                     }
-                }
-            });
-        }
+                });
+            }
 
-        handlerFunc(req, res, next);
+            handlerFunc(req, res, next);
+        });
 
     });
 }
@@ -147,7 +149,7 @@ function setDefaultHeaders(req, data, logger) {
 }
 
 
-function validateParameters(req, res, data, logger) {
+function validateParameters(req, data, logger, callback) {
 
     var parameters = data.parameters;
     for (var i = 0; i < parameters.length; i++) {
@@ -157,15 +159,18 @@ function validateParameters(req, res, data, logger) {
 
             if (parm.required && typeof(req.query[parm.name]) === 'undefined') {
                 logger.warn('Missing query parameter "%s" for operation "%s"', parm.name, data.operationId);
-                res.status(403).send('Missing query parameter "' + parm.name + '".');
-                return false;
+                var error = new VError('Missing %s query parameter', parm.name);
+                error.name = 'ValidationError';
+                return callback(error);
 
             } else if (typeof req.query[parm.name] !== 'undefined') {
                 var result = swaggerUtil.validateParameterType(parm, req.query[parm.name]);
 
-                if (result.status !== 'success') {
-                    res.status(403).send('Invalid query parameter "' + parm.name + '": ' + result.cause.message);
-                    return false;
+                if (!result.valid) {
+                    var error = new VError('Error validating query parameter %s', parm.name);
+                    error.name = 'ValidationError';
+                    error.subErrors = result.errors;
+                    return callback(error);
                 }
             }
 
@@ -173,40 +178,46 @@ function validateParameters(req, res, data, logger) {
 
             if (parm.required && typeof(req.get(parm.name)) === 'undefined') {
                 logger.warn('Missing header "%s" for operation "%s"', parm.name, data.operationId);
-                res.status(403).send('Missing header "' + parm.name + '".');
-                return false;
+                var error = new VError('Missing %s header', parm.name);
+                error.name = 'ValidationError';
+                return callback(error);
 
             } else if (typeof req.get(parm.name) !== 'undefined') {
                 var result = swaggerUtil.validateParameterType(parm, req.get(parm.name));
 
-                if (result.status !== 'success') {
-                    res.status(403).send('Invalid header "' + parm.name + '": ' + result.cause.message);
-                    return false;
+                if (!result.valid) {
+                    var error = new VError('Error validating %s header', parm.name);
+                    error.name = 'ValidationError';
+                    error.subErrors = result.errors;
+                    return callback(error);
                 }
             }
 
         } else if (parm.in === 'path') {
 
             var result = swaggerUtil.validateParameterType(parm, req.params[parm.name]);
-            if (result.status !== 'success') {
-                res.status(403).send('Invalid path parameter "' + parm.name + '": ' + result.cause.message);
-                return false;
+            if (!result.valid) {
+                var error = new VError('Error validating %s path parameter', parm.name);
+                error.name = 'ValidationError';
+                error.subErrors = result.errors;
+                return callback(error);
             }
 
         } else if (parm.in === 'formData') {
             //TODO: validate form data
+            logger.warn('Form data validation is not yet supported');
         } else if (parm.in === 'body') {
-            console.log('validating body', req.body, parm.schema);
             var result = swaggerUtil.validateJSONType(parm.schema, req.body);
-            console.log(result);
 
-            if (result.status !== 'success') {
-                res.status(403).send('Invalid field "' + parm.name + '": ' + result.cause.message);
-                return false;
+            if (!result.valid) {
+                var error = new VError('Error validating request body');
+                error.name = 'ValidationError';
+                error.subErrors = result.errors;
+                return callback(error);
             }
         }
     }
-    return true;
+    return callback();
 }
 
 function wrapCall(obj, funcName, toCall) {
