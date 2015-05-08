@@ -17,9 +17,24 @@
  */
 var _ = require('lodash'),
     request = require('request'),
-    jwt = require('jsonwebtoken');
+    jwt = require('jsonwebtoken'),
+    getRawBody = require('raw-body'),
+    winston = require('winston');
 
 var _logger, _cfg;
+var TOKEN_URL = 'https://www.googleapis.com/oauth2/v3/token';
+var LOGOUT_URL = 'https://accounts.google.com/o/oauth2/revoke';
+var PROFILE_URL = 'https://www.googleapis.com/plus/v1/people/me';
+
+var ilog = new (winston.Logger)({
+    transports: [
+        new (winston.transports.Console)({
+            level: 'info', //set to debug to get extra debug
+            colorize: true
+        })
+    ]
+});
+
 
 module.exports.init = function(app, logger, config) {
 
@@ -45,11 +60,35 @@ module.exports.init = function(app, logger, config) {
     }
 
     if (_cfg.callbackPath) {
-        app.get(_cfg.callbackPath, authCodeCallback);
+        app.all(_cfg.callbackPath, setAuthCodeOnReq, authCodeCallback);
     } else {
         logger.error('Missing callbackPath for google-oauth');
     }
 
+    if (_cfg.signoutPath) {
+        app.all(_cfg.signoutPath, signOutUser);
+    }
+
+}
+
+//Look for an auth code on a request.
+//The code is either stored on a query param, or as a POST body.
+//If found, it sets req.code, otherwise continue on.
+//Uses raw-body library to get the request body so that bodyParser doesn't have to be configured.
+function setAuthCodeOnReq(req, res, next) {
+    if (req.query.code) {
+        req.code = req.query.code;
+        ilog.debug('Found auth code %s on query param', req.code);
+        return next();
+    }
+
+    getRawBody(req, function(err, string) {
+        if (string.toString().length > 0) {
+            req.code = string.toString();
+            ilog.debug('Found auth code %s in body', req.code);
+        }
+        next();
+    });
 }
 
 module.exports.authenticate = function(req, res, next) {
@@ -59,6 +98,7 @@ module.exports.authenticate = function(req, res, next) {
             setUserData(req);
             next();
         } else {
+            ilog.debug('Access token expired.  Getting new token.');
             var profile = req.session.auth.profile;
             var tokenData = {
                 refresh_token: req.session.auth.refresh_token,
@@ -101,15 +141,17 @@ function setUserData(req) {
 
 
 //This gets called when someone hits the auth code callback endpoint
-//It expects that a valid google auth code is supplied through the "code" query param
+//It expects that a valid google auth code is supplied through either the "code" query param
+//or in the request body.  Let's setAuthCodeOnReq handle getting the auth code.
 //If anything fails, it returns an error status, otherwise a 200
 function authCodeCallback(req, res, next) {
-    if (!req.query.code) {
+    var code = req.code;
+    if (!code) {
         return res.status(400).send('Missing auth code');
     }
 
     var tokenData = {
-        code: req.query.code,
+        code: code,
         client_id: _cfg.clientId,
         client_secret: _cfg.clientSecret,
         grant_type: 'authorization_code',
@@ -139,6 +181,47 @@ function authCodeCallback(req, res, next) {
     });
 }
 
+//Revoke the access token, refresh token, and cookies
+function signOutUser(req, res, next) {
+    ilog.debug('Signing out user');
+    //make a best attempt effort at revoking the tokens
+    var accessToken = req.session.auth ? req.session.auth.access_token: null;
+    var refreshToken = req.session.auth ? req.session.auth.refresh_token: null;
+    if (accessToken) {
+        ilog.debug('Revoking access token');
+        request.get({
+            url: LOGOUT_URL,
+            qs: {
+                token: accessToken
+            }
+        }, function(err, response, body) {
+            if (err) {
+                ilog.warn('Error revoking access token', err.message);
+            } else {
+                ilog.debug('Revoked access token, %s', response.statusCode);
+            }
+        });
+    }
+
+    if (refreshToken) {
+
+        request.get({
+            url: LOGOUT_URL,
+            qs: {
+                token: refreshToken
+            }
+        }, function (err, response, body) {
+            if (err) {
+                ilog.warn('Error revoking refresh token', err.message);
+            } else {
+                ilog.debug('Revoked refresh token, %s', response.statusCode);
+            }
+        });
+    }
+    delete req.session.auth;
+    res.sendStatus(200);
+}
+
 /**
  * Makes a call to the google token service using the given data
  *
@@ -149,12 +232,13 @@ function authCodeCallback(req, res, next) {
  * @param callback
  */
 function getToken(data, callback) {
-    var url = 'https://www.googleapis.com/oauth2/v3/token';
-    request.post({url: url, form: data}, function (err, resp, body) {
+
+    request.post({url: TOKEN_URL, form: data}, function (err, resp, body) {
 
         if (resp.statusCode !== 200) { //error
             return callback({statusCode: resp.statusCode, message: body});
         } else {
+            ilog.debug('Got response back from token endpoint', body);
             /*
              Body should look like
              {
@@ -194,7 +278,7 @@ function getToken(data, callback) {
 }
 
 function getProfileData(token, callback) {
-    request.get('https://www.googleapis.com/plus/v1/people/me', {'auth': {'bearer': token}},
+    request.get(PROFILE_URL, {'auth': {'bearer': token}},
         function (err, resp, body) {
             if (err) {
                 return callback(err);
