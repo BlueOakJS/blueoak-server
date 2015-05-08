@@ -6,6 +6,6 @@
 
   "get /something2": {
     "handler": "test.getSomething2",
-    "auth": "google-jwt"
+    "auth": ["google-jwt"]
   }
 }
