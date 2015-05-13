@@ -124,7 +124,7 @@ function registerRoute(app, auth, method, path, data, allowedTypes, handlerFunc,
 
 //Any parameter with a default that's not already defined will be set to the default value
 function setDefaultQueryParams(req, data, logger) {
-    var parameters = data.parameters;
+    var parameters = _.toArray(data.parameters);
     for (var i = 0; i < parameters.length; i++) {
         var parm = parameters[i];
         if (parm.in === 'query') {
@@ -137,7 +137,7 @@ function setDefaultQueryParams(req, data, logger) {
 
 //Any header with a default that's not already defined will be set to the default value
 function setDefaultHeaders(req, data, logger) {
-    var parameters = data.parameters;
+    var parameters = _.toArray(data.parameters);
     for (var i = 0; i < parameters.length; i++) {
         var parm = parameters[i];
         if (parm.in === 'header') {
@@ -151,7 +151,7 @@ function setDefaultHeaders(req, data, logger) {
 
 function validateParameters(req, data, logger, callback) {
 
-    var parameters = data.parameters;
+    var parameters = _.toArray(data.parameters);
     for (var i = 0; i < parameters.length; i++) {
         var parm = parameters[i];
 
