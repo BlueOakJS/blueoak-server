@@ -360,3 +360,42 @@ describe('Array validation test', function () {
 
     });
 });
+
+describe('Test additional formats', function () {
+
+    it('Invalid date-time fails', function () {
+        assert.equal(swaggerUtil.validateParameterType({
+            type: 'string',
+            format: 'date-time'
+        }, '12345678').valid, FAIL);
+    });
+
+    it('Valid date-time passes', function () {
+        assert.equal(swaggerUtil.validateParameterType({
+            type: 'string',
+            format: 'date-time'
+        }, '2014-05-02T12:59:29+00:00').valid, SUCCESS);
+    });
+    
+    it('Invalid date fails', function () {
+        assert.equal(swaggerUtil.validateParameterType({
+            type: 'string',
+            format: 'date'
+        }, '12345678').valid, FAIL);
+    });
+
+    it('Valid date passes', function () {
+        assert.equal(swaggerUtil.validateParameterType({
+            type: 'string',
+            format: 'date'
+        }, '2014-05-20').valid, SUCCESS);
+    });
+    
+    it('Validate password format passes', function () {
+        assert.equal(swaggerUtil.validateParameterType({
+            type: 'string',
+            format: 'password'
+        }, 'passw0rd').valid, SUCCESS);
+    });
+
+});
