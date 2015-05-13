@@ -60,6 +60,10 @@ function startExpress(cfg, app, callback) {
         _logger.info('Running in Cloud Foundry environment');
         cfg.port = cfenv.getAppEnv().port;
     }
+    
+    if (process.env.PORT) {
+        cfg.port = process.env.PORT;
+    }
 
     //Is this ssl-enabled?
     if (cfg.ssl) {
