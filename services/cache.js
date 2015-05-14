@@ -6,19 +6,19 @@ exports.init = function (monitor, config) {
 
     var cfg = config.get('cache');
 
-    var interface = null;
+    var impl = null;
     if (cfg.type === 'redis') {
-        interface = services.get('redis').cacheInterface;
+        impl = services.get('redis').cacheInterface;
     } else {
-        interface = require('../lib/nodeCacheInterface');
+        impl = require('../lib/nodeCacheInterface');
     }
 
     exports.stop = function() {
-        interface.stop();
+        impl.stop();
     };
 
     exports.getClient = function () {
-        return interface['getClient'].apply(interface, arguments);
+        return impl['getClient'].apply(impl, arguments);
     };
 
     exports.get = function (key, callback) {
@@ -33,7 +33,7 @@ exports.init = function (monitor, config) {
                     monitor.increment(keyStr + '.' + 'cacheMisses', 1);
                 }
                 monitor.increment('cacheMisses', 1);
-                callback(err);
+                return callback(err);
             } else {
                 if (result/*result[key]*/) {
                     if (keyStr) {
@@ -50,10 +50,9 @@ exports.init = function (monitor, config) {
                     return callback(null, null);
                 }
             }
-            callback(err, result);
         }
 
-        return interface.get(key, cb);
+        return impl.get(key, cb);
     };
 
     exports.set = function (key, value, ttl, callback) {
@@ -75,7 +74,7 @@ exports.init = function (monitor, config) {
             callback(err, success);
         }
 
-        return interface.set(key, value, ttl, cb);
+        return impl.set(key, value, ttl, cb);
     };
 };
 
