@@ -94,11 +94,17 @@ function setAuthCodeOnReq(req, res, next) {
 module.exports.authenticate = function(req, res, next) {
     if (req.session.auth) {
         if (req.session.auth.expiration > Date.now()) {
-            //console.log("Hasn't yet expired", "have", (req.session.auth.expiration - Date.now()) / 1000, "seconds" )
             setUserData(req);
+            ilog.debug('Access token %s is valid for %s seconds', req.session.auth.id, (req.session.auth.expiration - Date.now()) / 1000);
             next();
         } else {
-            ilog.debug('Access token expired.  Getting new token.');
+            ilog.debug('Access token expired for %s.', req.session.auth.id);
+            
+            if (!req.session.auth.refresh_token) {
+              ilog.debug('No refresh token available for %s.', req.session.auth.id);  
+              return res.status(401).send('Access token expired');
+            }
+            
             var profile = req.session.auth.profile;
             var tokenData = {
                 refresh_token: req.session.auth.refresh_token,
@@ -110,7 +116,8 @@ module.exports.authenticate = function(req, res, next) {
 
             getToken(tokenData, function (err, authData) {
                 if (err) {
-                    return next(err);
+                    ilog.debug('Error getting new access token: %s', err);
+                    return res.sendStatus(401);
                 }
                 req.session.auth = authData;
                 if (profile) {
@@ -159,14 +166,18 @@ function authCodeCallback(req, res, next) {
     };
 
     getToken(tokenData, function (err, authData) {
+        
         if (err) {
-            res.status(err.statusCode).send(err.message);
+            ilog.debug('Error getting new access token: %s', err);
+            return res.sendStatus(401);
         } else {
             req.session.auth = authData;
 
             if (_cfg.profile === true) { //optional step to get profile data
+                ilog.debug('Requesting profile data');
                 getProfileData(authData.access_token, function(err, data) {
                     if (err) {
+                        ilog.debug('Error getting profile data: %s', err.message);
                         return next(err);
                     }
                     req.session.auth.profile = data;
@@ -234,9 +245,14 @@ function signOutUser(req, res, next) {
 function getToken(data, callback) {
 
     request.post({url: TOKEN_URL, form: data}, function (err, resp, body) {
+        
+        //this would be something like a connection error
+        if (err) {
+            return callback({statusCode: 500, message: err.message})
+        }
 
         if (resp.statusCode !== 200) { //error
-            return callback({statusCode: resp.statusCode, message: body});
+            return callback({statusCode: resp.statusCode, message: JSON.parse(body)});
         } else {
             ilog.debug('Got response back from token endpoint', body);
             /*
