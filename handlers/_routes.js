@@ -56,8 +56,10 @@ function registerDeclarativeRoutes(app, config, routes, serviceLoader, auth, log
         var middleware = [];
         if (routes[routePath].auth && !_.isPlainObject(routes[routePath].auth)) {
             middleware = auth.getAuthMiddleware(routes[routePath].auth);
-        } else if (routes[routePath].auth) {
-            logger.debug("Ignoring auth")
+        } else if (!routes[routePath].auth) { //at least set up global auth if it's available
+            middleware = auth.getAuthMiddleware();
+        } else {
+            logger.debug("Ignoring auth");
         }
 
         //Set up custom validator function on the route
