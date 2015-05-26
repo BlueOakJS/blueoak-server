@@ -260,5 +260,6 @@ function initServices(opts, callback) {
 
 function printVersion(logger) {
     var pkg = require('./package.json')
-    logger.info('Starting %s v%s', pkg.name, pkg.version);
+    logger.info('Starting %s v%s in %s mode', pkg.name, pkg.version, 
+        process.env.NODE_ENV || 'development'); //the config loader defaults to development
 }
