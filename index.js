@@ -6,8 +6,11 @@ var path = require('path'),
     q = require('q'),
     cluster = require('cluster');
 
+var sprout = require('./lib/sprout');
 var loader = require('./lib/loader');
+
 var serviceLoader = loader();
+var project = require('./lib/project')(serviceLoader);
 
 global.services = serviceLoader.getRegistry();
 
@@ -210,6 +213,7 @@ function initWorker() {
  * @returns {*}
  */
 function initServices(opts, callback) {
+
     if (!callback) {
         callback = opts;
         opts = {};
@@ -217,44 +221,15 @@ function initServices(opts, callback) {
 
     var bootstrap = opts.bootstrap || false;
 
-    var toInit = null;
-
-    if (opts.bootstrap) {
-        toInit = ['config', 'logger'];
+    if (bootstrap) {
+        project.bootstrap(function(err) {
+            callback(err);
+        });
+    } else {
+        project.initProject(function(err) {
+            callback(err);
+        });
     }
-
-    serviceLoader.loadServices(path.resolve(__dirname, 'services'));
-
-    var EventEmitter = require('events').EventEmitter;
-    serviceLoader.inject('events', new EventEmitter());
-
-    //inject itself so that services can directly use the service loader
-    serviceLoader.inject('serviceLoader', serviceLoader);
-
-    //app will be injected by middleware, so this is a placeholder to force our dependency calculations to be correct
-    serviceLoader.inject('app', {}, ['middleware']);
-
-    if (!opts.bootstrap) { //in bootstrap mode we only load the sprout services needed by master
-        var config = serviceLoader.get('config');
-
-        serviceLoader.loadServiceModules(config.get('services'));
-        serviceLoader.loadServices(path.resolve(global.__appDir, 'services')); //app services
-
-        serviceLoader.loadConsumerModules('handlers', config.get('handlers'));
-        serviceLoader.loadConsumers(path.resolve(__dirname, 'middleware'), 'middleware'); //sprout middleware
-        serviceLoader.loadConsumers(path.resolve(global.__appDir, 'middleware'), 'middleware'); //app middleware
-
-        serviceLoader.loadConsumers(path.resolve(__dirname, 'handlers'), 'handlers'); //sprout handlers
-        serviceLoader.loadConsumers(path.resolve(global.__appDir, 'handlers'), 'handlers'); //app handlers
-
-        serviceLoader.loadConsumers(path.resolve(global.__appDir, 'auth'), 'auth'); //app authenticators
-        serviceLoader.loadConsumers(path.resolve(__dirname, 'auth'), 'auth'); //sprout authenticators
-    }
-
-
-    serviceLoader.init(toInit, function(err) {
-        callback(err);
-    });
 
 }
 
