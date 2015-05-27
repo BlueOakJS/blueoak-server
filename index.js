@@ -158,8 +158,11 @@ module.exports.stop = function () {
         });
     }
 
-    //Just in case there's anything still running
-    process.exit();
+    //Just in case there's anything still running, give it 2 seconds and shut it down
+    setTimeout(function() {
+            process.exit();
+    }, 2000);
+
 };
 
 function stopServices() {
