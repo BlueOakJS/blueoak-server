@@ -6,7 +6,7 @@ var sprout = require('../../index'),
     util = require('./launchUtil');
 
 describe('SERVER4 - test swagger stub gen', function () {
-
+    this.timeout(5000);
     before(function (done) {
         util.launch('server4', {exec: '../../bin/swagger2js.js'}, done);
     });

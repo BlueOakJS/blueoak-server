@@ -13,6 +13,7 @@ exports.launch = function(fixtureName, opts, done) {
             exec: '../../bin/sprout-server.js'
         };
     }
+
     lastLaunch = child_process.execFile(path.resolve(__dirname, opts.exec), [],
         {'cwd': path.resolve(__dirname, 'fixtures/' + fixtureName)},
         function(err, stdout, stderr) {
@@ -22,12 +23,12 @@ exports.launch = function(fixtureName, opts, done) {
         });
     setTimeout(function() {
         done();
-    }, 1000);
+    }, 4000);
 };
 
 exports.finish = function(done) {
     lastLaunch.kill('SIGINT');
     setTimeout(function() {
         done();
-    }, 1000);
+    }, 2500);
 };
