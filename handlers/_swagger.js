@@ -37,7 +37,21 @@ exports.init = function (app, auth, config, logger, serviceLoader, callback) {
         parser.parse(file, function (err, api, metadata) {
 
             if (err) {
-                return swagCallback(err);
+                //Was this an actual swagger file?
+                try {
+                    var json = JSON.parse(fs.readFileSync(file));
+                    
+                    //valid JSON
+                    if (isSwaggerFile(json)) {
+                        //this must be a swagger file, but it doesn't validate. fail
+                        return swagCallback(err);
+                    }
+                } catch (err) {
+                    //wasn't even valid JSON, error out
+                    return swagCallback(err);
+                }
+                logger.warn('Skipping %s', file);
+                return swagCallback();
             }
 
             var handlerName = path.basename(file); //use the swagger filename as our handler module id
@@ -90,6 +104,12 @@ exports.init = function (app, auth, config, logger, serviceLoader, callback) {
 
 
 };
+
+//Try to determine if this is supposed to be a swagger file
+//For now look for the required "swagger" field, which contains the version
+function isSwaggerFile(json) {
+    return json.swagger;
+}
 
 function registerRoute(app, auth, method, path, data, allowedTypes, handlerFunc, logger) {
     var authMiddleware = auth.getAuthMiddleware();
