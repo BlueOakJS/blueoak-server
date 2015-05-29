@@ -72,13 +72,20 @@ module.exports.init = function(app, logger, config) {
 }
 
 //Look for an auth code on a request.
-//The code is either stored on a query param, or as a POST body.
+//The code is either stored on a query param, in a JSON POST body, or as a raw POST body.
 //If found, it sets req.code, otherwise continue on.
 //Uses raw-body library to get the request body so that bodyParser doesn't have to be configured.
 function setAuthCodeOnReq(req, res, next) {
     if (req.query.code) {
         req.code = req.query.code;
         ilog.debug('Found auth code %s on query param', req.code);
+        return next();
+    }
+    
+    //look for something like {"code": "..."}
+    if (req.body.code) {
+        req.code = req.body.code;
+        ilog.debug('Found auth code %s in JSON body', req.code);
         return next();
     }
 
