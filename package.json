@@ -29,7 +29,7 @@
     "jws": "^3.0.0",
     "lodash": "^3.9.3",
     "mocha-jenkins-reporter": "^0.1.8",
-    "node-cache": "^2.2.0",
+    "node-cache": "^3.0.0",
     "node-statsd": "^0.1.1",
     "on-headers": "^1.0.0",
     "prompt": "^0.2.14",
