@@ -1,0 +1,20 @@
+//Default config for my app
+{
+  "express": {
+    "port": "3000",
+    "middleware": ["cors", "bodyParser"],
+    "middleware$": ["errors"]
+  },
+  "cors": {
+    "origin": "http://editor.swagger.io"
+  },
+
+  "bodyParser": {
+    "json": {}
+  },
+
+  "cluster": {
+    "maxWorkers": 1
+  }
+
+}

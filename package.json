@@ -1,0 +1,66 @@
+{
+  "name": "sprout-server",
+  "version": "1.0.0",
+  "description": "PointSource Sprout Server",
+  "main": "index.js",
+  "scripts": {
+    "test": "JUNIT_REPORT_PATH=tests-report.xml mocha --check-leaks --reporter mocha-jenkins-reporter --globals services,__appDir test/unit",
+    "test-integration": "mocha test/integration",
+    "test-cov": "istanbul cover node_modules/mocha/bin/_mocha --report lcovonly -- test/unit",
+    "posttest": "publish"
+  },
+  "bin": {
+    "sprout-server": "bin/sprout-server.js"
+  },
+  "dependencies": {
+    "astw": "^2.0.0",
+    "async": "^1.0.0",
+    "base64url": "^1.0.4",
+    "body-parser": "^1.12.4",
+    "cfenv": "^1.0.0",
+    "config": "^1.13.0",
+    "cookie-session": "^1.1.0",
+    "cors": "^2.6.0",
+    "detect-indent": "^3.0.1",
+    "esprima": "^2.2.0",
+    "express": "^4.12.4",
+    "express-static": "^1.0.3",
+    "jsonwebtoken": "^5.0.1",
+    "jws": "^3.0.0",
+    "lodash": "^3.9.3",
+    "mocha-jenkins-reporter": "^0.1.8",
+    "node-cache": "^2.2.0",
+    "node-statsd": "^0.1.1",
+    "on-headers": "^1.0.0",
+    "prompt": "^0.2.14",
+    "q": "^1.4.1",
+    "raw-body": "^2.0.2",
+    "redis": "^0.12.1",
+    "request": "^2.55.0",
+    "rsa-pem-from-mod-exp": "^0.8.4",
+    "stack-trace": "0.0.9",
+    "strip-json-comments": "^1.0.2",
+    "swagger-parser": "^2.4.1",
+    "tv4": "^1.1.9",
+    "tv4-formats": "^1.0.0",
+    "verror": "^1.6.0",
+    "winston": "^1.0.0"
+  },
+  "devDependencies": {
+    "istanbul": "^0.3.14",
+    "mocha": "^2.2.5",
+    "nock": "^2.2.0",
+    "publish": "^0.5.0",
+    "sinon": "^1.14.1"
+  },
+  "files": [
+    "bin",
+    "lib",
+    "middleware",
+    "handlers",
+    "services",
+    "auth",
+    "defaults.json",
+    "index.js"
+  ]
+}

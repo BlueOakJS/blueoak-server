@@ -1,0 +1,37 @@
+{
+  "logger": {
+    "levels": { "silly": 0, "debug": 1, "verbose": 2, "info": 3, "warn": 4, "error": 5 },
+    "colors": { "silly": "magenta", "debug": "cyan", "verbose": "blue", "info": "green", "warn": "yellow", "error": "red" },
+    "transports": [
+      {
+        "package": "winston",
+        "field": "transports.Console",
+        "options": {
+          "level": "debug",
+          "colorize": true
+        }
+      }
+    ],
+    "showLocation": true
+  },
+
+  "cluster": {
+    "maxWorkers": -1 //-1 means use full cpu count
+  },
+
+  "session": {
+    "type": "cookie"
+  },
+
+  "express": {
+    "port": 3000
+  },
+
+  "monitor": {
+    "port": 8125 //statsd port
+  },
+
+  "express-monitor": {
+    "prefix": "express"
+  }
+}

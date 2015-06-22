@@ -1,0 +1,41 @@
+//Default config for my app
+{
+  "express": {
+    "port": "3000",
+    "middleware": ["csrf", "express-static", "bodyParser", "session"]
+  },
+  "cluster": {
+    "maxWorkers": 1
+  },
+  "security": {
+    "key": "testkey" //When set, don't prompt during startup for password
+  },
+  "csrf": {
+    "allowedOrigins": ["http://localhost:3000", "http://localhost:8080", "chrome-extension://fdmmgilgnpjigdojojpjoooidkmcomcm"]
+  },
+
+  "express-static": {
+    "docs": "client"
+  },
+
+  "session": {
+    "keys": ["sessionkey"]
+  },
+
+  "bodyParser": {
+    "json": {}
+  },
+
+  "google-oauth": {
+    "callbackPath": "/auth",
+    "signoutPath": "/logout",
+    "clientId": "107463652566-jo264sjf04n1uk17i2ijdqbs2tuu2rf0.apps.googleusercontent.com",
+    "clientSecret": "4MY4PJdwA2gKjvAm3wOTCyss",
+    "redirectURI": "postmessage",
+    "profile": true
+  },
+
+  "google-jwt": {
+    "clientId": "107463652566-jo264sjf04n1uk17i2ijdqbs2tuu2rf0.apps.googleusercontent.com"
+  }
+}

@@ -1,0 +1,46 @@
+//Default config for my app
+{
+  "express": {
+    "middleware": ["csrf", "cors", "session", "bodyParser"],
+    "middleware$": ["errors"]
+  },
+  "cluster": {
+    "maxWorkers": 1
+  },
+  "logger": {
+  },
+  "randomizer": {
+    "min": 0,
+    "max": 1000
+  },
+  "test": {
+    "value": {
+      "encrypted": "{aes-256-cbc}7d343a60de6b2ee4cca096509745f9fd=" //decryption key is testkey
+    }
+  },
+  "security": {
+    "key": "testkey" //When set, don't prompt during startup for password
+  },
+
+  "csrf": {
+    "allowedOrigins": ["http://localhost:3000", "chrome-extension://fdmmgilgnpjigdojojpjoooidkmcomcm"]
+  },
+
+  "cors": {
+    "origin": "http://example.com"
+  },
+
+  "session": {
+    "keys": ["sessionkey"]
+  },
+
+  "bodyParser": {
+    "json": {}
+  },
+
+  "monitor": {
+    "host": "localhost",
+    "debug": true
+  }
+
+}

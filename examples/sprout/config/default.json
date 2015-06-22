@@ -1,0 +1,9 @@
+{
+  "express": {
+    "port": "3000",
+    "middleware": []
+  },
+  "cluster": {
+    "maxWorkers": 1
+  }
+}

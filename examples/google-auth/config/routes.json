@@ -1,0 +1,11 @@
+{
+  "get /something": {
+    "handler": "test.getSomething",
+    "auth": "google-oauth"
+  },
+
+  "get /something2": {
+    "handler": "test.getSomething2",
+    "auth": ["google-jwt"]
+  }
+}

@@ -1,0 +1,5 @@
+{
+    "ext": ".js,.json,.xsl",
+    "ignore": ["*/node_modules/"],
+    "watch": [".", "../../"]
+}

@@ -1,0 +1,19 @@
+//Default config for my app
+{
+  "express": {
+    "port": "3000"
+  },
+
+  "cluster": {
+    "maxWorkers": 1
+  },
+
+  "handlers": [ //optional list of additional handler modules
+    "my-handler"
+  ],
+
+  "services": [ //optional list of additional service modules
+    "echo-service"
+  ]
+
+}

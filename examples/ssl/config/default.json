@@ -1,0 +1,25 @@
+//Default config for my app
+{
+  "express": {
+    "port": "3001",
+    "ssl": {
+      "key": "certs/server.key",
+      "cert": "certs/server.crt",
+      "passphrase": "{aes-256-cbc}41fc0c955caf2765e1f9dec69314d087=" //encoded string 'devmode' using 'testkey'
+    },
+    "middleware": ["csrf", "cors"]
+  },
+  "cluster": {
+    "maxWorkers": 1
+  },
+  "security": {
+    "key": "testkey" //When set, don't prompt during startup for password
+  },
+  "csrf": {
+    "allowedOrigins": ["http://localhost:3000", "chrome-extension://fdmmgilgnpjigdojojpjoooidkmcomcm"]
+  },
+  "cors": {
+    "origin": "http://example.com"
+  }
+
+}
