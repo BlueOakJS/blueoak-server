@@ -66,8 +66,8 @@ exports.init = function (app, auth, config, logger, serviceLoader, callback) {
                 if (useBasePath) {
                     routePath = basePath + routePath;
                 }
-                
-                if(data["x-handler"]){
+
+                if(data["x-handler"]) {
                     handlerName = data["x-handler"];
                 }
 
@@ -88,9 +88,37 @@ exports.init = function (app, auth, config, logger, serviceLoader, callback) {
                         if (!handlerFunc) {
                             return logger.warn('Could not find handler function "%s" for module "%s"', methodData.operationId, handlerName);
                         }
+                        
+                        
+                        //Look for custom middleware functions defined on the handler path
+                        var additionalMiddleware = [];
+                        var middlewareList = methodData['x-middleware'];
+                        if (middlewareList) {
+                            if (!_.isArray(middlewareList)) {
+                                middlewareList = [middlewareList]; //turn into an array
+                            }
+                            middlewareList.forEach(function(mwName) {
+                                //middleware can either be of form <handler.func>
+                                //or just <func> in which case the currently handler is used
+                                var parts = mwName.split('.');
+                                if (parts.length === 1) {
+                                    parts = [handlerName, parts[0]];
+                                }
 
+                                var mwHandlerMod = serviceLoader.getConsumer('handlers', parts[0]);
+                                if (!mwHandlerMod) {
+                                    return logger.warn('Could not find middleware handler module named "%s".', parts[0]);
+                                }
+                                if (mwHandlerMod[parts[1]]) {
+                                    additionalMiddleware.push(mwHandlerMod[parts[1]]); //add the mw function
+                                } else {
+                                    return logger.warn('Could not find middleware function "%s" on module "%s".', parts[1], parts[0])
+                                }
+                            });
+                        }
+                        
                         logger.debug('Wiring up route %s %s to %s.%s', key, routePath, handlerName, methodData.operationId);
-                        registerRoute(app, auth, key, routePath, methodData, methodData.produces || api.produces || null, handlerFunc, logger);
+                        registerRoute(app, auth, additionalMiddleware, key, routePath, methodData, methodData.produces || api.produces || null, handlerFunc, logger);
 
                     }
                 });
@@ -111,10 +139,21 @@ function isSwaggerFile(json) {
     return json.swagger;
 }
 
-function registerRoute(app, auth, method, path, data, allowedTypes, handlerFunc, logger) {
-    var authMiddleware = auth.getAuthMiddleware();
-
-    app[method].call(app, path, authMiddleware, function(req, res, next) {
+/**
+ * app - express app
+ * auth - auth service
+ * additionalMiddleware - list of other middleware callbacks to register
+ * method - get, post, put, etc.
+ * path - /swagger/path
+ * data - swagger spec associated with the path
+ * allowedTypes - the 'produces' data from the swagger spec
+ * handlerFunc - handler callback function
+ * logger - the logger service
+ */
+function registerRoute(app, auth, additionalMiddleware, method, path, data, allowedTypes, handlerFunc, logger) {
+    var authMiddleware = auth.getAuthMiddleware() || [];
+    additionalMiddleware = authMiddleware.concat(additionalMiddleware);
+    app[method].call(app, path, additionalMiddleware, function(req, res, next) {
 
         validateParameters(req, data, logger, function(err) {
             if (err) {
