@@ -9,12 +9,8 @@
 var _ = require('lodash'),
     cors = require('cors');
 
-var allowedOrigins = null;
-var logger = null;
-
 exports.init = function(app, config, logger, callback) {
-    cfg = config.get('cors');
-    allowedOrigins = cfg.allowOrigin;
+    var cfg = config.get('cors');
     app.use(cors(cfg));
     logger.debug('Enabled CORS.');
     callback();
