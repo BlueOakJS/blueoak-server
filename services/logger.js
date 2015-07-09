@@ -32,9 +32,9 @@ exports.init = function(config) {
         module.exports[level.toLowerCase()] = function() {
 
             var args = [].slice.call(arguments); //convert to pure array
-            if (workerCount !== 1) {
+            if (workerCount !== 1) { //cluster mode
                 var meta = {};
-                if (typeof args[args.length - 1] === 'object') {
+                if (_.isObject(args[args.length - 1])) {
                     meta = args[args.length - 1];
                 } else {
                     [].push.call(args, meta);
