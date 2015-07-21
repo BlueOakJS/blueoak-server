@@ -14,15 +14,18 @@ exports.launch = function(fixtureName, opts, done) {
         };
     }
 
+    var output = '';
     lastLaunch = child_process.execFile(path.resolve(__dirname, opts.exec), [],
         {'cwd': path.resolve(__dirname, 'fixtures/' + fixtureName)},
         function(err, stdout, stderr) {
             if (err) {
                 console.warn(err, stderr);
             }
+            output += stdout + stderr;
         });
     setTimeout(function() {
-        done();
+        output = output.length > 50? output: null; //if output > 50, probably contains a stack tracegu
+        done(output);
     }, 4000);
 };
 
