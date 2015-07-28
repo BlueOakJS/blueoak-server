@@ -64,3 +64,23 @@ describe('SERVER5 - test simple REST calls from swagger spec', function () {
     });
 
 });
+
+describe('SERVER7 - test simple REST calls from yaml-based swagger spec', function () {
+    this.timeout(5000);
+    before(function (done) {
+        util.launch('server7', done);
+    });
+
+    after(function (done) {
+        util.finish(done);
+    });
+
+    it('GET /v2/pet/1', function (done) {
+        request('http://localhost:' + (process.env.PORT || 5000) + '/v2/pet/1', function (err, resp, body) {
+            assert.ok(!err)
+            var json = JSON.parse(body);
+            assert.equal('pets1', json.name);
+            done();
+        });
+    });
+})
