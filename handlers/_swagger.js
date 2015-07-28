@@ -20,10 +20,13 @@ exports.init = function (app, auth, config, logger, serviceLoader, callback) {
     var files = [];
 
     try {
-        fs.readdirSync(swaggerDir).forEach(function(fileName) {
-           if (path.extname(fileName) === '.json') {
-               files.push(path.resolve(swaggerDir, fileName));
-           }
+        fs.readdirSync(swaggerDir).forEach(function (fileName) {
+            //look for json and yaml
+            if (path.extname(fileName) === '.json') {
+                files.push(path.resolve(swaggerDir, fileName));
+            } else if (path.extname(fileName) === '.yaml') {
+                files.push(path.resolve(swaggerDir, fileName));
+            }
         });
     } catch (err) {
         //swagger dir probably doesn't exist
@@ -36,11 +39,15 @@ exports.init = function (app, auth, config, logger, serviceLoader, callback) {
 
         parser.parse(file, function (err, api, metadata) {
 
+            if (err && path.extname(file) === '.yaml') {
+                return swagCallback(err);
+            }
+
             if (err) {
-                //Was this an actual swagger file?
+                //Was this an actual swagger file?  Could just be a partial swagger pointed to by a $ref
                 try {
                     var json = JSON.parse(fs.readFileSync(file));
-                    
+
                     //valid JSON
                     if (isSwaggerFile(json)) {
                         //this must be a swagger file, but it doesn't validate. fail
@@ -67,12 +74,12 @@ exports.init = function (app, auth, config, logger, serviceLoader, callback) {
                     routePath = basePath + routePath;
                 }
 
-                if(data["x-handler"]) {
+                if (data["x-handler"]) {
                     handlerName = data["x-handler"];
                 }
 
                 //loop for http method keys, like get an post
-                _.keys(data).forEach(function(key) {
+                _.keys(data).forEach(function (key) {
                     if (_.contains(httpMethods, key)) {
                         var methodData = data[key];
                         if (!methodData.operationId) {
@@ -88,8 +95,8 @@ exports.init = function (app, auth, config, logger, serviceLoader, callback) {
                         if (!handlerFunc) {
                             return logger.warn('Could not find handler function "%s" for module "%s"', methodData.operationId, handlerName);
                         }
-                        
-                        
+
+
                         //Look for custom middleware functions defined on the handler path
                         var additionalMiddleware = [];
                         var middlewareList = methodData['x-middleware'];
@@ -97,7 +104,7 @@ exports.init = function (app, auth, config, logger, serviceLoader, callback) {
                             if (!_.isArray(middlewareList)) {
                                 middlewareList = [middlewareList]; //turn into an array
                             }
-                            middlewareList.forEach(function(mwName) {
+                            middlewareList.forEach(function (mwName) {
                                 //middleware can either be of form <handler.func>
                                 //or just <func> in which case the currently handler is used
                                 var parts = mwName.split('.');
@@ -116,7 +123,7 @@ exports.init = function (app, auth, config, logger, serviceLoader, callback) {
                                 }
                             });
                         }
-                        
+
                         logger.debug('Wiring up route %s %s to %s.%s', key, routePath, handlerName, methodData.operationId);
                         registerRoute(app, auth, additionalMiddleware, key, routePath, methodData, methodData.produces || api.produces || null, handlerFunc, logger);
 
@@ -126,7 +133,7 @@ exports.init = function (app, auth, config, logger, serviceLoader, callback) {
             });
             swagCallback();
         });
-    },  function(err){
+    }, function (err) {
         return callback(err);
     });
 
@@ -153,9 +160,9 @@ function isSwaggerFile(json) {
 function registerRoute(app, auth, additionalMiddleware, method, path, data, allowedTypes, handlerFunc, logger) {
     var authMiddleware = auth.getAuthMiddleware() || [];
     additionalMiddleware = authMiddleware.concat(additionalMiddleware);
-    app[method].call(app, path, additionalMiddleware, function(req, res, next) {
+    app[method].call(app, path, additionalMiddleware, function (req, res, next) {
 
-        validateParameters(req, data, logger, function(err) {
+        validateParameters(req, data, logger, function (err) {
             if (err) {
                 return next(err);
             }
@@ -163,9 +170,9 @@ function registerRoute(app, auth, additionalMiddleware, method, path, data, allo
             setDefaultHeaders(req, data, logger);
 
             //Wrap the set function, which is responsible for setting headers
-            if(allowedTypes){
+            if (allowedTypes) {
                 //Validate that the content-type is correct per the swagger definition
-                wrapCall(res, 'set', function(name, value) {
+                wrapCall(res, 'set', function (name, value) {
                     if (name === 'Content-Type') {
                         var type = value.split(';')[0]; //parse off the optional encoding
                         if (!_.contains(allowedTypes, type)) {
@@ -281,7 +288,7 @@ function validateParameters(req, data, logger, callback) {
 
 function wrapCall(obj, funcName, toCall) {
     var origFunc = obj[funcName];
-    obj[funcName] = function() {
+    obj[funcName] = function () {
         toCall.apply(obj, arguments);
         return origFunc.apply(obj, arguments);
     };
