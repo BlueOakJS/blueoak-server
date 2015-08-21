@@ -1,0 +1,11 @@
+{
+  //override server default of 3000
+  "express": {
+    "port": 3001
+  },
+
+  //override server default of -1
+  "cluster": {
+    "maxWorkers": 1
+  }
+}

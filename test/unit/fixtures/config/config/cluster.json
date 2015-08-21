@@ -1,0 +1,4 @@
+{
+  //overrides what's in default.json
+  "maxWorkers": 2
+}
