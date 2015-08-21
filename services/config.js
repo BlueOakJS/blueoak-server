@@ -58,11 +58,11 @@ exports.init = function(callback) {
 
 };
 
-
 exports.get = function(key) {
+    //Load default config, merge in user config, and then the individual config files
     var val = defaults[key] || {};
-    val = config.util.extendDeep(val, loadFromIndividualConfigFile(key));
-    return config.util.extendDeep(val, config[key]);
+    val = config.util.extendDeep(val, config[key]);
+    return config.util.extendDeep(val, loadFromIndividualConfigFile(key));
 };
 
 //For every requested config key, check if there's a json file by that name in the config dir.
@@ -84,7 +84,7 @@ function loadFromIndividualConfigFile(key) {
 
         var json = {};
         try {
-            var json = JSON.parse(content);
+            var json = JSON.parse(stripJsonComments(content.toString()));
         } catch (err) {
             console.warn('Error parsing JSON for %s', toLoad);
         }
