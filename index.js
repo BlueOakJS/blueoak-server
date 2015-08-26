@@ -15,6 +15,7 @@ var project = require('./lib/project')(serviceLoader);
 global.services = serviceLoader.getRegistry();
 
 var server = module.exports;
+var forceShutdown = false; //if true, user hit ctrl+c and we don't want to restart workers
 
 //set the app root to the directory the main module was executed from
 global.__appDir = path.normalize(path.join(process.mainModule.filename, '../'));
@@ -50,6 +51,12 @@ module.exports.init = function (opts, callback) {
             var clusterConfig = serviceLoader.get('config').get('cluster');
             var logger = serviceLoader.get('logger');
 
+            /*process.on('uncaughtException', function(err) {
+                console.log(err.stack);
+                logger.dumpBuffer();
+                process.exit(1); //default behavior
+            });*/
+
             printVersion(logger);
 
             // Either set to maxWorkers, or if < 0, use the count of machine's CPUs
@@ -72,7 +79,13 @@ module.exports.init = function (opts, callback) {
                 }, function(err, result) {
                     callback(err);
                     cluster.on('exit', function(worker, code, signal) {
-                        logger.info('Worked %d stopped (%s). Restarting', worker.process.pid, signal || code);
+                        if (!forceShutdown) {
+                            logger.info('Worked %d stopped (%s). Restarting', worker.process.pid, signal || code);
+                            forkWorker(function () {
+                                //restarted
+                                logger.info('Restarted worker process');
+                            });
+                        }
                     });
                 });
             }
@@ -117,7 +130,7 @@ process.on('message', function(msg) {
 
 //gracefully handle ctrl+c
 process.on('SIGINT', function() {
-    module.exports.stop();
+    module.exports.stop(true);
 });
 
 
@@ -127,7 +140,6 @@ process.on('SIGINT', function() {
  * We also wait for a graceful shutdown of each worker so that existing requests are handled.
  */
 process.on('SIGHUP', function() {
-
     var logger = serviceLoader.get('logger');
 
     if (isClusteredMaster()) {
@@ -152,7 +164,11 @@ process.on('SIGHUP', function() {
 
 
 //Stop the server
-module.exports.stop = function () {
+//if force, don't bother restarting.  We were probably stopped by a ctrl+c
+module.exports.stop = function (force) {
+    if (force) {
+        forceShutdown = true;
+    }
     stopServices();
 
     if (isClusteredMaster()) {
@@ -161,10 +177,10 @@ module.exports.stop = function () {
         });
     }
 
-    //Just in case there's anything still running, give it 2 seconds and shut it down
-    setTimeout(function() {
-            process.exit();
-    }, 2000);
+    //Just in case there's anything still running, give it a second and shut it down
+    setTimeout(function () {
+        process.exit();
+    }, 1000);
 
 };
 
@@ -190,7 +206,7 @@ function stopServices() {
  * Otherwise return false, i.e. for worker processes or single-process masters.
  */
 function isClusteredMaster() {
-    return cluster.isMaster && _.keys(cluster.workers).length > 0;
+    return cluster.isMaster && serviceLoader.get('config').get('cluster').maxWorkers !== 1;
 }
 
 function initWorker() {
