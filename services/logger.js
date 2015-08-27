@@ -3,11 +3,14 @@ var _ = require('lodash'),
     winston = require('winston'),
     path = require('path'),
     cluster = require('cluster'),
-    stackTrace = require('stack-trace');
+    stackTrace = require('stack-trace'),
+    util = require('util');
+
 
 exports.init = function(config) {
 
     var cfg = config.get('logger');
+
     var showLocation = cfg.showLocation;
 
     var logger = new (winston.Logger)({
@@ -68,12 +71,55 @@ exports.init = function(config) {
                     }
                 }
                 logger[level.toLowerCase()].apply(logger, args);
+                buffer(level.toLowerCase(), args);
             }
 
         };
     });
 
+    //The buffer stores all logged data, regardless of log level
+    //rather than relying on array.push/slice which are slow,
+    //we keep the buffer a fixed size and just loop the index around
+    var bufferIdx = 0;
+    var bufferLength = config.get('crashDump').length;
+    var bufferData = [];
+    var bufferEnabled = config.get('crashDump').enabled;
+
+    function buffer(level, args) {
+        if (bufferEnabled) {
+            bufferData[bufferIdx] = {args: args, ts: Date.now(), level: level};
+            bufferIdx++;
+            if (bufferIdx > bufferLength) {
+                bufferIdx = 0;
+            }
+        }
+    }
+
+    //TODO: support different dump types, e.g. console vs file
+    exports.dumpBuffer = function(err) {
+
+        if (bufferEnabled) {
+            console.log('---------- Crash Report ' + (new Date().toString()) + ' ----------');
+            console.log('PID:         ', process.pid);
+            console.log('Uptime:      ', process.uptime() + 's');
+            console.log('Heap used:   ', process.memoryUsage().heapUsed);
+            console.log('Heap total:  ', process.memoryUsage().heapTotal);
+
+            var log = function (data) {
+                console.log('' + data.ts + ' ' + data.level + ': ' + util.format.apply(null, data.args));
+            }
+            for (var i = bufferIdx; i < bufferData.length; i++) {
+                log(bufferData[i]);
+            }
+
+            for (var i = 0; i < bufferIdx; i++) {
+                log(bufferData[i]);
+            }
+        }
+    };
+
 };
+
 
 //Determine the name of the service that called logger
 function getLocation() {
