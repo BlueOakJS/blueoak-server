@@ -80,10 +80,11 @@ exports.init = function(config) {
     //The buffer stores all logged data, regardless of log level
     //rather than relying on array.push/slice which are slow,
     //we keep the buffer a fixed size and just loop the index around
+    var crashDumpCfg = config.get('crashDump') || {};
     var bufferIdx = 0;
-    var bufferLength = config.get('crashDump').length;
+    var bufferLength = crashDumpCfg.length;
     var bufferData = [];
-    var bufferEnabled = config.get('crashDump').enabled;
+    var bufferEnabled = crashDumpCfg.enabled;
 
     function buffer(level, args) {
         if (bufferEnabled) {
