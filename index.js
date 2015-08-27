@@ -51,11 +51,11 @@ module.exports.init = function (opts, callback) {
             var clusterConfig = serviceLoader.get('config').get('cluster');
             var logger = serviceLoader.get('logger');
 
-            /*process.on('uncaughtException', function(err) {
+            process.on('uncaughtException', function(err) {
                 console.log(err.stack);
-                logger.dumpBuffer();
+                logger.dumpBuffer(err);
                 process.exit(1); //default behavior
-            });*/
+            });
 
             printVersion(logger);
 
