@@ -7,7 +7,7 @@ var _ = require('lodash'),
     util = require('util');
 
 
-exports.init = function(config) {
+exports.init = function (config) {
 
     var cfg = config.get('logger');
 
@@ -30,9 +30,9 @@ exports.init = function(config) {
         setupTransports(cfg, logger);
     }
 
-    _.keys(cfg.levels).forEach(function(level) {
+    _.keys(cfg.levels).forEach(function (level) {
 
-        module.exports[level.toLowerCase()] = function() {
+        module.exports[level.toLowerCase()] = function () {
 
             var args = [].slice.call(arguments); //convert to pure array
             if (workerCount !== 1) { //cluster mode
@@ -45,7 +45,7 @@ exports.init = function(config) {
 
                 //if we're logging on behalf of a worker process, this will already be set
                 if (!meta.pid) {
-                    meta.pid =  process.pid;
+                    meta.pid = process.pid;
                 }
 
                 //if we're in clustered mode, throw the service name in the metadata
@@ -80,34 +80,34 @@ exports.init = function(config) {
     module.exports['components'] = cfg.components;
     module.exports['logger'] = logger;
     module.exports['levels'] = cfg.levels;
-    module.exports['getComponentLogger'] = function(component) {
+    module.exports['getComponentLogger'] = function (component) {
         var theLogger = this.logger;
-        if(!this.components || !this.components[component] || !this.components[component].loglevels) {
+        if (!this.components || !this.components[component] || !this.components[component].loglevels) {
             theLogger.error('The component logger ' + component + ' is not configured or not configured properly. Using base logger.');
             return theLogger;
         }
         var loglevels = this.components[component].loglevels;
         var logger = this;
-        var tmp = {'component':component};
+        var tmp = {'component': component};
         var self = this;
-        _.keys(this.levels).forEach(function(lev){
-            tmp[lev] = function() {
+        _.keys(this.levels).forEach(function (lev) {
+            tmp[lev] = function () {
                 var args = [].slice.call(arguments);
                 args[0] = "" + this.component + ' - ' + args[0];
-                tlevels = [];
+                var tlevels = [];
                 //look through transports and save current log levels
-                Object.keys(theLogger.transports).forEach(function(k) {
+                Object.keys(theLogger.transports).forEach(function (k) {
                     tlevels.push([k, theLogger.transports[k].level]);
                     var newLevel = loglevels[k];
-                    if(newLevel) { // if overridden by component, set the loglevel for this transport
+                    if (newLevel) { // if overridden by component, set the loglevel for this transport
                         theLogger.transports[k].level = newLevel;
                     }
                 });
                 self[lev](args);
-                tlevels.forEach(function(levelinfo) { // restore all the transport loglevels
+                tlevels.forEach(function (levelinfo) { // restore all the transport loglevels
                     theLogger.transports[levelinfo[0]].level = levelinfo[1];
                 });
-            }
+            };
         });
         return tmp;
     };
@@ -132,7 +132,7 @@ exports.init = function(config) {
     }
 
     //TODO: support different dump types, e.g. console vs file
-    exports.dumpBuffer = function(err) {
+    exports.dumpBuffer = function (err) {
 
         if (bufferEnabled) {
             console.log('---------- Crash Report ' + (new Date().toString()) + ' ----------');
@@ -143,7 +143,8 @@ exports.init = function(config) {
 
             var log = function (data) {
                 console.log('' + data.ts + ' ' + data.level + ': ' + util.format.apply(null, data.args));
-            }
+            };
+
             for (var i = bufferIdx; i < bufferData.length; i++) {
                 log(bufferData[i]);
             }
@@ -173,26 +174,26 @@ function getLocation() {
     var modNm = 'logger';
     var rmodNm = null;
     var skip = ['logger', 'logger.js'];
-    while((skip.indexOf(modNm) >= 0) && trace.length > idx) {
+    while ((skip.indexOf(modNm) >= 0) && trace.length > idx) {
         var fpath = trace[idx].getFileName();
         ++idx;
-        if(fpath.slice(0,'native'.length) == 'native') {
+        if (fpath.slice(0, 'native'.length) === 'native') {
             continue; // skip native modules
         }
         modNm = null;
         var mod = null;
         try {
             mod = require(fpath);
-        } catch(err) {
+        } catch (err) {
             // do nothing here, it's checked later
         }
-        if(mod) { //__id is injected into services by the loader
-            if(!mod.__id) {
+        if (mod) { //__id is injected into services by the loader
+            if (!mod.__id) {
                 modNm = fpath.split('/').pop();
                 rmodNm = modNm;
             } else {
                 modNm = mod.__id;
-                if(modNm != null) {
+                if (modNm !== null) {
                     rmodNm = modNm;
                 }
             }
@@ -209,19 +210,19 @@ function setupTransports(cfg, logger) {
     //dynamically add transports based on the config
     //Each transport will have a package, which is the package name of the transport, e.g. winston-papertrail
     //and a field, which is the field within the transport containing the instance, e.g. Papertrail
-    cfg.transports.forEach(function(transport) {
+    cfg.transports.forEach(function (transport) {
         transport.options = transport.options || {};
-        if(transport.options.timestamp) {
-            var ts = transport.options.timestamp.trim();
-            var tsl = ts.toLowerCase();
-            if(tsl == 'true') {
-                transport.options.timestamp = true;
-            } else if(tsl == 'false') {
-                transport.options.timestamp = false;
+        if (typeof transport.options.timestamp !== 'undefined') {
+            var ts = transport.options.timestamp;
+
+            if (ts === true || ts === false) {
+                //don't need to do anything -- already handled by winston
             } else {
+                //is a string
+                var tsl = ts.toLowerCase();
                 try {
                     var tsm = require(global.__appDir + '/' + ts);
-                    if(typeof tsm.init === 'function' && typeof tsm.timestamp === 'function') {
+                    if (typeof tsm.init === 'function' && typeof tsm.timestamp === 'function') {
                         transport.options.timestamp = tsm.timestamp;
                         tsm.init(); // allow one-time init if necessary, but require the function to be there
                     } else {
@@ -230,14 +231,15 @@ function setupTransports(cfg, logger) {
                     }
                     try {
                         console.log(func + ': type of transport.options.timestamp is now: ' + typeof tsm.timestamp);
-                    } catch(err) {
+                    } catch (err) {
                         console.log(func + ': error parsing timestamp type (true/false/modulename) - ' + err);
                     }
-                } catch( err ) {
+                } catch (err) {
                     //not sure, set it to true....
                     console.log(func + ': defaulting timestamp to true. ' + err);
                 }
             }
+
         }
         var locationsToTry = [
             transport.package,
@@ -260,7 +262,7 @@ function setupTransports(cfg, logger) {
         var obj = mod;
 
         //if transport field is something like transports.Console, split at the dots and dereference each part
-        transport.field.split('.').forEach(function(field) {
+        transport.field.split('.').forEach(function (field) {
             obj = obj[field];
         });
         logger.add(obj, transport.options);
