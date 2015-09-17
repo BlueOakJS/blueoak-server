@@ -189,11 +189,15 @@ function authCodeCallback(req, res, next) {
           email: data.email,
           access_token: token,
           expiration: Date.now() + (1000 * 3600),
-          refresh_token: data.refresh_token,
-          profile: data
+          refresh_token: data.refresh_token
+        };
+        if(_cfg.profile === true) {
+          req.session.auth.profile = data;
+          return res.status(200).send(data);
+        } else {
+          return res.sendStatus(200);
         }
 
-        return res.status(200).send(data);
       });
     } else {
 
@@ -221,10 +225,10 @@ function authCodeCallback(req, res, next) {
                           return next(err);
                       }
                       req.session.auth.profile = data;
-                      res.send(data);
+                      return res.status(200).send(data);
                   });
               } else {
-                  res.sendStatus(200);
+                  return res.sendStatus(200);
               }
           }
       });
