@@ -37,7 +37,7 @@ exports.init = function (app, auth, config, logger, serviceLoader, callback) {
     //For each model, parse it, and automatically hook up the routes to the appropriate handler
     async.eachSeries(files, function parseSwagger(file, swagCallback) {
 
-        parser.parse(file, function (err, api, metadata) {
+        parser.dereference(file, function (err, api, metadata) {
 
             if (err && path.extname(file) === '.yaml') {
                 return swagCallback(err);

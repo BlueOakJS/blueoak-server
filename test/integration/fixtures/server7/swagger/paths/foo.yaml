@@ -1,0 +1,5 @@
+get:
+  operationId: foo
+  responses:
+    200:
+      description: OK
