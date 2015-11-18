@@ -40,7 +40,7 @@
     "rsa-pem-from-mod-exp": "^0.8.4",
     "stack-trace": "0.0.9",
     "strip-json-comments": "^1.0.2",
-    "swagger-parser": "^2.4.1",
+    "swagger-parser": "^3.3.0",
     "tv4": "^1.1.9",
     "tv4-formats": "^1.0.0",
     "verror": "^1.6.0",
