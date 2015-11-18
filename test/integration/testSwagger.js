@@ -83,4 +83,14 @@ describe('SERVER7 - test simple REST calls from yaml-based swagger spec', functi
             done();
         });
     });
+
+    //foo is defined in a yaml containing references
+    it('GET /foo', function (done) {
+        request('http://localhost:' + (process.env.PORT || 5000) + '/foo', function (err, resp, body) {
+            assert.ok(!err)
+            var json = JSON.parse(body);
+            assert.equal('foo', json.name);
+            done();
+        });
+    });
 })
