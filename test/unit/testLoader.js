@@ -339,6 +339,45 @@ describe('DI Loader test8 - test camel case', function () {
 
 });
 
+describe('DI Loader test8 - test service underscored alias stripping', function () {
+    var testLoader;
+
+    beforeEach(function () {
+        testLoader = loader();
+    });
+
+    afterEach(function () {
+        testLoader.unload('_service15_');
+        testLoader.unload('_service-one_');
+    });
+
+    it('Should strip underscores from service names', function (done) {
+        testLoader.loadServices(path.resolve(__dirname, 'fixtures/loader/test8'));
+        testLoader.inject('service-loader', testLoader);
+        var service15 = testLoader.get('_service15_');
+        var serviceOne = testLoader.get('_service-one_');
+
+        testLoader.init(function(err) {
+            assert.equal(service15.isInitialized(), true);
+            assert.equal(serviceOne.isInitialized(), true);
+            done();
+        });
+    });
+
+    it('Should not affect non-underscored names', function (done) {
+        testLoader.loadServices(path.resolve(__dirname, 'fixtures/loader/test8'));
+        testLoader.inject('service-loader', testLoader);
+        var service15 = testLoader.get('service15');
+        var serviceOne = testLoader.get('service-one');
+
+        testLoader.init(function(err) {
+            assert.equal(service15.isInitialized(), true);
+            assert.equal(serviceOne.isInitialized(), true);
+            done();
+        });
+    });
+});
+
 describe('DI Loader test10 - test services get', function () {
     var testLoader, services;
 
