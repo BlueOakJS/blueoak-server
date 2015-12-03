@@ -81,11 +81,23 @@ function setAuthCodeOnReq(req, res, next) {
         ilog.debug('Found auth code %s on query param', req.code);
         return next();
     }
+
+    if (req.query.token) {
+        req.token = req.query.token;
+        ilog.debug('Found auth code %s on query param', req.token);
+        return next();
+    }
     
     //look for something like {"code": "..."}
     if (req.body.code) {
         req.code = req.body.code;
         ilog.debug('Found auth code %s in JSON body', req.code);
+        return next();
+    }
+
+    if (req.body.token) {
+        req.token = req.body.token;
+        ilog.debug('Found auth code %s in JSON body', req.token);
         return next();
     }
 
@@ -160,43 +172,67 @@ function setUserData(req) {
 //If anything fails, it returns an error status, otherwise a 200
 function authCodeCallback(req, res, next) {
     var code = req.code;
-    if (!code) {
-        return res.status(400).send('Missing auth code');
+    var token = req.token;
+
+    if (!code && !token) {
+        return res.status(400).send('Missing auth code or token');
     }
 
-    var tokenData = {
-        code: code,
-        client_id: _cfg.clientId,
-        client_secret: _cfg.clientSecret,
-        grant_type: 'authorization_code',
-        redirect_uri: _cfg.redirectURI
-    };
-
-    getToken(tokenData, function (err, authData) {
-        
-        if (err) {
-            ilog.debug('Error getting new access token: %s', err);
-            return res.sendStatus(401);
-        } else {
-            req.session.auth = authData;
-
-            if (_cfg.profile === true) { //optional step to get profile data
-                ilog.debug('Requesting profile data');
-                getProfileData(authData.access_token, function(err, data) {
-                    if (err) {
-                        ilog.debug('Error getting profile data: %s', err.message);
-                        return next(err);
-                    }
-                    req.session.auth.profile = data;
-                    res.sendStatus(200);
-                });
-            } else {
-                res.sendStatus(200);
-            }
-
-
+    if(token) {
+      getProfileData(token, function (error, data) {
+        if(error) {
+          return res.status(400).send('Invalid token.  Could not fetch profile data');
         }
-    });
+
+        req.session.auth = {
+          id: data.id,
+          email: data.email,
+          access_token: token,
+          expiration: Date.now() + (1000 * 3600),
+          refresh_token: data.refresh_token
+        };
+        if(_cfg.profile === true) {
+          req.session.auth.profile = data;
+          return res.status(200).send(data);
+        } else {
+          return res.sendStatus(200);
+        }
+
+      });
+    } else {
+
+      var tokenData = {
+          code: code,
+          client_id: _cfg.clientId,
+          client_secret: _cfg.clientSecret,
+          grant_type: 'authorization_code',
+          redirect_uri: _cfg.redirectURI
+      };
+
+      getToken(tokenData, function (err, authData) {
+          
+          if (err) {
+              ilog.debug('Error getting new access token: %s', err);
+              return res.sendStatus(401);
+          } else {
+              req.session.auth = authData;
+
+              if (_cfg.profile === true) { //optional step to get profile data
+                  ilog.debug('Requesting profile data');
+                  getProfileData(authData.access_token, function(err, data) {
+                      if (err) {
+                          ilog.debug('Error getting profile data: %s', err.message);
+                          return next(err);
+                      }
+                      req.session.auth.profile = data;
+                      return res.status(200).send(data);
+                  });
+              } else {
+                  return res.sendStatus(200);
+              }
+          }
+      });
+    }
 }
 
 //Revoke the access token, refresh token, and cookies
