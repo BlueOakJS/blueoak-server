@@ -139,7 +139,6 @@ exports.init = function(mod, serviceMap, serviceCallback, callback) {
     paramNames.forEach(function(paramName) {
         if (!serviceMap[paramName]) {
             
-            console.log(__dirname);
             //since it's possible that this has already been loaded once and
             //has stubbed out methods, delete it from the cache
             var modPath = require.resolve('./mocks/' + paramName);
@@ -162,8 +161,7 @@ exports.init = function(mod, serviceMap, serviceCallback, callback) {
         }
         callback(thrownError);
     }
-}
+};
 
 exports.restore = function() {
-    
-}
+};
