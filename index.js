@@ -257,3 +257,12 @@ function printVersion(logger) {
     logger.info('Starting %s v%s in %s mode', pkg.name, pkg.version, 
         process.env.NODE_ENV || 'development'); //the config loader defaults to development
 }
+
+/*
+ * testUtility must be explicitly called in order to gain access to utility methods that are
+ * helpful for testing Sprout Server projects.  Not intended for use in non-test environments.
+ */
+module.exports.testUtility = function () {
+    return require('./test/unit/util');
+};
+

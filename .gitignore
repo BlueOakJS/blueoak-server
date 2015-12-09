@@ -3,3 +3,5 @@ tests-report.xml
 !test/unit/**/node_modules
 !examples/sprout/node_modules
 .idea
+*.swp
+*.swo
