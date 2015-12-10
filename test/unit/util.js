@@ -4,6 +4,7 @@
 var di = require('../../lib/di'),
     _ = require('lodash'),
     fs = require('fs'),
+    stripJsonComments = require('strip-json-comments'),
     sinon = require('sinon');
 
 //creates a mock config service
@@ -64,27 +65,35 @@ exports.initService = function(module, config, injections, callback) {
  * This method lets you include unmodified Sprout services into your tests. One use case is 
  * when testing your own service that depends on Sprout services, but the particular method
  * you want to test does not.  Rather than replicating mocked/stubbed functionality that already
- * exists in the native services, you can just inject the native services themselves so 
+ * exists in the core services, you can just inject the core services themselves so 
  * init() and logic/calls within init() doesn't break.
  *
  * @param {Array|String} modules - An single name of a module or an array of module names
- * @param {object} config - Your local config or mocked config as needed
+ * @param {String|Object} config - A configuration file path or required()'d object.  Any necessary 
+                                   config properties that aren't present will be included with 
+                                   Sprout defaults.
  * @param {function} callback - Called after all modules are required and init()'d. An object with 
  *                              the mapping, `{ <module_name>: <module>, ... }` is returned.
  */
-exports.injectNative = function (modules, config, callback) {
-  var nativeModules = fs.readdirSync(__dirname + '/../../services/'),
+exports.injectCore = function (modules, config, callback) {
+  var coreModules = fs.readdirSync(__dirname + '/../../services/'),
       servicePattern = /^[a-z]+(.js)$/i,
       initializedModules = {},
       initializedCount = 0,
       temp;
 
-  for(var i = 0; i < nativeModules.length; i++) {
-    if(!servicePattern.test(nativeModules[i])) {
-      nativeModules.splice(i, 1);  
+  if(typeof config === 'string') {
+    config = loadJson(config);
+  }
+
+  config = augmentConfigWithDefaults(config);
+
+  for(var i = 0; i < coreModules.length; i++) {
+    if(!servicePattern.test(coreModules[i])) {
+      coreModules.splice(i, 1);  
     }
 
-    nativeModules[i] = nativeModules[i].split('.')[0];
+    coreModules[i] = coreModules[i].split('.')[0];
   }
 
   if(!(modules instanceof Array)) {
@@ -94,15 +103,15 @@ exports.injectNative = function (modules, config, callback) {
   for(var i = 0; i < modules.length; i++) {
     temp = {};
 
-    if(nativeModules.indexOf(modules[i]) === -1) {
-      throw new Error('Given module name is not a native service');
+    if(coreModules.indexOf(modules[i]) === -1) {
+      throw new Error('Given module name is not a core service');
     }
 
     initializedModules[modules[i]] = require('../../services/' + modules[i]);
 
     this.initService(initializedModules[modules[i]], config, function (error) {
       if(error) {
-        throw new Error('Unable to inject native service');
+        throw new Error('Unable to inject core service');
       }
 
       initializedCount++;
@@ -112,6 +121,48 @@ exports.injectNative = function (modules, config, callback) {
     });
   }
 };
+
+/*
+ * Load defaults.json from sprout-server to merge with a given config to ensure core services
+ * function as intended.
+ */
+function augmentConfigWithDefaults (config) {
+  var defaultConfig = loadJson(__dirname + '/../../defaults.json');
+
+  return populateMissingProperties(defaultConfig, config);
+}
+
+/*
+ * Recursively populate missing properties and values in the given injectCore() configuration
+ */
+function populateMissingProperties (defaultConfig, config) {
+  for(var property in defaultConfig) {
+    if(typeof defaultConfig[property] === 'object' && !(defaultConfig[property] instanceof Array)) {
+      if(!config[property]) {
+        config[property] = {};
+      }
+
+      populateMissingProperties(defaultConfig[property], config[property]);
+    } else {
+      if(!config[property]) {
+        config[property] = defaultConfig[property];
+      }
+    }
+  }
+
+  return config;
+}
+
+/*
+ * Return an object from a JSON file containing comments
+ */
+function loadJson (path) {
+  var json = fs.readFileSync(path, 'utf-8');  
+  json = stripJsonComments(json);
+  json = JSON.parse(json);
+
+  return json;
+}
 
 /* This is a new init method to replace initService
  * mod: the module to init
