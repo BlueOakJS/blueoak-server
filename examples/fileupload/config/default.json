@@ -1,0 +1,22 @@
+//Default config for my app
+{
+  "express": {
+    "port": "3000",
+    "middleware": ["express-static", "bodyParser"]
+  },
+  "cluster": {
+    "maxWorkers": 1
+  },
+  "bodyParser": {
+    "json": {}
+  },
+
+  "express-static": {
+    "docs": "static"
+  },
+
+  "multer": {
+    "dest": "uploads/"
+  }
+
+}
