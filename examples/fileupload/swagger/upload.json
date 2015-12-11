@@ -1,0 +1,46 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "version": "1.0.0",
+    "title": "Swagger Fileupload",
+    "description": "Test multipart form data"
+  },
+  "host": "example.com",
+  "basePath": "/api",
+  "schemes": [
+    "http"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/test/fileUpload": {
+      "post": {
+        "tags": ["api"],
+        "operationId": "fileUpload",
+        "parameters": [
+          {
+            "required": true,
+            "type": "number",
+            "name": "text",
+            "in": "formData"
+          },
+          {
+            "required": true,
+            "type": "file",
+            "name": "file1",
+            "in": "formData"
+          }
+        ],
+        "consumes": ["multipart/form-data"],
+        "responses": {
+          "default": {}
+        },
+        "produces": ["application/json"]
+      }
+    }
+  }
+}

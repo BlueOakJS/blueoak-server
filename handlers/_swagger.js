@@ -5,9 +5,11 @@ var _ = require('lodash'),
     async = require('async'),
     fs = require('fs'),
     swaggerUtil = require('../lib/swaggerUtil'),
-    VError = require('verror');
+    VError = require('verror'),
+    multer = require('multer');
 
 
+var _upload; //will get set to a configured multer instance if multipart form data is used
 var httpMethods = ['get', 'put', 'post', 'delete', 'options', 'head', 'patch'];
 
 exports.init = function (app, auth, config, logger, serviceLoader, callback) {
@@ -38,6 +40,16 @@ exports.init = function (app, auth, config, logger, serviceLoader, callback) {
     async.eachSeries(files, function parseSwagger(file, swagCallback) {
 
         parser.dereference(file, function (err, api, metadata) {
+
+            if (containsMultipartFormData(api)) {
+
+                //make sure we have the config for multer
+                if (_.keys(config.get('multer')).length === 0) {
+                    logger.warn('No multer config found.  Required when using multipart form data.');
+                } else {
+                    _upload = multer(config.get('multer'));
+                }
+            }
 
             if (err && path.extname(file) === '.yaml') {
                 return swagCallback(err);
@@ -119,7 +131,7 @@ exports.init = function (app, auth, config, logger, serviceLoader, callback) {
                                 if (mwHandlerMod[parts[1]]) {
                                     additionalMiddleware.push(mwHandlerMod[parts[1]]); //add the mw function
                                 } else {
-                                    return logger.warn('Could not find middleware function "%s" on module "%s".', parts[1], parts[0])
+                                    return logger.warn('Could not find middleware function "%s" on module "%s".', parts[1], parts[0]);
                                 }
                             });
                         }
@@ -139,6 +151,31 @@ exports.init = function (app, auth, config, logger, serviceLoader, callback) {
 
 
 };
+
+//determine if something in the spec uses formdata
+//The entire api can contain a consume field, or just an individual route
+function containsMultipartFormData(api) {
+    if (_.indexOf(api.consumes, 'multipart/form-data') > -1) {
+        return true;
+    }
+
+    var foundMultipartData = false;
+    _.keys(api.paths).forEach(function(path) {
+        var pathData = api.paths[path];
+        _.keys(pathData).forEach(function(method) {
+            if (_.indexOf(pathData[method].consumes, 'multipart/form-data') > -1) {
+                foundMultipartData = true;
+                return;
+            }
+        });
+        if (foundMultipartData) {
+            return;
+        }
+
+    });
+
+    return foundMultipartData;
+}
 
 //Try to determine if this is supposed to be a swagger file
 //For now look for the required "swagger" field, which contains the version
@@ -160,6 +197,20 @@ function isSwaggerFile(json) {
 function registerRoute(app, auth, additionalMiddleware, method, path, data, allowedTypes, handlerFunc, logger) {
     var authMiddleware = auth.getAuthMiddleware() || [];
     additionalMiddleware = authMiddleware.concat(additionalMiddleware);
+
+
+    if (containsFormData(data)) {
+        var fieldData = _.where(data.parameters, {in: 'formData', type: 'file'});
+        fieldData = _.map(fieldData, function(item) {
+            return {
+                name: item.name,
+                maxCount: 1
+            };
+        });
+
+        additionalMiddleware.push(_upload.fields(fieldData));
+    }
+
     app[method].call(app, path, additionalMiddleware, function (req, res, next) {
 
         validateParameters(req, data, logger, function (err) {
@@ -186,6 +237,11 @@ function registerRoute(app, auth, additionalMiddleware, method, path, data, allo
         });
 
     });
+}
+
+//Check if a given route contains any formData parameters
+function containsFormData(routeData) {
+    return _.where(routeData.parameters, {in: 'formData'}).length > 0;
 }
 
 //Any parameter with a default that's not already defined will be set to the default value
@@ -270,8 +326,34 @@ function validateParameters(req, data, logger, callback) {
             }
 
         } else if (parm.in === 'formData') {
-            //TODO: validate form data
-            logger.warn('Form data validation is not yet supported');
+            //fyi, the swagger parser will fail if the user didn't set consumes to multipart/form-data or application/x-www-form-urlencoded
+
+            if (parm.required && parm.type === 'file') {
+                if (!req.files[parm.name]) {
+                    logger.warn('Missing form parameter "%s" for operation "%s"', parm.name, data.operationId);
+                    var error = new VError('Missing %s form parameter', parm.name);
+                    error.name = 'ValidationError';
+                    return callback(error);
+                }
+            } else if (parm.required) { //something other than file
+                if (!req.body[parm.name]) { //multer puts the non-file parameters in the request body
+                    logger.warn('Missing form parameter "%s" for operation "%s"', parm.name, data.operationId);
+                    var error = new VError('Missing %s form parameter', parm.name);
+                    error.name = 'ValidationError';
+                    return callback(error);
+                } else {
+                    //go through the param-parsing code which is able to take text and validate
+                    //it as any type, such as number, or array
+                    var result = swaggerUtil.validateParameterType(parm, req.body[parm.name]);
+                    if (!result.valid) {
+                        var error = new VError('Error validating form parameter %s', parm.name);
+                        error.name = 'ValidationError';
+                        error.subErrors = result.errors;
+                        return callback(error);
+                    }
+                }
+            }
+
         } else if (parm.in === 'body') {
             var result = swaggerUtil.validateJSONType(parm.schema, req.body);
 
