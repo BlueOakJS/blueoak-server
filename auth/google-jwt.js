@@ -68,8 +68,17 @@ module.exports.authenticate = function (req, res, next) {
 
             //with the kid, we can look up the corresponding pem
             var pem = _pems[kid];
+            
+            //for some reason, the iss can be either accounts.google.com or https://accounts.google.com
+            //let's go ahead and use the one from the token itself
+            var payload = JSON.parse(base64.decode(parts[1]));
+            var iss = _discovery.issuer;
+            if (payload.iss === 'accounts.google.com') {
+                iss = 'accounts.google.com';
+            }
+
             jwt.verify(bearer, pem, {
-                issuer: _discovery.issuer,
+                issuer: iss,
                 algorithms: _discovery.id_token_signing_alg_values_supported,
                 audience: _cfg.clientId
             }, function (err, decoded) {
