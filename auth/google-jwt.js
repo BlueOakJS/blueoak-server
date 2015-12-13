@@ -52,15 +52,28 @@ module.exports.init = function (app, logger, config, auth, callback) {
         callback(); //nothing to do
     }
 
+}
 
+//either return token from the Bearer, Bearer <token>, or false if malformed
+function extractToken(token) {
+    var regex = /^Bearer\s(\S+)$/i;
+    var result = regex.exec(token);
+    return result ? result[1] : false;
 }
 
 module.exports.authenticate = function (req, res, next) {
     var bearerToken = req.headers["authorization"];
     if (bearerToken) {
+        
+        var bearer = extractToken(bearerToken);
+        if (!bearer) {
+            return res.sendStatus(400);  //bad request, malformed beared
+        }
+        
         var bearer = bearerToken.split(' ')[1];
 
         //we need to decode just the header of the jwt so that we can figure out the kid
+        //TODO: Validate that bearer token is well formed before trying to split
         var parts = bearer.split('.');
         try {
             var header = JSON.parse(base64.decode(parts[0]));
