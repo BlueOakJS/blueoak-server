@@ -253,7 +253,7 @@ function initServices(opts, callback) {
 }
 
 function printVersion(logger) {
-    var pkg = require('./package.json')
+    var pkg = require('./package.json');
     logger.info('Starting %s v%s in %s mode', pkg.name, pkg.version, 
         process.env.NODE_ENV || 'development'); //the config loader defaults to development
 }
@@ -263,6 +263,6 @@ function printVersion(logger) {
  * helpful for testing Sprout Server projects.  Not intended for use in non-test environments.
  */
 module.exports.testUtility = function () {
-    return require('./test/unit/util');
+    return require('./testlib/util');
 };
 
