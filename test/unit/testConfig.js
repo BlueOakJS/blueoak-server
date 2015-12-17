@@ -1,7 +1,7 @@
 /* Copyright © 2015 PointSource, LLC. All rights reserved. */
 var assert = require("assert"),
     path = require('path'),
-    util = require('./util'),
+    util = require('../../testlib/util'),
     _ = require('lodash'),
     config = require('../../services/config'),
     sinon = require('sinon');

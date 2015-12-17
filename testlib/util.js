@@ -1,7 +1,7 @@
 /* Copyright © 2015 PointSource, LLC. All rights reserved. */
 //Some utilities to help with testing services
 
-var di = require('../../lib/di'),
+var di = require('../lib/di'),
     _ = require('lodash'),
     fs = require('fs'),
     stripJsonComments = require('strip-json-comments'),
@@ -76,7 +76,7 @@ exports.initService = function(module, config, injections, callback) {
  *                              the mapping, `{ <module_name>: <module>, ... }` is returned.
  */
 exports.injectCore = function (modules, config, callback) {
-  var coreModules = fs.readdirSync(__dirname + '/../../services/'),
+  var coreModules = fs.readdirSync(__dirname + '/../services/'),
       servicePattern = /^[a-z]+(.js)$/i,
       initializedModules = {},
       initializedCount = 0,
@@ -107,7 +107,7 @@ exports.injectCore = function (modules, config, callback) {
       throw new Error('Given module name is not a core service');
     }
 
-    initializedModules[modules[i]] = require('../../services/' + modules[i]);
+    initializedModules[modules[i]] = require('../services/' + modules[i]);
 
     this.initService(initializedModules[modules[i]], config, function (error) {
       if(error) {
@@ -127,7 +127,7 @@ exports.injectCore = function (modules, config, callback) {
  * function as intended.
  */
 function augmentConfigWithDefaults (config) {
-  var defaultConfig = loadJson(__dirname + '/../../defaults.json');
+  var defaultConfig = loadJson(__dirname + '/../defaults.json');
 
   return populateMissingProperties(defaultConfig, config);
 }
