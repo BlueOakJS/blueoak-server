@@ -57,6 +57,7 @@
   "files": [
     "bin",
     "lib",
+    "testlib",
     "middleware",
     "handlers",
     "services",

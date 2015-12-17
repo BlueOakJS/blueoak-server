@@ -3,7 +3,7 @@ var assert = require("assert"),
     path = require('path'),
     redis = require('../../services/redis'),
     cache = require('../../services/cache'),
-    util = require('./util');
+    util = require('../../testlib/util');
 
 describe('Redis Test', function () {
 
