@@ -3,7 +3,6 @@ var path = require('path'),
     fs = require('fs'),
     _ = require('lodash'),
     async = require('async'),
-    q = require('q'),
     cluster = require('cluster');
 
 var sprout = require('./lib/sprout');
