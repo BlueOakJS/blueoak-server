@@ -20,7 +20,7 @@ if (process.argv.length === 4 && process.argv[2] !== '-c') {
 }
 
 function printHelp() {
-    console.log('Encodes text for use in the sprout-server config files.');
+    console.log('Encodes text for use in the blueoak-server config files.');
     console.log('Usage: encrypt.js [options] key text\n');
     console.log('Options:');
     console.log('\t-c <cipher>\tCipher to use\n');

@@ -1,7 +1,7 @@
 {
-  "name": "sprout-server",
-  "version": "1.6.0",
-  "description": "PointSource Sprout Server",
+  "name": "blueoak-server",
+  "version": "2.0.0",
+  "description": "PointSource BlueOak Server",
   "main": "index.js",
   "scripts": {
     "test": "JUNIT_REPORT_PATH=tests-report.xml mocha --check-leaks --reporter mocha-jenkins-reporter --globals services,__appDir test/unit",
@@ -10,7 +10,7 @@
     "posttest": "publish"
   },
   "bin": {
-    "sprout-server": "bin/sprout-server.js"
+    "blueoak-server": "bin/blueoak-server.js"
   },
   "dependencies": {
     "async": "^1.0.0",

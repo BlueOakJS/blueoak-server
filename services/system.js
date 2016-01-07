@@ -7,14 +7,14 @@ var _ = require('lodash');
 exports.init = function () {
 };
 
-function getSproutVersion() {
+function getBlueOakVersion() {
     var pkg = require('../package.json')
     return pkg.version;
 }
 
 exports.stats = function (callback) {
     var versions = {
-        'sprout-server': getSproutVersion()
+        'blueoak-server': getBlueOakVersion()
     };
 
     _.extend(versions, process.versions);

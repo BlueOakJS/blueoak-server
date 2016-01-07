@@ -6,7 +6,7 @@ var assert = require("assert"),
 /* uses the following load order
  * First try within the app's node_modules
  * Next, if this module is required by another module, load it relative to that other module
- * Finally, use the normal require call, which will look in the sprout server's node_modules
+ * Finally, use the normal require call, which will look in the BO server's node_modules
  */
 describe('Subrequire test', function () {
 

@@ -54,7 +54,7 @@ exports.getDependencies = function(serviceLoader) {
 
 function startExpress(cfg, app, callback) {
 
-    //Use this to allow sprout server to run in bluemix/cloud foundry.
+    //Use this to allow BO server to run in bluemix/cloud foundry.
     //instead of using the port from the config, use the port form the CF env info
     if (!cfenv.getAppEnv().isLocal) {
         _logger.info('Running in Cloud Foundry environment');

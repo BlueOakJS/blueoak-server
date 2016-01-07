@@ -10,7 +10,7 @@ exports.launch = function(fixtureName, opts, done) {
     if (!done) {
         done = opts;
         opts = {
-            exec: '../../bin/sprout-server.js'
+            exec: '../../bin/blueoak-server.js'
         };
     }
 

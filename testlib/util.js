@@ -62,8 +62,8 @@ exports.initService = function(module, config, injections, callback) {
 };
 
 /*
- * This method lets you include unmodified Sprout services into your tests. One use case is 
- * when testing your own service that depends on Sprout services, but the particular method
+ * This method lets you include unmodified BO services into your tests. One use case is
+ * when testing your own service that depends on BO services, but the particular method
  * you want to test does not.  Rather than replicating mocked/stubbed functionality that already
  * exists in the core services, you can just inject the core services themselves so 
  * init() and logic/calls within init() doesn't break.
@@ -71,7 +71,7 @@ exports.initService = function(module, config, injections, callback) {
  * @param {Array|String} modules - An single name of a module or an array of module names
  * @param {String|Object} config - A configuration file path or required()'d object.  Any necessary 
                                    config properties that aren't present will be included with 
-                                   Sprout defaults.
+                                   BO defaults.
  * @param {function} callback - Called after all modules are required and init()'d. An object with 
  *                              the mapping, `{ <module_name>: <module>, ... }` is returned.
  */
@@ -123,7 +123,7 @@ exports.injectCore = function (modules, config, callback) {
 };
 
 /*
- * Load defaults.json from sprout-server to merge with a given config to ensure core services
+ * Load defaults.json from blueoak-server to merge with a given config to ensure core services
  * function as intended.
  */
 function augmentConfigWithDefaults (config) {

@@ -1,6 +1,5 @@
 /* Copyright © 2015 PointSource, LLC. All rights reserved. */
-var sprout = require('../../index'),
-    path = require('path'),
+var path = require('path'),
     request = require('request'),
     assert = require('assert'),
     util = require('./launchUtil');

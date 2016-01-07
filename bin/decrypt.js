@@ -14,7 +14,7 @@ if (process.argv.length === 4) {
 }
 
 function printHelp() {
-    console.log('Decodes text from the sprout-server config files.');
+    console.log('Decodes text from the blueoak-server config files.');
     console.log('Usage: decrypt.js <key> <encodedText>\n');
     console.log('Encoded text should be of the form {<cipher>}text=');
 }

@@ -6,7 +6,6 @@ var path = require('path'),
     cluster = require('cluster'),
     semver = require('semver');
 
-var sprout = require('./lib/sprout');
 var loader = require('./lib/loader');
 
 var serviceLoader = loader();
@@ -270,7 +269,7 @@ function checkNodeVersion(logger) {
 }
 /*
  * testUtility must be explicitly called in order to gain access to utility methods that are
- * helpful for testing Sprout Server projects.  Not intended for use in non-test environments.
+ * helpful for testing BO Server projects.  Not intended for use in non-test environments.
  */
 module.exports.testUtility = function () {
     return require('./testlib/util');
