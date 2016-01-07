@@ -31,7 +31,6 @@ function csrfCheck(req, res, next) {
 
         if (req.get('Origin')) {
 
-            var foundMatch = false;
             for (var i = 0; i < whitelist.length; i++) {
                 //whitelist can also contain regexps
                 if (whitelist[i] instanceof RegExp && whitelist[i].test(req.headers.origin)) {
@@ -44,10 +43,10 @@ function csrfCheck(req, res, next) {
             _logger.warn('CSRF request failed for origin, %s', req.headers.origin);
             return res.sendStatus(400);
         } else {
-            next();
+            return next();
         }
     } else {
-        next(); //no need to check origin
+        return next(); //no need to check origin
     }
 
 }

@@ -1,7 +1,7 @@
 /* Copyright © 2015 PointSource, LLC. All rights reserved. */
-var path = require('path'),
-    request = require('request').defaults({jar: true}), //need cookies enabled since this is cookie session
-    assert = require('assert'),
+var request = require('request').defaults({jar: true}); //need cookies enabled since this is cookie session
+
+var assert = require('assert'),
     util = require('./launchUtil');
 
 describe('SERVER3 - test session support', function () {

@@ -1,6 +1,5 @@
 /* Copyright © 2015 PointSource, LLC. All rights reserved. */
-var assert = require("assert"),
-    path = require('path'),
+var assert = require('assert'),
     redis = require('../../services/redis'),
     cache = require('../../services/cache'),
     util = require('../../testlib/util');
@@ -16,7 +15,7 @@ describe('Redis Test', function () {
 
     it('If host and port config is defined, redis client will be defined', function (done) {
         util.initService(redis, {redis: {host: 'localhost', port: 6379}}, function() {
-            assert.ok(redis.getClient())
+            assert.ok(redis.getClient());
             done();
         });
 
@@ -53,14 +52,14 @@ describe('Cache test', function () {
     it('If type is redis, we should get a redis interface', function (done) {
         util.initService(cache, {cache: {type: 'redis'}}, function(err) {
             assert.equal(cache.getClient(), redis.getClient());
-            done();
+            done(err);
         });
     });
 
     it('If type is not redis, we should not get a redis interface', function (done) {
         util.initService(cache, {cache: {type: 'blah'}}, function(err) {
             assert.ok(cache.getClient() !== redis.getClient());
-            done();
+            done(err);
         });
     });
 
@@ -70,11 +69,11 @@ describe('Cache test', function () {
             return done();
         }
 
-        util.initService(cache, {cache: {type: 'redis'}}, function(err) {
+        util.initService(cache, {cache: {type: 'redis'}}, function(err1) {
             cache.set('foo', 'bar', function() {
-                cache.get('foo', function(err, result) {
+                cache.get('foo', function(err2, result) {
                     assert.equal(result, 'bar');
-                    done();
+                    done(err1 || err2);
                 });
             });
         });
@@ -91,7 +90,7 @@ describe('Cache test', function () {
             cache.set('foo', 5, function () {
                 cache.get('foo', function (err, result) {
                     assert.equal(result, 5);
-                    done();
+                    done(err);
                 });
             });
         });
@@ -107,7 +106,7 @@ describe('Cache test', function () {
             cache.set('foo', null, function() {
                 cache.get('foo', function(err, result) {
                     assert.equal(result, null);
-                    done();
+                    done(err);
                 });
             });
         });
@@ -124,7 +123,7 @@ describe('Cache test', function () {
             cache.set('foo', {hello: 'world'}, function() {
                 cache.get('foo', function(err, result) {
                     assert.equal(result.hello, 'world');
-                    done();
+                    done(err);
                 });
             });
         });
@@ -143,7 +142,7 @@ describe('Cache test', function () {
                 setTimeout(function() {
                     cache.get('foo', function(err, result) {
                         assert.equal(result, null);
-                        done();
+                        done(err);
                     });
                 }, 2500);
             });
@@ -162,7 +161,7 @@ describe('Cache test', function () {
                 setTimeout(function() {
                     cache.get('foo', function(err, result) {
                         assert.equal(result, 'bar');
-                        done();
+                        done(err);
                     });
                 }, 2500); //not enough time to cause expiration
             });
@@ -175,7 +174,7 @@ describe('Cache test', function () {
             cache.set('foo', 'bar', function () {
                 cache.get('foo', function (err, result) {
                     assert.equal(result, 'bar');
-                    done();
+                    done(err);
                 });
             });
         });
@@ -186,7 +185,7 @@ describe('Cache test', function () {
             cache.set('foo', 5, function () {
                 cache.get('foo', function (err, result) {
                     assert.equal(result, 5);
-                    done();
+                    done(err);
                 });
             });
         });
@@ -197,7 +196,7 @@ describe('Cache test', function () {
             cache.set('foo', null, function () {
                 cache.get('foo', function (err, result) {
                     assert.equal(result, null);
-                    done();
+                    done(err);
                 });
             });
         });
@@ -208,7 +207,7 @@ describe('Cache test', function () {
             cache.set('foo', {hello: 'world'}, function () {
                 cache.get('foo', function (err, result) {
                     assert.equal(result.hello, 'world');
-                    done();
+                    done(err);
                 });
             });
         });
@@ -222,7 +221,7 @@ describe('Cache test', function () {
                 setTimeout(function() {
                     cache.get('foo', function(err, result) {
                         assert.equal(result, null);
-                        done();
+                        done(err);
                     });
                 }, 2500);
             });
@@ -237,7 +236,7 @@ describe('Cache test', function () {
                 setTimeout(function() {
                     cache.get('foo', function(err, result) {
                         assert.equal(result, 'bar');
-                        done();
+                        done(err);
                     });
                 }, 2500); //not enough time to cause expiration
             });

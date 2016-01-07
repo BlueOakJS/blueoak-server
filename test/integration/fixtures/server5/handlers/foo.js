@@ -1,3 +1,3 @@
 exports.pets5 = function(req, res, next) {
-    res.json({name: "pets5"})
-}
+    res.json({name: 'pets5'});
+};

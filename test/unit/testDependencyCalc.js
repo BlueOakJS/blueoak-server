@@ -1,5 +1,5 @@
 /* Copyright © 2015 PointSource, LLC. All rights reserved. */
-var assert = require("assert"),
+var assert = require('assert'),
     depCalc = require('../../lib/dependencyCalc');
 
 describe('Dependency Calculator', function () {

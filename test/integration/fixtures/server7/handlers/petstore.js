@@ -2,5 +2,5 @@
 exports.getPetById = function(req, res, next) {
     res.json({
         name: 'pets1'
-    })
+    });
 };

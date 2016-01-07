@@ -1,5 +1,5 @@
 /* Copyright © 2015 PointSource, LLC. All rights reserved. */
-var assert = require("assert"),
+var assert = require('assert'),
     loader = require('../../lib/loader'),
     path = require('path');
 
@@ -7,11 +7,11 @@ describe('DI Loader test1 - basic loading', function () {
 
     var testLoader;
 
-    beforeEach(function(){
+    beforeEach(function() {
         testLoader = loader();
     });
 
-    afterEach(function(){
+    afterEach(function() {
 
         testLoader.unload('service1');
         testLoader.unload('service2');
@@ -26,8 +26,8 @@ describe('DI Loader test1 - basic loading', function () {
 
         var service1 = testLoader.get('service1');
         var service2 = testLoader.get('service2');
-        assert.ok(service1, "Not null");
-        assert.ok(service2, "Not null");
+        assert.ok(service1, 'Not null');
+        assert.ok(service2, 'Not null');
         assert.equal(service1.isInitialized(), false);
         assert.equal(service2.isInitialized(), false);
         testLoader.init(function() {
@@ -72,7 +72,7 @@ describe('DI Loader test2 - errors', function () {
         //async error
         testLoader.init(['service3'], function(err) {
             assert.equal(service3.isInitialized(), false);
-            assert.ok(err !== null && err.message.indexOf('crap') > -1, "contains an error with a message");
+            assert.ok(err !== null && err.message.indexOf('crap') > -1, 'contains an error with a message');
             done();
         });
     });
@@ -85,7 +85,7 @@ describe('DI Loader test2 - errors', function () {
         //async error
         testLoader.init(['service4'], function(err) {
             assert.equal(service4.isInitialized(), false);
-            assert.ok(err !== null && err.message.indexOf('crap') > -1, "contains an error with a message");
+            assert.ok(err !== null && err.message.indexOf('crap') > -1, 'contains an error with a message');
             done();
         });
     });
@@ -114,7 +114,7 @@ describe('DI Loader test3 - dependency injection', function () {
             assert.equal(service5.isInitialized(), true);
             assert.equal(service6.isInitialized(), true);
             assert.equal(service7.isInitialized(), true);
-            done();
+            done(err);
         });
     });
 
@@ -135,7 +135,7 @@ describe('DI Loader test4 - dependency injection errors', function () {
     it('Should get errors for unmet dependencies', function (done) {
         testLoader.loadServices(path.resolve(__dirname, 'fixtures/loader/test4')); //app services
 
-        var service8 = testLoader.get('service8');
+        testLoader.get('service8');
         testLoader.init(function(err) {
             assert.ok(err && err.message.indexOf('blah') > -1); //should cause an error about unmet dependency blah
             done();
@@ -148,7 +148,7 @@ describe('DI Loader test4 - dependency injection errors', function () {
         var service8 = testLoader.get('service8');
         testLoader.init(function(err) {
             assert.equal(service8.isInitialized(), true);
-            done();
+            done(err);
         });
     });
 
@@ -158,7 +158,7 @@ describe('DI Loader test4 - dependency injection errors', function () {
         var service9 = testLoader.get('service9');
         testLoader.init(function(err) {
             assert.equal(service9.isInitialized(), true);
-            done();
+            done(err);
         });
     });
 });
@@ -202,12 +202,12 @@ describe('DI Loader test6 - test consumers', function () {
         testLoader.loadConsumers(path.resolve(__dirname, 'fixtures/loader/test6/consumers'), 'foo');
 
         var service20 = testLoader.get('service20');
-        testLoader.init(function(err) {
-            testLoader.initConsumers('foo', function(err) {
+        testLoader.init(function(err1) {
+            testLoader.initConsumers('foo', function(err2) {
                 //both consumers if they were init'd will registered themselves with service20
                 assert.ok(service20.get().indexOf('consumer1') > -1);
                 assert.ok(service20.get().indexOf('consumer2') > -1);
-                done();
+                done(err1 || err2);
             });
 
         });
@@ -218,12 +218,12 @@ describe('DI Loader test6 - test consumers', function () {
         testLoader.loadConsumers(path.resolve(__dirname, 'fixtures/loader/test6/consumers'), 'foo');
 
         var service20 = testLoader.get('service20');
-        testLoader.init(function(err) {
-            testLoader.initConsumers('foo', ['consumer1'], function(err) {
+        testLoader.init(function(err1) {
+            testLoader.initConsumers('foo', ['consumer1'], function(err2) {
                 //both consumers if they were init'd will registered themselves with service20
                 assert.ok(service20.get().indexOf('consumer1') > -1);
                 assert.ok(service20.get().indexOf('consumer2') < 0); //consumer2 won't have loaded
-                done();
+                done(err1 || err2);
             });
 
         });
@@ -235,14 +235,14 @@ describe('DI Loader test6 - test consumers', function () {
         testLoader.loadConsumers(path.resolve(__dirname, 'fixtures/loader/test6/otherConsumers'), 'bar');
 
         var service20 = testLoader.get('service20');
-        testLoader.init(function(err) {
-            testLoader.initConsumers('foo', function(err) {
-                testLoader.initConsumers('bar', function(err) {
+        testLoader.init(function(err1) {
+            testLoader.initConsumers('foo', function(err2) {
+                testLoader.initConsumers('bar', function(err3) {
                     //both consumers if they were init'd will registered themselves with service20
                     assert.ok(service20.get().indexOf('consumer1') > -1);
                     assert.ok(service20.get().indexOf('consumer2') > -1);
                     assert.ok(service20.get().indexOf('otherConsumer1') > -1);
-                    done();
+                    done(err1 || err2 || err3);
                 });
             });
 
@@ -253,8 +253,11 @@ describe('DI Loader test6 - test consumers', function () {
         testLoader.loadServices(path.resolve(__dirname, 'fixtures/loader/test6/services')); //app services
         testLoader.loadConsumers(path.resolve(__dirname, 'fixtures/loader/test6/badConsumers'), 'foo');
 
-        var service20 = testLoader.get('service20');
+        testLoader.get('service20');
         testLoader.init(function(err) {
+            if (err) {
+                return done(err);
+            }
             testLoader.initConsumers('foo', ['consumer1'], function(err) {
                 assert.ok(err && err.message.indexOf('bad consumer1') > -1);
                 done();
@@ -267,8 +270,11 @@ describe('DI Loader test6 - test consumers', function () {
         testLoader.loadServices(path.resolve(__dirname, 'fixtures/loader/test6/services')); //app services
         testLoader.loadConsumers(path.resolve(__dirname, 'fixtures/loader/test6/badConsumers'), 'foo');
 
-        var service20 = testLoader.get('service20');
+        testLoader.get('service20');
         testLoader.init(function(err) {
+            if (err) {
+                return done(err);
+            }
             testLoader.initConsumers('foo', ['consumer2'], function(err) {
                 assert.ok(err && err.message.indexOf('bad consumer2') > -1);
                 done();
@@ -297,16 +303,16 @@ describe('DI Loader test7 - test dynamic dependencies', function () {
         testLoader.loadServices(path.resolve(__dirname, 'fixtures/loader/test7'));
         testLoader.inject('service-loader', testLoader);
         var service12 = testLoader.get('service12');
-        var service13 = testLoader.get('service13');
-        var service14 = testLoader.get('service14');
-        var service15 = testLoader.get('service15');
+        testLoader.get('service13');
+        testLoader.get('service14');
+        testLoader.get('service15');
 
         testLoader.init(function(err) {
             assert.equal(service12.isInitialized(), true);
             //assert.equal(service13.isInitialized(), true);
             //assert.equal(service14.isInitialized(), true);
             //assert.equal(service15.isInitialized(), true);
-            done();
+            done(err);
         });
     });
 
@@ -333,7 +339,7 @@ describe('DI Loader test8 - test camel case', function () {
         testLoader.init(function(err) {
             assert.equal(service15.isInitialized(), true);
             assert.equal(serviceOne.isInitialized(), true);
-            done();
+            done(err);
         });
     });
 
@@ -360,7 +366,7 @@ describe('DI Loader test8 - test service underscored alias stripping', function 
         testLoader.init(function(err) {
             assert.equal(service15.isInitialized(), true);
             assert.equal(serviceOne.isInitialized(), true);
-            done();
+            done(err);
         });
     });
 
@@ -373,7 +379,7 @@ describe('DI Loader test8 - test service underscored alias stripping', function 
         testLoader.init(function(err) {
             assert.equal(service15.isInitialized(), true);
             assert.equal(serviceOne.isInitialized(), true);
-            done();
+            done(err);
         });
     });
 });
@@ -400,7 +406,7 @@ describe('DI Loader test10 - test services get', function () {
         testLoader.init(['service19'], function(err) {
             service19 = services.get('service19');
             assert.equal(service19.isInitialized(), true);
-            done();
+            done(err);
         });
     });
 
@@ -417,6 +423,9 @@ describe('DI Loader test10 - test services get', function () {
         });
 
         testLoader.init(['service18'], function(err) {
+            if (err) {
+                return done(err);
+            }
         });
     });
 
@@ -438,14 +447,14 @@ describe('DI Loader test11 - load from subdirectories', function () {
         testLoader.loadConsumers(path.resolve(__dirname, 'fixtures/loader/test11/consumers'), 'foo');
 
         var service21 = testLoader.get('service21');
-        testLoader.init(function (err) {
-            testLoader.initConsumers('foo', function (err) {
+        testLoader.init(function (err1) {
+            testLoader.initConsumers('foo', function (err2) {
                 //both consumer4 if it was init'd will registered with service21
                 assert.ok(service21.get().indexOf('consumer5') > -1);
 
                 //service22 won't exist because it didn't recurse deep enough
                 assert.ok(!testLoader.get('service22'));
-                done();
+                done(err1 || err2);
             });
 
         });
@@ -456,13 +465,13 @@ describe('DI Loader test1.1 - test events', function () {
 
     var testLoader;
 
-    beforeEach(function(){
+    beforeEach(function() {
         testLoader = loader();
         var EventEmitter = require('events').EventEmitter;
         testLoader.inject('events', new EventEmitter());
     });
 
-    afterEach(function(){
+    afterEach(function() {
 
         testLoader.unload('service1');
         testLoader.unload('service2');
@@ -472,8 +481,8 @@ describe('DI Loader test1.1 - test events', function () {
     it('Should get XX:init:done events when services are initialized', function (done) {
         testLoader.loadServices(path.resolve(__dirname, 'fixtures/loader/test1')); //app services
 
-        var service1 = testLoader.get('service1');
-        var service2 = testLoader.get('service2');
+        testLoader.get('service1');
+        testLoader.get('service2');
 
         var s1init = false;
         var s2init = false;

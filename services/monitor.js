@@ -1,6 +1,5 @@
 /* Copyright © 2015 PointSource, LLC. All rights reserved. */
 var StatsD = require('node-statsd'),
-    _ = require('lodash'),
     onHeaders = require('on-headers');
 
 var client;
@@ -60,7 +59,7 @@ exports.express = function(prefix, genRoute) {
                     routeName = 'root.';
                 }
                 routeName = req.method + routeName;
-                routeName = routeName.replace(/:/g, '').replace(/^\/|\/$/g, '').replace(/\//g, ".");
+                routeName = routeName.replace(/:/g, '').replace(/^\/|\/$/g, '').replace(/\//g, '.');
                 key = prefix + '.' + routeName + '.';
             } else {
                 key = prefix + '.';
@@ -77,7 +76,7 @@ exports.express = function(prefix, genRoute) {
 
 
         if (next) {
-            next();
+            return next();
         }
     };
 };

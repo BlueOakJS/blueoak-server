@@ -7,8 +7,7 @@
  */
 
 
-var session = require('cookie-session'),
-    _ = require('lodash');
+var session = require('cookie-session');
 
 
 exports.init = function(app, config, logger, callback) {

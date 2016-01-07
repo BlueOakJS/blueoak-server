@@ -5,7 +5,6 @@
  */
 var _ = require('lodash'),
     path = require('path'),
-    async = require('async'),
     fs = require('fs'),
     https = require('https'),
     di = require('../lib/di'),
@@ -34,7 +33,7 @@ exports.stop = function(callback) {
         server.close(callback);
     } else {
         if (callback) {
-            callback();
+            return callback();
         }
     }
 };

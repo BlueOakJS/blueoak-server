@@ -4,8 +4,8 @@ var initialized = false;
 
 exports.init = function(service15) {
     initialized = true;
-}
+};
 
 exports.isInitialized = function() {
     return initialized;
-}
+};

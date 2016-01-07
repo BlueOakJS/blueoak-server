@@ -1,7 +1,6 @@
 /* Copyright © 2015 PointSource, LLC. All rights reserved. */
-var assert = require("assert"),
-    swaggerUtil = require('../../lib/swaggerUtil'),
-    path = require('path');
+var assert = require('assert'),
+    swaggerUtil = require('../../lib/swaggerUtil');
 
 var FAIL = false;
 var SUCCESS = true;
@@ -76,11 +75,11 @@ describe('Number validation test', function () {
 
         assert.equal(swaggerUtil.validateParameterType({
             type: 'number'
-        }, "7").valid, SUCCESS);
+        }, '7').valid, SUCCESS);
 
         assert.equal(swaggerUtil.validateParameterType({
             type: 'number'
-        }, "foo").valid, FAIL);
+        }, 'foo').valid, FAIL);
     });
 
 

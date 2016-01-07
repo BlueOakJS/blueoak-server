@@ -11,7 +11,7 @@ exports.init = function (app) {
     app.get('/login', function (req, res) {
         var username = req.query.name || 'anonymous';
         req.session.auth = {
-          id: username
+            id: username
         };
         res.status(200).send('You logged in as ' + username);
     });
@@ -26,7 +26,7 @@ exports.init = function (app) {
 
         res.status(200).send('You logged out as ' + username);
     });
-}
+};
 
 exports.authenticate = function (req, res, next) {
     if (req.session.auth) {
@@ -37,4 +37,4 @@ exports.authenticate = function (req, res, next) {
         return res.status(401).send('Log in first at /login');
     }
     next();
-}
+};

@@ -25,13 +25,12 @@ exports.init = function (logger, config, callback) {
 
     client.on('connect', function () {
         logger.info('Connected to redis on %s:%s',  cfg.host, cfg.port);
-        callback();
-        callback = function(err) { //if we lose connection, error callback is called again
+        return callback();
+        //TODO: Need implement reconnect
+        /*callback = function(err) { //if we lose connection, error callback is called again
             logger.warn(err);
-
-            //TODO: Need implement reconnect
             //logger.info('Attempting to reconnect to redis');
-        };
+        };*/
     });
 };
 
@@ -41,9 +40,9 @@ exports.cacheInterface = {
     get: function(key, callback) {
         client.get(key, function(err, result) {
             if (err) {
-                callback(err);
+                return callback(err);
             } else {
-                callback(null, JSON.parse(result));
+                return callback(null, JSON.parse(result));
             }
         });
     },
@@ -68,7 +67,7 @@ exports.cacheInterface = {
                     callback();
                 });
             } else {
-                callback();
+                return callback();
             }
         });
     },

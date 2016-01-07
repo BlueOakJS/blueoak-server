@@ -4,8 +4,8 @@
 var di = require('../lib/di'),
     _ = require('lodash'),
     fs = require('fs'),
-    stripJsonComments = require('strip-json-comments'),
-    sinon = require('sinon');
+    path = require('path'),
+    stripJsonComments = require('strip-json-comments');
 
 //creates a mock config service
 function getConfigService(cfg) {
@@ -56,7 +56,7 @@ exports.initService = function(module, config, injections, callback) {
         module.init.apply(null, args);
     } else {
         module.init.apply(null, args);
-        callback();
+        return callback();
     }
 
 };
@@ -70,56 +70,55 @@ exports.initService = function(module, config, injections, callback) {
  *
  * @param {Array|String} modules - An single name of a module or an array of module names
  * @param {String|Object} config - A configuration file path or required()'d object.  Any necessary 
-                                   config properties that aren't present will be included with 
+                                   config properties that aren't present will be included with
                                    BO defaults.
  * @param {function} callback - Called after all modules are required and init()'d. An object with 
  *                              the mapping, `{ <module_name>: <module>, ... }` is returned.
  */
 exports.injectCore = function (modules, config, callback) {
-  var coreModules = fs.readdirSync(__dirname + '/../services/'),
-      servicePattern = /^[a-z]+(.js)$/i,
-      initializedModules = {},
-      initializedCount = 0,
-      temp;
+    var coreModules = fs.readdirSync(path.join(__dirname, '/../services/')),
+        servicePattern = /^[a-z]+(.js)$/i,
+        initializedModules = {},
+        initializedCount = 0;
 
-  if(typeof config === 'string') {
-    config = loadJson(config);
-  }
-
-  config = augmentConfigWithDefaults(config);
-
-  for(var i = 0; i < coreModules.length; i++) {
-    if(!servicePattern.test(coreModules[i])) {
-      coreModules.splice(i, 1);  
+    if (typeof config === 'string') {
+        config = loadJson(config);
     }
 
-    coreModules[i] = coreModules[i].split('.')[0];
-  }
+    config = augmentConfigWithDefaults(config);
 
-  if(!(modules instanceof Array)) {
-    modules = [modules]; 
-  }
+    for (var i = 0; i < coreModules.length; i++) {
+        if (!servicePattern.test(coreModules[i])) {
+            coreModules.splice(i, 1);
+        }
 
-  for(var i = 0; i < modules.length; i++) {
-    temp = {};
-
-    if(coreModules.indexOf(modules[i]) === -1) {
-      throw new Error('Given module name is not a core service');
+        coreModules[i] = coreModules[i].split('.')[0];
     }
 
-    initializedModules[modules[i]] = require('../services/' + modules[i]);
+    if (!(modules instanceof Array)) {
+        modules = [modules];
+    }
 
-    this.initService(initializedModules[modules[i]], config, function (error) {
-      if(error) {
-        throw new Error('Unable to inject core service');
-      }
+    for (var i = 0; i < modules.length; i++) {
+        temp = {};
 
-      initializedCount++;
-      if(initializedCount === modules.length) {
-        callback(initializedModules);
-      }
-    });
-  }
+        if (coreModules.indexOf(modules[i]) === -1) {
+            throw new Error('Given module name is not a core service');
+        }
+
+        initializedModules[modules[i]] = require('../services/' + modules[i]);
+
+        this.initService(initializedModules[modules[i]], config, function (error) {
+            if (error) {
+                throw new Error('Unable to inject core service');
+            }
+
+            initializedCount++;
+            if (initializedCount === modules.length) {
+                return callback(initializedModules);
+            }
+        });
+    }
 };
 
 /*
@@ -127,41 +126,41 @@ exports.injectCore = function (modules, config, callback) {
  * function as intended.
  */
 function augmentConfigWithDefaults (config) {
-  var defaultConfig = loadJson(__dirname + '/../defaults.json');
+    var defaultConfig = loadJson(path.join(__dirname, '/../defaults.json'));
 
-  return populateMissingProperties(defaultConfig, config);
+    return populateMissingProperties(defaultConfig, config);
 }
 
 /*
  * Recursively populate missing properties and values in the given injectCore() configuration
  */
 function populateMissingProperties (defaultConfig, config) {
-  for(var property in defaultConfig) {
-    if(typeof defaultConfig[property] === 'object' && !(defaultConfig[property] instanceof Array)) {
-      if(!config[property]) {
-        config[property] = {};
-      }
+    for (var property in defaultConfig) {
+        if (typeof defaultConfig[property] === 'object' && !(defaultConfig[property] instanceof Array)) {
+            if (!config[property]) {
+                config[property] = {};
+            }
 
-      populateMissingProperties(defaultConfig[property], config[property]);
-    } else {
-      if(!config[property]) {
-        config[property] = defaultConfig[property];
-      }
+            populateMissingProperties(defaultConfig[property], config[property]);
+        } else {
+            if (!config[property]) {
+                config[property] = defaultConfig[property];
+            }
+        }
     }
-  }
 
-  return config;
+    return config;
 }
 
 /*
  * Return an object from a JSON file containing comments
  */
 function loadJson (path) {
-  var json = fs.readFileSync(path, 'utf-8');  
-  json = stripJsonComments(json);
-  json = JSON.parse(json);
+    var json = fs.readFileSync(path, 'utf-8');
+    json = stripJsonComments(json);
+    json = JSON.parse(json);
 
-  return json;
+    return json;
 }
 
 /* This is a new init method to replace initService
@@ -177,24 +176,24 @@ exports.init = function(mod, serviceMap, serviceCallback, callback) {
         serviceCallback = serviceMap;
         serviceMap = {};
     }
-    
+
     global.services = {
-      get: function(name) {
-          console.log("Get", name);
-          return serviceMap[name];
-      }  
+        get: function (name) {
+            console.log('Get', name);
+            return serviceMap[name];
+        }
     };
-    
+
     var paramNames = di.getParamNames(mod.init);
     var mockParams = [];
     paramNames.forEach(function(paramName) {
         if (!serviceMap[paramName]) {
-            
+
             //since it's possible that this has already been loaded once and
             //has stubbed out methods, delete it from the cache
             var modPath = require.resolve('./mocks/' + paramName);
             delete require.cache[modPath];
-            
+
             serviceMap[paramName] = require('./mocks/' + paramName);
         }
         mockParams.push(serviceMap[paramName]);
@@ -210,7 +209,7 @@ exports.init = function(mod, serviceMap, serviceCallback, callback) {
         } catch (err) {
             thrownError = err;
         }
-        callback(thrownError);
+        return callback(thrownError);
     }
 };
 

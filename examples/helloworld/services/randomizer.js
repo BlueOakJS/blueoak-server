@@ -18,6 +18,9 @@ exports.get = function(callback) {
     //custom log level
     _logger.info('request URL:  ' +  url);
     request.get({url: url}, function(err, response, body) {
+        if (err) {
+            throw err;
+        }
         callback(Number(body));
     });
 };

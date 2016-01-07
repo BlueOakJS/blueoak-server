@@ -1,7 +1,6 @@
 /* Copyright © 2015 PointSource, LLC. All rights reserved. */
 
-var _ = require('lodash'),
-    request = require('request'),
+var request = require('request'),
     jwt = require('jsonwebtoken'),
     base64 = require('base64url'),
     getPem = require('rsa-pem-from-mod-exp');
@@ -49,10 +48,10 @@ module.exports.init = function (app, logger, config, auth, callback) {
             });
         });
     } else {
-        callback(); //nothing to do
+        return callback(); //nothing to do
     }
 
-}
+};
 
 //either return token from the Bearer, Bearer <token>, or false if malformed
 function extractToken(token) {
@@ -62,7 +61,7 @@ function extractToken(token) {
 }
 
 module.exports.authenticate = function (req, res, next) {
-    var bearerToken = req.headers["authorization"];
+    var bearerToken = req.headers['authorization'];
     if (bearerToken) {
         
         var bearer = extractToken(bearerToken);
@@ -112,4 +111,4 @@ module.exports.authenticate = function (req, res, next) {
     } else {
         res.sendStatus(401);
     }
-}
+};

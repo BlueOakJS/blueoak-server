@@ -1,5 +1,5 @@
 /* Copyright © 2015 PointSource, LLC. All rights reserved. */
-var assert = require("assert"),
+var assert = require('assert'),
     security = require('../../lib/security');
 
 describe('Security Decryption', function () {
@@ -88,7 +88,7 @@ describe('Security Config', function () {
         ];
 
         for (var i = 0; i < toTest.length; i++) {
-            assert(security.containsEncryptedData(toTest[i]), "Should contain encrypted data");
+            assert(security.containsEncryptedData(toTest[i]), 'Should contain encrypted data');
         }
 
     });
@@ -100,7 +100,7 @@ describe('Security Config', function () {
             //Simple
             {
                 data: unencryptedData,
-                data2: "http://blah?time={now}&foo=bar"
+                data2: 'http://blah?time={now}&foo=bar'
             },
 
             //Nested
@@ -128,7 +128,7 @@ describe('Security Config', function () {
         ];
 
         for (var i = 0; i < toTest.length; i++) {
-            assert(!security.containsEncryptedData(toTest[i]), "Should NOT contain encrypted data");
+            assert(!security.containsEncryptedData(toTest[i]), 'Should NOT contain encrypted data');
         }
     });
 

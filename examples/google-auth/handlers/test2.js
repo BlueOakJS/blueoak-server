@@ -4,4 +4,4 @@ exports.init = function(app, auth) {
     app.get('/test2', auth.get('google-oauth'), function(req, res) {
         res.json({email: req.user.email});
     });
-}
+};

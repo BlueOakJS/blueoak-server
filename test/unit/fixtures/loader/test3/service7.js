@@ -7,8 +7,8 @@ exports.init = function(service6) {
     if (service6.isInitialized()) {
         initialized = true;
     }
-}
+};
 
 exports.isInitialized = function() {
     return initialized;
-}
+};

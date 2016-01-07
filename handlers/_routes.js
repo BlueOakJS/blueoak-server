@@ -13,8 +13,6 @@ exports.init = function (app, config, serviceLoader, auth, logger) {
  */
 function registerDeclarativeRoutes(app, config, routes, serviceLoader, auth, logger) {
 
-    var cfg = config.get('auth');
-
     _.keys(routes).forEach(function (routePath) {
         //routePath should be of form "<method> path"
         var parts = routePath.split(' ');
@@ -59,7 +57,7 @@ function registerDeclarativeRoutes(app, config, routes, serviceLoader, auth, log
         } else if (!routes[routePath].auth) { //at least set up global auth if it's available
             middleware = auth.getAuthMiddleware();
         } else {
-            logger.debug("Ignoring auth");
+            logger.debug('Ignoring auth');
         }
 
         //Set up custom validator function on the route

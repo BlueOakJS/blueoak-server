@@ -2,5 +2,5 @@
 exports.foo = function(req, res, next) {
     res.json({
         name: 'foo'
-    })
+    });
 };

@@ -3,8 +3,9 @@ var stripJsonComments = require('strip-json-comments'),
     fs = require('fs'),
     cluster = require('cluster'),
     security = require('../lib/security'),
-    path = require('path'),
-    config = null;
+    path = require('path');
+
+var config = null;
 
 //These are the default config values for anything not specified in the app's config dir
 var defaults = {};
@@ -15,7 +16,7 @@ exports.init = function(callback) {
     process.env.NODE_CONFIG_DIR = path.resolve(global.__appDir, 'config');
     config = require('config');
 
-    fs.readFile(__dirname + '/../defaults.json', function (err, data) {
+    fs.readFile(path.join(__dirname, '/../defaults.json'), function (err, data) {
         if (err) {
             return callback(err);
         }
@@ -34,11 +35,11 @@ exports.init = function(callback) {
                         return callback(err);
                     } else {
                         exports.decryptionKey = result;
-                        callback();
+                        return callback();
                     }
                 });
             } else {
-                callback();
+                return callback();
             }
         } else {
             //If we're a worker process, we expect that the master has set the decryptionKey as an env variable
@@ -52,7 +53,7 @@ exports.init = function(callback) {
                     return callback(new Error('Could not decrypt keys: ' + err.message));
                 }
             }
-            callback();
+            return callback();
         }
     });
 

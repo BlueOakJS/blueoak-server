@@ -1,0 +1,39 @@
+{
+  "env": {
+    "node": true
+  },
+  "rules": {
+    // 4-space indentation
+    "indent": 2,
+    // Require semicolons
+    "semi": [2, "always"],
+    // Require strings to use single quotes
+    "quotes": [2, "single"],
+    // Require curly braces for all control statements
+    "curly": 2,
+    // Disallow using variables before they've been defined (allow functions)
+    "no-use-before-define": [2, "nofunc"],
+    // Allow any case for variable naming
+    "camelcase": 0,
+    // Disallow unused variables, except as function arguments
+    "no-unused-vars": [2, {"args":"none"}],
+    // Use if () { }
+    //       ^ space
+    "space-after-keywords": [2, "always"],
+    // Use if () { }
+    //          ^ space
+    "space-before-blocks": [2, "always"],
+    // allow use of synchronous methods - TODO: Remove sync methods from code
+    "no-sync": 0,
+    // disallow string concatenation with __dirname and __filename
+    "no-path-concat": 1,
+    // disallow use of new operator with the require function
+    "no-new-require": 1,
+    // disallow mixing regular variable and require declarations
+    "no-mixed-requires": [1, false],
+    // enforce return after a callback
+    "callback-return": 1,
+    // enforces error handling in callbacks (node environment)
+    "handle-callback-err": 1,
+  }
+}

@@ -87,13 +87,13 @@ exports.init = function (config) {
             return theLogger;
         }
         var loglevels = this.components[component].loglevels;
-        var logger = this;
+
         var tmp = {'component': component};
         var self = this;
         _.keys(this.levels).forEach(function (lev) {
             tmp[lev] = function () {
                 var args = [].slice.call(arguments);
-                args[0] = "" + this.component + ' - ' + args[0];
+                args[0] = this.component + ' - ' + args[0];
                 var tlevels = [];
                 //look through transports and save current log levels
                 Object.keys(theLogger.transports).forEach(function (k) {
@@ -132,7 +132,7 @@ exports.init = function (config) {
     }
 
     //TODO: support different dump types, e.g. console vs file
-    exports.dumpBuffer = function (err) {
+    exports.dumpBuffer = function () {
 
         if (bufferEnabled) {
             console.log('---------- Crash Report ' + (new Date().toString()) + ' ----------');
@@ -219,7 +219,6 @@ function setupTransports(cfg, logger) {
                 //don't need to do anything -- already handled by winston
             } else {
                 //is a string
-                var tsl = ts.toLowerCase();
                 try {
                     var tsm = require(global.__appDir + '/' + ts);
                     if (typeof tsm.init === 'function' && typeof tsm.timestamp === 'function') {

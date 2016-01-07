@@ -10,12 +10,12 @@ util.inherits(Transport, winston.Transport);
 
 Transport.prototype.log = function() {
     
-}
+};
 
 exports.foo = {
     bar: Transport
-}
+};
 
 exports.getOptions = function() {
     return initOptions;
-}
+};

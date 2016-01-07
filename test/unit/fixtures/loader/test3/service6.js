@@ -7,8 +7,8 @@ exports.init = function(service5, callback) {
         initialized = true;
     }
     callback();
-}
+};
 
 exports.isInitialized = function() {
     return initialized;
-}
+};

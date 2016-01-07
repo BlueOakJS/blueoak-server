@@ -4,10 +4,11 @@
   "description": "PointSource BlueOak Server",
   "main": "index.js",
   "scripts": {
-    "test": "JUNIT_REPORT_PATH=tests-report.xml mocha --check-leaks --reporter mocha-jenkins-reporter --globals services,__appDir test/unit",
+    "test": "JUNIT_REPORT_PATH=tests-report.xml mocha --check-leaks --reporter mocha-jenkins-reporter --globals services,__appDir test/unit; npm run lint",
     "test-integration": "mocha test/integration",
     "test-cov": "istanbul cover node_modules/mocha/bin/_mocha --report lcovonly -- test/unit",
-    "posttest": "publish"
+    "posttest": "publish",
+    "lint": "eslint auth examples handlers lib middleware services test testlib && echo lint complete."
   },
   "bin": {
     "blueoak-server": "bin/blueoak-server.js"
@@ -43,9 +44,10 @@
     "winston": "^1.0.0"
   },
   "devDependencies": {
-    "mocha-jenkins-reporter": "^0.1.8",
+    "eslint": "^1.10.3",
     "istanbul": "^0.3.14",
     "mocha": "^2.2.5",
+    "mocha-jenkins-reporter": "^0.1.8",
     "nock": "^2.2.0",
     "publish": "^0.5.0",
     "sinon": "^1.14.1"

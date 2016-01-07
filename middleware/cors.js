@@ -6,8 +6,7 @@
  * See https://github.com/troygoode/node-cors#configuration-options
  */
 
-var _ = require('lodash'),
-    cors = require('cors');
+var cors = require('cors');
 
 exports.init = function(app, config, logger, callback) {
     var cfg = config.get('cors');

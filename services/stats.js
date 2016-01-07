@@ -1,6 +1,5 @@
 /* Copyright © 2015 PointSource, LLC. All rights reserved. */
 var async = require('async');
-var _events;
 var loader;
 
 exports.init = function (serviceLoader) {
@@ -16,10 +15,10 @@ function collectStats(callback) {
         if (mod.stats) { //does it have a stats function?
             invokeStatsOnMod(mod, function(err, data) {
                 serviceStats[service] = data;
-                callback(err);
+                return callback(err);
             });
         } else {
-            callback(); //nothing to do, no stats method exposed
+            return callback(); //nothing to do, no stats method exposed
         }
 
     }, function(err) {

@@ -4,7 +4,7 @@ exports.init = function(app, logger) {
         if (err.name === 'ValidationError') {
             res.json({error: err.message});
         } else {
-            next();
+            return next();
         }
     });
-}
+};

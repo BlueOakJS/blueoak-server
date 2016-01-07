@@ -1,6 +1,5 @@
 /* Copyright © 2015 PointSource, LLC. All rights reserved. */
 var path = require('path'),
-    fs = require('fs'),
     _ = require('lodash'),
     async = require('async'),
     cluster = require('cluster'),
@@ -13,7 +12,6 @@ var project = require('./lib/project')(serviceLoader);
 
 global.services = serviceLoader.getRegistry();
 
-var server = module.exports;
 var forceShutdown = false; //if true, user hit ctrl+c and we don't want to restart workers
 
 //set the app root to the directory the main module was executed from
@@ -44,7 +42,6 @@ module.exports.init = function (opts, callback) {
             }
         }
 
-        var clusterCount = 0;
         if (cluster.isMaster) {
 
             var clusterConfig = serviceLoader.get('config').get('cluster');
@@ -77,7 +74,7 @@ module.exports.init = function (opts, callback) {
                 async.timesSeries(workerCount, function(n, next) {
                     forkWorker(next);
                 }, function(err, result) {
-                    callback(err);
+
                     cluster.on('exit', function(worker, code, signal) {
                         if (!forceShutdown) {
                             logger.info('Worked %d stopped (%s). Restarting', worker.process.pid, signal || code);
@@ -87,6 +84,7 @@ module.exports.init = function (opts, callback) {
                             });
                         }
                     });
+                    return callback(err);
                 });
             }
 
@@ -105,7 +103,7 @@ function forkWorker(callback) {
         try {
             var obj = JSON.parse(msg);
             logger[obj.level].apply(logger, obj.args);
-        } catch(err) {
+        } catch (err) {
             logger.info(msg);
         }
 
@@ -114,7 +112,7 @@ function forkWorker(callback) {
                 //Callback with the error
                 return callback(new Error(msg.error));
             } else {
-                callback();
+                return callback();
             }
         }
     });
@@ -154,7 +152,10 @@ process.on('SIGHUP', function() {
             cluster.workers[id].send('stop');
             forkWorker(next);
         }, function(err, result) {
-           logger.info('Restart complete');
+            if (err) {
+                logger.info(err);
+            }
+            logger.info('Restart complete');
         });
     } else if (cluster.isMaster) {
         logger.warn('Ignoring SIGHUP');

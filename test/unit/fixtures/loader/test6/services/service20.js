@@ -7,12 +7,16 @@ var consumers = [];
 exports.init = function(callback) {
     initialized = true;
     callback();
-}
+};
 
 exports.add = function(name) {
     consumers.push(name);
-}
+};
 
 exports.get = function() {
     return consumers;
-}
+};
+
+exports.isInitialized = function() {
+    return initialized;
+};

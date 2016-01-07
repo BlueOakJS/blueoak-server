@@ -22,10 +22,10 @@ exports.init = function(app, config, logger) {
     var cfg = config.get('bodyParser');
 
     var types = ['urlencoded', 'json', 'raw', 'text'];
-    types.forEach(function(type) {
-       if (cfg[type]) {
-           logger.debug('Enabled body parser for type %s.', type);
-          app.use(bodyParser[type](cfg[type]));
-       }
+    types.forEach(function (type) {
+        if (cfg[type]) {
+            logger.debug('Enabled body parser for type %s.', type);
+            app.use(bodyParser[type](cfg[type]));
+        }
     });
-}
+};

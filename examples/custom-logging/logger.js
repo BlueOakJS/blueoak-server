@@ -9,4 +9,4 @@ module.exports.init = function(logger) {
             return Date.now();
         }
     });
-}
+};

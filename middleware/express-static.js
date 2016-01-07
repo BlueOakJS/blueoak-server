@@ -16,21 +16,19 @@
  */
 
 var path = require('path'),
-      es = require('express-static');
+    es = require('express-static');
 
-var logger = null;
-
-exports.init = function(app, config, logger) {
-  var cfg = config.get('express-static');
-  var cfgDir = cfg.www;
-  if(!cfgDir) {
-    cfgDir = cfg.docs;
-  }
-  if (!cfgDir) {
-    logger.warn('No document root is configured for express-static.');
-  } else {
-    var docsDir = path.resolve(global.__appDir, cfgDir);
-    logger.info('Serving static content from: %s.', docsDir);
-    app.use(es(docsDir));
-  }
+exports.init = function (app, config, logger) {
+    var cfg = config.get('express-static');
+    var cfgDir = cfg.www;
+    if (!cfgDir) {
+        cfgDir = cfg.docs;
+    }
+    if (!cfgDir) {
+        logger.warn('No document root is configured for express-static.');
+    } else {
+        var docsDir = path.resolve(global.__appDir, cfgDir);
+        logger.info('Serving static content from: %s.', docsDir);
+        app.use(es(docsDir));
+    }
 };

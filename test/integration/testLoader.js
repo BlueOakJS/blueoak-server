@@ -1,7 +1,5 @@
 /* Copyright © 2015 PointSource, LLC. All rights reserved. */
-var path = require('path'),
-    request = require('request'),
-    assert = require('assert'),
+var assert = require('assert'),
     util = require('./launchUtil');
 
 describe('SERVER6 - duplicate service name should fail on startup', function () {

@@ -21,7 +21,7 @@ var _ = require('lodash'),
     getRawBody = require('raw-body'),
     winston = require('winston');
 
-var _logger, _cfg;
+var _cfg;
 var TOKEN_URL = 'https://www.googleapis.com/oauth2/v3/token';
 var LOGOUT_URL = 'https://accounts.google.com/o/oauth2/revoke';
 var PROFILE_URL = 'https://www.googleapis.com/plus/v1/people/me';
@@ -37,8 +37,6 @@ var ilog = new (winston.Logger)({
 
 
 module.exports.init = function(app, logger, config) {
-
-    _logger = logger;
 
     _cfg = config.get('google-oauth');
 
@@ -69,7 +67,7 @@ module.exports.init = function(app, logger, config) {
         app.all(_cfg.signoutPath, signOutUser);
     }
 
-}
+};
 
 //Look for an auth code on a request.
 //The code is either stored on a query param, in a JSON POST body, or as a raw POST body.
@@ -81,7 +79,7 @@ function setAuthCodeOnReq(req, res, next) {
         ilog.debug('Found auth code %s on query param', req.code);
         return next();
     }
-    
+
     //look for something like {"code": "..."}
     if (req.body.code) {
         req.code = req.body.code;
@@ -90,6 +88,9 @@ function setAuthCodeOnReq(req, res, next) {
     }
 
     getRawBody(req, function(err, string) {
+        if (err) {
+            ilog.debug(err);
+        }
         if (string.toString().length > 0) {
             req.code = string.toString();
             ilog.debug('Found auth code %s in body', req.code);
@@ -103,13 +104,13 @@ module.exports.authenticate = function(req, res, next) {
         if (req.session.auth.expiration > Date.now()) {
             setUserData(req);
             ilog.debug('Access token %s is valid for %s seconds', req.session.auth.id, (req.session.auth.expiration - Date.now()) / 1000);
-            next();
+            return next();
         } else {
             ilog.debug('Access token expired for %s.', req.session.auth.id);
             
             if (!req.session.auth.refresh_token) {
-              ilog.debug('No refresh token available for %s.', req.session.auth.id);  
-              return res.status(401).send('Access token expired');
+                ilog.debug('No refresh token available for %s.', req.session.auth.id);
+                return res.status(401).send('Access token expired');
             }
             
             var profile = req.session.auth.profile;
@@ -131,13 +132,13 @@ module.exports.authenticate = function(req, res, next) {
                     req.session.auth.profile = profile;
                 }
                 setUserData(req);
-                next();
+                return next();
             });
         }
     } else {
         res.sendStatus(401); //not authenticated
     }
-}
+};
 
 function setUserData(req) {
     var auth = req.session.auth;
@@ -173,7 +174,7 @@ function authCodeCallback(req, res, next) {
     };
 
     getToken(tokenData, function (err, authData) {
-        
+
         if (err) {
             ilog.debug('Error getting new access token: %s', err);
             return res.sendStatus(401);
@@ -255,7 +256,7 @@ function getToken(data, callback) {
         
         //this would be something like a connection error
         if (err) {
-            return callback({statusCode: 500, message: err.message})
+            return callback({statusCode: 500, message: err.message});
         }
 
         if (resp.statusCode !== 200) { //error
@@ -289,7 +290,7 @@ function getToken(data, callback) {
              iat: 1428691188,
              exp: 1428694788 }
              */
-            callback(null, {
+            return callback(null, {
                 id: idData.sub,
                 email: idData.email,
                 access_token: authData.access_token,
@@ -298,7 +299,7 @@ function getToken(data, callback) {
             });
         }
     });
-}
+};
 
 function getProfileData(token, callback) {
     request.get(PROFILE_URL, {'auth': {'bearer': token}},

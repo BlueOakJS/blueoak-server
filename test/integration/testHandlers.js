@@ -1,6 +1,5 @@
 /* Copyright © 2015 PointSource, LLC. All rights reserved. */
-var path = require('path'),
-    request = require('request'),
+var request = require('request'),
     assert = require('assert'),
     util = require('./launchUtil');
 
@@ -16,7 +15,7 @@ describe('SERVER1 - test simple REST calls', function () {
 
     it('GET /endpoint1', function (done) {
         request('http://localhost:' + (process.env.PORT || 5000) + '/endpoint1', function(err, resp, body) {
-            assert.ok(!err)
+            assert.ok(!err);
             var json = JSON.parse(body);
             assert.equal('endpoint1', json.name);
             done();
@@ -25,7 +24,7 @@ describe('SERVER1 - test simple REST calls', function () {
 
     it('POST /endpoint1', function (done) {
         request.post('http://localhost:' + (process.env.PORT || 5000) + '/endpoint1', function(err, resp, body) {
-            assert.ok(!err)
+            assert.ok(!err);
             var json = JSON.parse(body);
             assert.equal('endpoint1', json.name);
             done();
@@ -34,7 +33,7 @@ describe('SERVER1 - test simple REST calls', function () {
 
     it('PUT /endpoint1', function (done) {
         request.put('http://localhost:' + (process.env.PORT || 5000) + '/endpoint1', function(err, resp, body) {
-            assert.ok(!err)
+            assert.ok(!err);
             var json = JSON.parse(body);
             assert.equal('endpoint1', json.name);
             done();
@@ -43,7 +42,7 @@ describe('SERVER1 - test simple REST calls', function () {
 
     it('DELETE /endpoint1', function (done) {
         request.del('http://localhost:' + (process.env.PORT || 5000) + '/endpoint1', function(err, resp, body) {
-            assert.ok(!err)
+            assert.ok(!err);
             var json = JSON.parse(body);
             assert.equal('endpoint1', json.name);
             done();

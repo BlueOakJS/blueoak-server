@@ -6,4 +6,4 @@ exports.init = function(app, config, logger, monitor) {
         app.use(monitor.express(cfg.prefix, true));
     }
 
-}
+};

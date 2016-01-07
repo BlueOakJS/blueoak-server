@@ -8,7 +8,7 @@ exports.init = function () {
 };
 
 function getBlueOakVersion() {
-    var pkg = require('../package.json')
+    var pkg = require('../package.json');
     return pkg.version;
 }
 

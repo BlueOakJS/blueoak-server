@@ -86,8 +86,8 @@ exports.init = function (app, auth, config, logger, serviceLoader, callback) {
                     routePath = basePath + routePath;
                 }
 
-                if (data["x-handler"]) {
-                    handlerName = data["x-handler"];
+                if (data['x-handler']) {
+                    handlerName = data['x-handler'];
                 }
 
                 //loop for http method keys, like get an post
