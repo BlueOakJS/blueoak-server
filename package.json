@@ -13,7 +13,6 @@
     "sprout-server": "bin/sprout-server.js"
   },
   "dependencies": {
-    "astw": "^2.0.0",
     "async": "^1.0.0",
     "base64url": "^1.0.4",
     "body-parser": "^1.12.4",
@@ -21,13 +20,10 @@
     "config": "^1.13.0",
     "cookie-session": "^1.1.0",
     "cors": "^2.6.0",
-    "detect-indent": "^3.0.1",
-    "esprima": "^2.2.0",
     "express": "^4.12.4",
     "express-static": "^1.0.3",
     "jsonwebtoken": "^5.4.1",
     "lodash": "^3.9.3",
-    "mocha-jenkins-reporter": "^0.1.8",
     "multer": "^1.1.0",
     "node-cache": "^3.0.0",
     "node-statsd": "^0.1.1",
@@ -46,6 +42,7 @@
     "winston": "^1.0.0"
   },
   "devDependencies": {
+    "mocha-jenkins-reporter": "^0.1.8",
     "istanbul": "^0.3.14",
     "mocha": "^2.2.5",
     "nock": "^2.2.0",
