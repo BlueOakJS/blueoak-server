@@ -39,5 +39,12 @@
 
   "express-monitor": {
     "prefix": "express"
+  },
+
+  "node": {
+    "version": {
+      "min": "^4.2.3 || ^5.1.1",
+      "recommended": "4.2.3" //Dec '15 security update
+    }
   }
 }

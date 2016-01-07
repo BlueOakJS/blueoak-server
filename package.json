@@ -33,6 +33,7 @@
     "redis": "^0.12.1",
     "request": "^2.55.0",
     "rsa-pem-from-mod-exp": "^0.8.4",
+    "semver": "^5.1.0",
     "stack-trace": "0.0.9",
     "strip-json-comments": "^1.0.2",
     "swagger-parser": "^3.3.0",

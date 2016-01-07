@@ -3,7 +3,8 @@ var path = require('path'),
     fs = require('fs'),
     _ = require('lodash'),
     async = require('async'),
-    cluster = require('cluster');
+    cluster = require('cluster'),
+    semver = require('semver');
 
 var sprout = require('./lib/sprout');
 var loader = require('./lib/loader');
@@ -57,6 +58,7 @@ module.exports.init = function (opts, callback) {
             });
 
             printVersion(logger);
+            checkNodeVersion(logger);
 
             // Either set to maxWorkers, or if < 0, use the count of machine's CPUs
             var workerCount = clusterConfig.maxWorkers < 0 ? require('os').cpus().length : clusterConfig.maxWorkers;
@@ -253,10 +255,19 @@ function initServices(opts, callback) {
 
 function printVersion(logger) {
     var pkg = require('./package.json');
-    logger.info('Starting %s v%s in %s mode', pkg.name, pkg.version, 
-        process.env.NODE_ENV || 'development'); //the config loader defaults to development
+    logger.info('Starting %s v%s in %s mode using Node.js %s', pkg.name, pkg.version,
+        process.env.NODE_ENV || 'development', process.version); //the config loader defaults to development
 }
 
+function checkNodeVersion(logger) {
+    var nodeCfg = serviceLoader.get('config').get('node');
+    var minVersionRange = nodeCfg.version.min;
+    var recommendedVersion = nodeCfg.version.recommended;
+    if (!semver.satisfies(process.version, minVersionRange)) {
+        logger.warn('Unsupported Node.js. Consider upgrading to at least v%s', recommendedVersion);
+    }
+
+}
 /*
  * testUtility must be explicitly called in order to gain access to utility methods that are
  * helpful for testing Sprout Server projects.  Not intended for use in non-test environments.
