@@ -100,7 +100,6 @@ exports.injectCore = function (modules, config, callback) {
     }
 
     for (var i = 0; i < modules.length; i++) {
-        temp = {};
 
         if (coreModules.indexOf(modules[i]) === -1) {
             throw new Error('Given module name is not a core service');
