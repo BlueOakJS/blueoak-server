@@ -4,6 +4,7 @@ var redis = require('redis');
 var client = null;
 
 exports.init = function (logger, config, callback) {
+
     var cfg = config.get('redis');
 
     if (cfg.host && cfg.port) {
@@ -16,21 +17,37 @@ exports.init = function (logger, config, callback) {
         return callback();
     }
 
+    var reconnecting = false; //becomes true if we're attempting to reconnect
     client = redis.createClient(cfg.port, cfg.host, cfg.options);
     client.on('error', function (err) {
-        client.end();
-        return callback(err);
+        //this gets called on every failed connect attempt
 
+        if (callback) {
+            client.end(); //stop trying to reconnect during server startup
+            return callback(err);
+        }
+    });
+
+    client.on('reconnecting', function (data) {
+        if (!reconnecting) { //ensures message only logged once
+            logger.error('Disconnected from redis.');
+            reconnecting = true;
+        }
+        logger.debug("Reconnecting to redis, attempt #%s", data.attempt);
     });
 
     client.on('connect', function () {
+        reconnecting = false;
+        if (!callback) {
+            //must be reconnected, ignore
+            logger.info('Reconnected to redis');
+            return;
+        }
+
         logger.info('Connected to redis on %s:%s',  cfg.host, cfg.port);
-        return callback();
-        //TODO: Need implement reconnect
-        /*callback = function(err) { //if we lose connection, error callback is called again
-            logger.warn(err);
-            //logger.info('Attempting to reconnect to redis');
-        };*/
+        var originCallback = callback;
+        callback = null; //make sure it's not called if we disconnect
+        return originCallback();
     });
 };
 

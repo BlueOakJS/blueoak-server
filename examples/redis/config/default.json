@@ -1,0 +1,18 @@
+{
+    "cache": {
+        "type": "redis"
+    },
+
+    "redis": {
+        "host": "localhost",
+        "port": "6379"
+    },
+
+    "express": {
+        "middleware": []
+    },
+
+    "cluster": {
+        "maxWorkers": 1
+    }
+}
