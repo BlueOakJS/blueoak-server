@@ -6,7 +6,7 @@
   "scripts": {
     "test": "JUNIT_REPORT_PATH=tests-report.xml mocha --check-leaks --reporter mocha-jenkins-reporter --globals services,__appDir test/unit; npm run lint",
     "test-integration": "mocha test/integration",
-    "test-cov": "istanbul cover node_modules/mocha/bin/_mocha --report lcovonly -- test/unit",
+    "test-cov": "istanbul cover node_modules/mocha/bin/_mocha --report html -- test/unit",
     "posttest": "publish",
     "lint": "eslint auth examples handlers lib middleware services test testlib && echo lint complete."
   },
@@ -19,7 +19,7 @@
     "body-parser": "^1.12.4",
     "cfenv": "^1.0.0",
     "config": "^1.13.0",
-    "cookie-session": "^1.1.0",
+    "cookie-session": "^1.2.0",
     "cors": "^2.6.0",
     "express": "^4.12.4",
     "express-static": "^1.0.3",
@@ -36,19 +36,18 @@
     "rsa-pem-from-mod-exp": "^0.8.4",
     "semver": "^5.1.0",
     "stack-trace": "0.0.9",
-    "strip-json-comments": "^1.0.2",
+    "strip-json-comments": "^2.0.0",
     "swagger-parser": "^3.3.0",
     "tv4": "^1.1.9",
     "tv4-formats": "^1.0.0",
     "verror": "^1.6.0",
-    "winston": "^1.0.0"
+    "winston": "^1.1.0"
   },
   "devDependencies": {
     "eslint": "^1.10.3",
-    "istanbul": "^0.3.14",
+    "istanbul": "^0.4.1",
     "mocha": "^2.2.5",
     "mocha-jenkins-reporter": "^0.1.8",
-    "nock": "^2.2.0",
     "publish": "^0.5.0",
     "sinon": "^1.14.1"
   },
