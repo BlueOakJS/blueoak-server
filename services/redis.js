@@ -33,7 +33,7 @@ exports.init = function (logger, config, callback) {
             logger.error('Disconnected from redis.');
             reconnecting = true;
         }
-        logger.debug("Reconnecting to redis, attempt #%s", data.attempt);
+        logger.debug('Reconnecting to redis, attempt #%s', data.attempt);
     });
 
     client.on('connect', function () {

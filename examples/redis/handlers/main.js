@@ -4,6 +4,10 @@ exports.init = function (app, cache, logger) {
 
         cache.get('/main/counter', function (err, val) {
 
+            if (err) {
+                return next(err);
+            }
+
             //if we don't have a value for counter, set it to 1
             if (typeof val === 'undefined' || val === null) {
                 cache.set('/main/counter', 1);
@@ -18,4 +22,4 @@ exports.init = function (app, cache, logger) {
         });
     });
 
-}
+};
