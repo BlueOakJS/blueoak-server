@@ -48,8 +48,7 @@
     "istanbul": "^0.4.1",
     "mocha": "^2.2.5",
     "mocha-jenkins-reporter": "^0.1.8",
-    "publish": "^0.5.0",
-    "sinon": "^1.14.1"
+    "publish": "^0.5.0"
   },
   "files": [
     "bin",
