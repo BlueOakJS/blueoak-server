@@ -21,6 +21,7 @@
     "config": "^1.13.0",
     "cookie-session": "^1.2.0",
     "cors": "^2.6.0",
+    "debug": "^2.2.0",
     "express": "^4.12.4",
     "express-static": "^1.0.3",
     "jsonwebtoken": "^5.4.1",

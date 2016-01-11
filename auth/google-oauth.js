@@ -18,22 +18,15 @@
 var _ = require('lodash'),
     request = require('request'),
     jwt = require('jsonwebtoken'),
-    getRawBody = require('raw-body'),
-    winston = require('winston');
+    getRawBody = require('raw-body');
+
+var debug = require('debug')('google-oauth');
 
 var _cfg;
 var TOKEN_URL = 'https://www.googleapis.com/oauth2/v3/token';
 var LOGOUT_URL = 'https://accounts.google.com/o/oauth2/revoke';
 var PROFILE_URL = 'https://www.googleapis.com/plus/v1/people/me';
 
-var ilog = new (winston.Logger)({
-    transports: [
-        new (winston.transports.Console)({
-            level: 'info', //set to debug to get extra debug
-            colorize: true
-        })
-    ]
-});
 
 
 module.exports.init = function(app, logger, config) {
@@ -76,24 +69,24 @@ module.exports.init = function(app, logger, config) {
 function setAuthCodeOnReq(req, res, next) {
     if (req.query.code) {
         req.code = req.query.code;
-        ilog.debug('Found auth code %s on query param', req.code);
+        debug('Found auth code %s on query param', req.code);
         return next();
     }
 
     //look for something like {"code": "..."}
     if (req.body.code) {
         req.code = req.body.code;
-        ilog.debug('Found auth code %s in JSON body', req.code);
+        debug('Found auth code %s in JSON body', req.code);
         return next();
     }
 
     getRawBody(req, function(err, string) {
         if (err) {
-            ilog.debug(err);
+            debug(err);
         }
         if (string.toString().length > 0) {
             req.code = string.toString();
-            ilog.debug('Found auth code %s in body', req.code);
+            debug('Found auth code %s in body', req.code);
         }
         next();
     });
@@ -103,13 +96,13 @@ module.exports.authenticate = function(req, res, next) {
     if (req.session.auth) {
         if (req.session.auth.expiration > Date.now()) {
             setUserData(req);
-            ilog.debug('Access token %s is valid for %s seconds', req.session.auth.id, (req.session.auth.expiration - Date.now()) / 1000);
+            debug('Access token %s is valid for %s seconds', req.session.auth.id, (req.session.auth.expiration - Date.now()) / 1000);
             return next();
         } else {
-            ilog.debug('Access token expired for %s.', req.session.auth.id);
+            debug('Access token expired for %s.', req.session.auth.id);
             
             if (!req.session.auth.refresh_token) {
-                ilog.debug('No refresh token available for %s.', req.session.auth.id);
+                debug('No refresh token available for %s.', req.session.auth.id);
                 return res.status(401).send('Access token expired');
             }
             
@@ -124,7 +117,7 @@ module.exports.authenticate = function(req, res, next) {
 
             getToken(tokenData, function (err, authData) {
                 if (err) {
-                    ilog.debug('Error getting new access token: %s', err);
+                    debug('Error getting new access token: %s', err);
                     return res.sendStatus(401);
                 }
                 req.session.auth = authData;
@@ -176,16 +169,16 @@ function authCodeCallback(req, res, next) {
     getToken(tokenData, function (err, authData) {
 
         if (err) {
-            ilog.debug('Error getting new access token: %s', err);
+            debug('Error getting new access token: %s', err);
             return res.sendStatus(401);
         } else {
             req.session.auth = authData;
 
             if (_cfg.profile === true) { //optional step to get profile data
-                ilog.debug('Requesting profile data');
+                debug('Requesting profile data');
                 getProfileData(authData.access_token, function(err, data) {
                     if (err) {
-                        ilog.debug('Error getting profile data: %s', err.message);
+                        debug('Error getting profile data: %s', err.message);
                         return next(err);
                     }
                     req.session.auth.profile = data;
@@ -202,12 +195,12 @@ function authCodeCallback(req, res, next) {
 
 //Revoke the access token, refresh token, and cookies
 function signOutUser(req, res, next) {
-    ilog.debug('Signing out user');
+    debug('Signing out user');
     //make a best attempt effort at revoking the tokens
     var accessToken = req.session.auth ? req.session.auth.access_token: null;
     var refreshToken = req.session.auth ? req.session.auth.refresh_token: null;
     if (accessToken) {
-        ilog.debug('Revoking access token');
+        debug('Revoking access token');
         request.get({
             url: LOGOUT_URL,
             qs: {
@@ -215,9 +208,9 @@ function signOutUser(req, res, next) {
             }
         }, function(err, response, body) {
             if (err) {
-                ilog.warn('Error revoking access token', err.message);
+                debug('Error revoking access token', err.message);
             } else {
-                ilog.debug('Revoked access token, %s', response.statusCode);
+                debug('Revoked access token, %s', response.statusCode);
             }
         });
     }
@@ -231,9 +224,9 @@ function signOutUser(req, res, next) {
             }
         }, function (err, response, body) {
             if (err) {
-                ilog.warn('Error revoking refresh token', err.message);
+                debug('Error revoking refresh token', err.message);
             } else {
-                ilog.debug('Revoked refresh token, %s', response.statusCode);
+                debug('Revoked refresh token, %s', response.statusCode);
             }
         });
     }
@@ -262,7 +255,7 @@ function getToken(data, callback) {
         if (resp.statusCode !== 200) { //error
             return callback({statusCode: resp.statusCode, message: JSON.parse(body)});
         } else {
-            ilog.debug('Got response back from token endpoint', body);
+            debug('Got response back from token endpoint', body);
             /*
              Body should look like
              {

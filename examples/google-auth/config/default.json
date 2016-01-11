@@ -29,13 +29,13 @@
   "google-oauth": {
     "callbackPath": "/auth",
     "signoutPath": "/logout",
-    "clientId": "107463652566-jo264sjf04n1uk17i2ijdqbs2tuu2rf0.apps.googleusercontent.com",
-    "clientSecret": "4MY4PJdwA2gKjvAm3wOTCyss",
+    "clientId": "826839015121-rs7t7ick1ib0uvui9iihbb82gcqg64r9.apps.googleusercontent.com",
+    "clientSecret": "<REPLACE ME>",
     "redirectURI": "postmessage",
     "profile": true
   },
 
   "google-jwt": {
-    "clientId": "107463652566-jo264sjf04n1uk17i2ijdqbs2tuu2rf0.apps.googleusercontent.com"
+    "clientId": "826839015121-rs7t7ick1ib0uvui9iihbb82gcqg64r9.apps.googleusercontent.com"
   }
 }

@@ -1,5 +1,5 @@
 /* Copyright © 2015 PointSource, LLC. All rights reserved. */
-var server = require('blueoak-server');
+var server = require('../../');
 
 server.init(function(err) {
     if (err) {
