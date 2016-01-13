@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2016 PointSource, LLC.
+ * Copyright (c) 2015-2016 PointSource, LLC.
  * MIT Licensed
  */
 var whitelist = [];

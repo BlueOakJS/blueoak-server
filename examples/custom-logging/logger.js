@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2016 PointSource, LLC.
+ * Copyright (c) 2015-2016 PointSource, LLC.
  * MIT Licensed
  */
 //Placing a logger.js in my app root let's me setup a logger via code rather than config.
