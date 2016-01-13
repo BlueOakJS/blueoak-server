@@ -1,7 +1,8 @@
 #!/usr/bin/env node
-
-/* Copyright © 2015 PointSource, LLC. All rights reserved. */
-
+/*
+ * Copyright 2015-2016 PointSource, LLC.
+ * MIT Licensed
+ */
 var server = require('../');
 
 server.init({

@@ -1,3 +1,7 @@
+/*
+ * Copyright 2015-2016 PointSource, LLC.
+ * MIT Licensed
+ */
 /**
  * Custom auth system for demostrative purposes.
  *

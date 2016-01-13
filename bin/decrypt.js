@@ -1,7 +1,10 @@
 #!/usr/bin/env node
-/* Copyright © 2015 PointSource, LLC. All rights reserved. */
-var security = require('../lib/security');
+/*
+ * Copyright 2015-2016 PointSource, LLC.
+ * MIT Licensed
+ */
 
+var security = require('../lib/security');
 
 if (process.argv.length === 4) {
     try {

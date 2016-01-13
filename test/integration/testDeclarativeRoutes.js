@@ -1,4 +1,7 @@
-/* Copyright © 2015 PointSource, LLC. All rights reserved. */
+/*
+ * Copyright 2015-2016 PointSource, LLC.
+ * MIT Licensed
+ */
 var request = require('request'),
     assert = require('assert'),
     util = require('./launchUtil');

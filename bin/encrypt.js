@@ -1,10 +1,11 @@
 #!/usr/bin/env node
+/*
+ * Copyright 2015-2016 PointSource, LLC.
+ * MIT Licensed
+ */
 
-/* Copyright © 2015 PointSource, LLC. All rights reserved. */
 var crypto = require('crypto');
 var defaultCipher = 'aes-256-cbc';
-
-
 
 if (process.argv.length === 4 && process.argv[2] !== '-c') {
     //use default cipher

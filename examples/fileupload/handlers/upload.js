@@ -1,3 +1,7 @@
+/*
+ * Copyright 2015-2016 PointSource, LLC.
+ * MIT Licensed
+ */
 
 exports.fileUpload = function(req, res, next) {
     console.log('FILE UPLOAD!');

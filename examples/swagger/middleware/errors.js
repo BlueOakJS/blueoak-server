@@ -1,4 +1,7 @@
-/* Copyright © 2015 PointSource, LLC. All rights reserved. */
+/*
+ * Copyright 2015-2016 PointSource, LLC.
+ * MIT Licensed
+ */
 exports.init = function(app, logger) {
     app.use(function(err, req, res, next) {
         if (err.name === 'ValidationError') {

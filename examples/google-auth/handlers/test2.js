@@ -1,3 +1,7 @@
+/*
+ * Copyright 2015-2016 PointSource, LLC.
+ * MIT Licensed
+ */
 exports.init = function(app, auth) {
 
     //manual injection of auth middleware

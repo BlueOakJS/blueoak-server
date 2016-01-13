@@ -1,3 +1,7 @@
+/*
+ * Copyright 2015-2016 PointSource, LLC.
+ * MIT Licensed
+ */
 
 var util = require('util');
 var winston = require('winston');

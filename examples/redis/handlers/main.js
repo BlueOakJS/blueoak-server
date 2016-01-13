@@ -1,3 +1,7 @@
+/*
+ * Copyright 2015-2016 PointSource, LLC.
+ * MIT Licensed
+ */
 exports.init = function (app, cache, logger) {
 
     app.get('/cache', function (req, res, next) {
