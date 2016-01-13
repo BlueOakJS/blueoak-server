@@ -9,6 +9,21 @@
   "license": "MIT",
   "main": "index.js",
   "author": "Patrick Wolf <patrick.wolf@pointsource.com>",
+  "contributors": [
+    "Greg Considine <greg@greg-considine.com>",
+    "Erik Daughtrey <erik.daughtrey@pointsource.com>",
+    "Benjamin Schell <ben@benschell.org>",
+    "Sean Kennedy <sean.kennedy@pointsource.com>",
+    "Erin Bartholomew <erin.bartholomew@pointsource.com>"
+  ],
+  "keywords": [
+    "node",
+    "framework",
+    "swagger",
+    "rest",
+    "express",
+    "api"
+  ],
   "scripts": {
     "test": "JUNIT_REPORT_PATH=tests-report.xml mocha --check-leaks --reporter mocha-jenkins-reporter --globals services,__appDir test/unit; npm run lint",
     "test-integration": "mocha test/integration",
