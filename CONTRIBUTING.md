@@ -6,7 +6,7 @@ Bugs can be handled by submitting pull requests or opening issues in our GitHub 
 
 ## Pull Requests
 * Pull requests must follow style guidelines.  Run `npm run lint` to validate style.
-* Ensure tests pass, both unit tests (`npm test') and functional tests (`npm run test-integration`).
+* Ensure tests pass, both unit tests (`npm test`) and functional tests (`npm run test-integration`).
 * Add new tests as necessary.
 * [Pull requests](http://help.github.com/send-pull-requests/) should be made to the master branch.
 
