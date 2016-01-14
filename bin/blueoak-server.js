@@ -11,7 +11,8 @@ server.init({
     if (err) {
         console.warn('Startup failed', err);
     } else {
-        console.log('started');
+        var logger = this.services.get('logger');
+        logger.info('Server started');
     }
 
 });
