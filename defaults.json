@@ -22,7 +22,7 @@
   },
 
   "cluster": {
-    "maxWorkers": -1 //-1 means use full cpu count
+    "maxWorkers": 1
   },
 
   "session": {
