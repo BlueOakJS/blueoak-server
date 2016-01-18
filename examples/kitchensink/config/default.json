@@ -1,7 +1,7 @@
 //Default config for my app
 {
   "express": {
-    "middleware": ["csrf", "cors", "session", "bodyParser"],
+    "middleware": ["csrf", "cors", "session", "body-parser"],
     "middleware$": ["errors"]
   },
   "cluster": {
@@ -34,7 +34,7 @@
     "keys": ["sessionkey"]
   },
 
-  "bodyParser": {
+  "body-parser": {
     "json": {}
   },
 

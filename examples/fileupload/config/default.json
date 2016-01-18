@@ -2,12 +2,12 @@
 {
   "express": {
     "port": "3000",
-    "middleware": ["express-static", "bodyParser"]
+    "middleware": ["express-static", "body-parser"]
   },
   "cluster": {
     "maxWorkers": 1
   },
-  "bodyParser": {
+  "body-parser": {
     "json": {}
   },
 

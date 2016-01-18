@@ -2,14 +2,14 @@
 {
   "express": {
     "port": "3000",
-    "middleware": ["cors", "bodyParser"],
+    "middleware": ["cors", "body-parser"],
     "middleware$": ["errors"]
   },
   "cors": {
     "origin": "http://editor.swagger.io"
   },
 
-  "bodyParser": {
+  "body-parser": {
     "json": {}
   },
 

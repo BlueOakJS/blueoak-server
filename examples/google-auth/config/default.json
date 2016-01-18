@@ -2,7 +2,7 @@
 {
   "express": {
     "port": "3000",
-    "middleware": ["csrf", "express-static", "bodyParser", "session"]
+    "middleware": ["csrf", "express-static", "body-parser", "session"]
   },
   "cluster": {
     "maxWorkers": 1
@@ -22,7 +22,7 @@
     "keys": ["sessionkey"]
   },
 
-  "bodyParser": {
+  "body-parser": {
     "json": {}
   },
 
