@@ -196,7 +196,10 @@ function stopServices() {
 
         //try to do a graceful shutdown, note the express shutdown is async since it waits for requests to complete
         global.services.get('express').stop(function() {
-            global.services.get('cache').stop();
+            var cache = global.services.get('cache');
+            if (cache && cache.stop) { //might not exist if server didn't finish starting
+                cache.stop();
+            }
 
             //and kill whatever is left
             process.exit();
