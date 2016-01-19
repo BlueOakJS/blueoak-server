@@ -14,7 +14,8 @@ exports.init = function (app, cache, logger) {
 
             //if we don't have a value for counter, set it to 1
             if (typeof val === 'undefined' || val === null) {
-                cache.set('/main/counter', 1);
+                val = 1;
+                cache.set('/main/counter', val);
             }
 
             //return response
