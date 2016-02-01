@@ -34,6 +34,6 @@
     // enforce return after a callback
     "callback-return": 1,
     // enforces error handling in callbacks (node environment)
-    "handle-callback-err": 1,
+    "handle-callback-err": 1
   }
 }
