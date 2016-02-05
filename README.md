@@ -115,4 +115,7 @@ which monitor for file changes and automatically restart the server.
 
 ### Next steps
 
-Read through the [docs](https://github.com/BlueOakJS/blueoak-server/wiki) and look at the our [examples](/examples)
+Read through the [docs](https://github.com/BlueOakJS/blueoak-server/wiki) and look at the our [examples](/examples).
+
+When you're ready to try it out, start from the [template](https://github.com/BlueOakJS/blueoak-server-template).
+
