@@ -41,11 +41,7 @@ exports.init = function(app) {
 Services do most of the heavy lifting.  Like handlers, services contain init functions that are called during server startup.
 However, services can export other functions, and those functions can be invoked from handlers.
 
-Here's an example of a fizzbuzz service (services/fizzbuzz.js).
-You'll notice it has an init method with two parameters, logger and callback.
-The logger is a built in service.  
-And callback is an optional parameter that can be used for cases where services need to perform asynchronous operations during startup.
-The service also exports a _getResult_ function.  Any service or handler with a dependency on _fizzbuzz_ can invoke `fizzbuzz.getResult`.
+Here's an example of a fizzbuzz service (services/fizzbuzz.js).  You'll notice it has an init method with two parameters, logger and callback.  The logger is a built-in service.  The _callback_ is an optional parameter used for cases where services need to perform asynchronous operations during startup.  The service also exports a _getResult_ function.  Any service or handler with a dependency on _fizzbuzz_ can invoke `fizzbuzz.getResult`.
 
 ```js
 exports.init = function(logger, callback) {
@@ -67,7 +63,7 @@ exports.getResult = function(num) {
   
 ```
 
-We want to use that service from our handler, so we simply include `fizzbuzz` as a parameter of the `init` function.
+We want to use that service from our handler, so we include `fizzbuzz` as a parameter of the `init` function.
 The server will ensure that the fizzbuzz service is initialized during server startup and passed to the handler.
 
 ```js
