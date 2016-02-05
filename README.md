@@ -1,4 +1,4 @@
-blueoak-server
+![BlueOak Logo](https://github.com/BlueOakJS/blueoak-server/wiki/images/blueoak.png)
 ======
 
 BlueOak Server is a framework for building RESTful APIs in NodeJS.
