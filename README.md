@@ -1,9 +1,12 @@
 ![BlueOak Logo](https://github.com/BlueOakJS/blueoak-server/wiki/images/blueoak.png)
 ======
 
-BlueOak Server is a framework for building RESTful APIs in NodeJS.
+BlueOak Server is a NodeJS framework for building RESTful APIs.
 
 [![Build Status](https://travis-ci.org/BlueOakJS/blueoak-server.svg?branch=master)](https://travis-ci.org/BlueOakJS/blueoak-server)
+
+BlueOak Server is _swagger-matic_, that is, it maximizes the value of your Swagger API by using it to drive runtime behavior.  
+BlueOak Server loads your Swagger API, connects the paths it defines to your implementation code, exposes that API to the network, and validates that every request is well-formed per that API.
 
 Check out the documentation on our wiki: https://github.com/BlueOakJS/blueoak-server/wiki
 
