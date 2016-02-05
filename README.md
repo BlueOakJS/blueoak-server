@@ -3,7 +3,7 @@ blueoak-server
 
 BlueOak Server is a framework for building RESTful APIs in NodeJS.
 
-Check out the documentation on our wiki: ...
+Check out the documentation on our wiki: https://github.com/BlueOakJS/blueoak-server/wiki
 
 ### Overview
 
@@ -115,4 +115,4 @@ which monitor for file changes and automatically restart the server.
 
 ### Next steps
 
-Read through the [docs](... and look at the our examples..
+Read through the [docs](https://github.com/BlueOakJS/blueoak-server/wiki) and look at the our [examples](/examples)
