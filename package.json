@@ -28,7 +28,6 @@
     "test": "JUNIT_REPORT_PATH=tests-report.xml mocha --check-leaks --reporter mocha-jenkins-reporter --globals services,__appDir test/unit; npm run lint",
     "test-integration": "mocha test/integration",
     "test-cov": "istanbul cover node_modules/mocha/bin/_mocha --report html -- test/unit",
-    "posttest": "publish",
     "lint": "eslint auth examples handlers lib middleware services test testlib && echo lint complete."
   },
   "bin": {
