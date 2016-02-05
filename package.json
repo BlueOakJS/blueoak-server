@@ -1,10 +1,10 @@
 {
   "name": "blueoak-server",
   "version": "2.0.1",
-  "description": "PointSource BlueOak Server",
+  "description": "BlueOak Server",
   "repository": {
     "type": "git",
-    "url": "git@github.com:PointSource/blueoak-server.git"
+    "url": "git@github.com:BlueOakJS/blueoak-server.git"
   },
   "license": "MIT",
   "main": "index.js",
