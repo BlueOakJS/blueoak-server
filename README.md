@@ -3,6 +3,8 @@
 
 BlueOak Server is a framework for building RESTful APIs in NodeJS.
 
+[![Build Status](https://travis-ci.org/BlueOakJS/blueoak-server.svg?branch=master)](https://travis-ci.org/BlueOakJS/blueoak-server)
+
 Check out the documentation on our wiki: https://github.com/BlueOakJS/blueoak-server/wiki
 
 Why'd we do it? (and tell me more about it) - check out the [announcement blog][blog1].
