@@ -43,8 +43,8 @@
 
   "node": {
     "version": {
-      "min": "^4.2.3 || ^5.1.1",
-      "recommended": "4.2.3" //Dec '15 security update
+      "min": "^4.3.0 || ^5.6.0",
+      "recommended": "4.3.0" //Feb '16 security update
     }
   }
 }
