@@ -11,6 +11,8 @@ var _ = require('lodash'),
     VError = require('verror'),
     multer = require('multer');
 
+var debug = require('debug')('swagger');
+
 
 var _upload; //will get set to a configured multer instance if multipart form data is used
 var httpMethods = ['get', 'put', 'post', 'delete', 'options', 'head', 'patch'];
@@ -21,7 +23,15 @@ exports.init = function (app, auth, config, logger, serviceLoader, callback) {
     //default to true
     var useBasePath = cfg.useBasePath || cfg.useBasePath === undefined;
 
-    var swaggerDir = path.resolve(global.__appDir, 'swagger');
+    var swaggerDir = null;
+    if (isBlueoakProject()) {
+        swaggerDir = path.resolve(global.__appDir, '../common/swagger');
+    } else {
+        swaggerDir = path.resolve(global.__appDir, 'swagger');
+    }
+
+    debug('Loading swagger files from %s', swaggerDir);
+
     var files = [];
 
     try {
@@ -154,6 +164,21 @@ exports.init = function (app, auth, config, logger, serviceLoader, callback) {
 
 
 };
+
+//There are two possible places for loading swagger.
+//If we're part of a broader blueoak client-server project, blueoak is running
+//from a 'server' directory, and there's a sibling directory named 'common' which contains the swagger directory.
+//Otherwise we just look in the normal swagger folder within the project
+function isBlueoakProject() {
+    try {
+        return path.basename(global.__appDir) === 'server'
+            && fs.statSync(path.resolve(global.__appDir, '../common/swagger'));
+    } catch (err) {
+        //the fs.statSync will return false if dir doesn't exist
+        return false;
+    }
+
+}
 
 //determine if something in the spec uses formdata
 //The entire api can contain a consume field, or just an individual route
