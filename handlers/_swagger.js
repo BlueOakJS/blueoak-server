@@ -23,6 +23,10 @@ exports.init = function (app, auth, config, logger, serviceLoader, callback) {
     //default to true
     var useBasePath = cfg.useBasePath || cfg.useBasePath === undefined;
 
+    var serveSpec = cfg.serve;
+    var useLocalhost = cfg.useLocalhost;
+    var context = cfg.context;
+
     var swaggerDir = null;
     if (isBlueoakProject()) {
         swaggerDir = path.resolve(global.__appDir, '../common/swagger');
@@ -53,6 +57,30 @@ exports.init = function (app, auth, config, logger, serviceLoader, callback) {
     async.eachSeries(files, function parseSwagger(file, swagCallback) {
 
         parser.dereference(file, function (err, api, metadata) {
+
+            //wire up serving the spec from <host>/swagger/<filename_without_extension>
+            if (serveSpec) {
+                var bn = path.basename(file); //e.g. petstore.json
+                var ext = path.extname(bn); //e.g. .json
+                var route = context + '/' + bn.slice(0, -1 * ext.length); //strip extension
+                logger.debug('Serving swagger spec at %s', route);
+
+                var apiToServe = _.cloneDeep(api); //clone it since we'll be modifying the host
+
+                //We swap the default host
+                if (useLocalhost) {
+                    apiToServe.host = 'localhost:' + config.get('express').port;
+                }
+
+                if (!useBasePath) {
+                    apiToServe.basePath = '/';
+                }
+
+                app.get(route, function(req, res) {
+                    res.json(apiToServe);
+                });
+            }
+
 
             if (containsMultipartFormData(api)) {
 

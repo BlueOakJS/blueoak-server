@@ -65,6 +65,15 @@ describe('SERVER5 - test simple REST calls from swagger spec', function () {
         });
     });
 
+    it('GET spec from /swagger/petstore', function (done) {
+        request('http://localhost:' + (process.env.PORT || 5000) + '/swagger/petstore', function(err, resp, body) {
+            assert.ok(!err);
+            var json = JSON.parse(body);
+            assert.equal('localhost:5000', json.host);
+            done();
+        });
+    });
+
 });
 
 //This is the same as SERVER5 except we're running with a blueoak project structure
