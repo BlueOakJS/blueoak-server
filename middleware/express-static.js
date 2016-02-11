@@ -15,6 +15,13 @@
  *    This will serve the static content from the mywwwdir directory relative to the default
  *    application server directory.
  *
+ * If you want to use a different context root, specify the "context" property.
+ *
+ * "express-static" : {
+ *       "www": "./mywwwdir",
+ *       "context": "/static"
+ *    }
+ *
  * To enable: add "express-static" to the middleware list of services to load in default.json.
  */
 
@@ -31,7 +38,13 @@ exports.init = function (app, config, logger) {
         logger.warn('No document root is configured for express-static.');
     } else {
         var docsDir = path.resolve(global.__appDir, cfgDir);
-        logger.info('Serving static content from: %s.', docsDir);
-        app.use(es(docsDir));
+        if (typeof cfg.context == 'undefined') {
+            logger.info('Serving static content from: %s.', docsDir);
+            app.use(es(docsDir));
+        } else {
+            logger.info('Serving static content from %s at %s.', docsDir, cfg.context);
+            app.use(cfg.context, es(docsDir));
+        }
+
     }
 };
