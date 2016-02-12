@@ -3,21 +3,14 @@
  * MIT Licensed
  */
 var _ = require('lodash'),
-    parser = require('swagger-parser'),
-    path = require('path'),
-    async = require('async'),
-    fs = require('fs'),
     swaggerUtil = require('../lib/swaggerUtil'),
     VError = require('verror'),
     multer = require('multer');
 
-var debug = require('debug')('swagger');
-
-
 var _upload; //will get set to a configured multer instance if multipart form data is used
 var httpMethods = ['get', 'put', 'post', 'delete', 'options', 'head', 'patch'];
 
-exports.init = function (app, auth, config, logger, serviceLoader, callback) {
+exports.init = function (app, auth, config, logger, serviceLoader, swagger, callback) {
     var cfg = config.get('swagger');
 
     //default to true
@@ -27,186 +20,117 @@ exports.init = function (app, auth, config, logger, serviceLoader, callback) {
     var useLocalhost = cfg.useLocalhost;
     var context = cfg.context;
 
-    var swaggerDir = null;
-    if (isBlueoakProject()) {
-        swaggerDir = path.resolve(global.__appDir, '../common/swagger');
-    } else {
-        swaggerDir = path.resolve(global.__appDir, 'swagger');
-    }
+    var specs = swagger.getSpecs();
+    _.keys(specs).forEach(function(specName) {
+        var api = specs[specName];
 
-    debug('Loading swagger files from %s', swaggerDir);
+        //wire up serving the spec from <host>/swagger/<filename_without_extension>
+        if (serveSpec) {
 
-    var files = [];
+            var route = context + '/' + specName; //strip extension
+            logger.debug('Serving swagger spec at %s', route);
 
-    try {
-        fs.readdirSync(swaggerDir).forEach(function (fileName) {
-            //look for json and yaml
-            if (path.extname(fileName) === '.json') {
-                files.push(path.resolve(swaggerDir, fileName));
-            } else if (path.extname(fileName) === '.yaml') {
-                files.push(path.resolve(swaggerDir, fileName));
-            }
-        });
-    } catch (err) {
-        //swagger dir probably doesn't exist
-        return callback();
-    }
+            var apiToServe = _.cloneDeep(api); //clone it since we'll be modifying the host
 
-    //Loop through all our swagger models
-    //For each model, parse it, and automatically hook up the routes to the appropriate handler
-    async.eachSeries(files, function parseSwagger(file, swagCallback) {
-
-        parser.dereference(file, function (err, api, metadata) {
-
-            //wire up serving the spec from <host>/swagger/<filename_without_extension>
-            if (serveSpec) {
-                var bn = path.basename(file); //e.g. petstore.json
-                var ext = path.extname(bn); //e.g. .json
-                var route = context + '/' + bn.slice(0, -1 * ext.length); //strip extension
-                logger.debug('Serving swagger spec at %s', route);
-
-                var apiToServe = _.cloneDeep(api); //clone it since we'll be modifying the host
-
-                //We swap the default host
-                if (useLocalhost) {
-                    apiToServe.host = 'localhost:' + config.get('express').port;
-                }
-
-                if (!useBasePath) {
-                    apiToServe.basePath = '/';
-                }
-
-                app.get(route, function(req, res) {
-                    res.json(apiToServe);
-                });
+            //We swap the default host
+            if (useLocalhost) {
+                apiToServe.host = 'localhost:' + config.get('express').port;
             }
 
-
-            if (containsMultipartFormData(api)) {
-
-                //make sure we have the config for multer
-                if (_.keys(config.get('multer')).length === 0) {
-                    logger.warn('No multer config found.  Required when using multipart form data.');
-                } else {
-                    _upload = multer(config.get('multer'));
-                }
+            if (!useBasePath) {
+                apiToServe.basePath = '/';
             }
 
-            if (err && path.extname(file) === '.yaml') {
-                return swagCallback(err);
-            }
-
-            if (err) {
-                //Was this an actual swagger file?  Could just be a partial swagger pointed to by a $ref
-                try {
-                    var json = JSON.parse(fs.readFileSync(file));
-
-                    //valid JSON
-                    if (isSwaggerFile(json)) {
-                        //this must be a swagger file, but it doesn't validate. fail
-                        return swagCallback(err);
-                    }
-                } catch (err) {
-                    //wasn't even valid JSON, error out
-                    return swagCallback(err);
-                }
-                logger.warn('Skipping %s', file);
-                return swagCallback();
-            }
-
-            var handlerName = path.basename(file); //use the swagger filename as our handler module id
-            handlerName = handlerName.substring(0, handlerName.lastIndexOf('.')); //strip extensions
-
-            var basePath = api.basePath || '';
-
-            _.keys(api.paths).forEach(function (path) {
-                var data = api.paths[path];
-                var routePath = convertPathToExpress(path);
-
-                if (useBasePath) {
-                    routePath = basePath + routePath;
-                }
-
-                if (data['x-handler']) {
-                    handlerName = data['x-handler'];
-                }
-
-                //loop for http method keys, like get an post
-                _.keys(data).forEach(function (key) {
-                    if (_.contains(httpMethods, key)) {
-                        var methodData = data[key];
-                        if (!methodData.operationId) {
-                            return logger.warn('Missing operationId in route "%s"', routePath);
-                        }
-
-                        var handlerMod = serviceLoader.getConsumer('handlers', handlerName);
-                        if (!handlerMod) {
-                            return logger.warn('Could not find handler module named "%s".', handlerName);
-                        }
-
-                        var handlerFunc = handlerMod[methodData.operationId];
-                        if (!handlerFunc) {
-                            return logger.warn('Could not find handler function "%s" for module "%s"', methodData.operationId, handlerName);
-                        }
-
-
-                        //Look for custom middleware functions defined on the handler path
-                        var additionalMiddleware = [];
-                        var middlewareList = methodData['x-middleware'];
-                        if (middlewareList) {
-                            if (!_.isArray(middlewareList)) {
-                                middlewareList = [middlewareList]; //turn into an array
-                            }
-                            middlewareList.forEach(function (mwName) {
-                                //middleware can either be of form <handler.func>
-                                //or just <func> in which case the currently handler is used
-                                var parts = mwName.split('.');
-                                if (parts.length === 1) {
-                                    parts = [handlerName, parts[0]];
-                                }
-
-                                var mwHandlerMod = serviceLoader.getConsumer('handlers', parts[0]);
-                                if (!mwHandlerMod) {
-                                    return logger.warn('Could not find middleware handler module named "%s".', parts[0]);
-                                }
-                                if (mwHandlerMod[parts[1]]) {
-                                    additionalMiddleware.push(mwHandlerMod[parts[1]]); //add the mw function
-                                } else {
-                                    return logger.warn('Could not find middleware function "%s" on module "%s".', parts[1], parts[0]);
-                                }
-                            });
-                        }
-
-                        logger.debug('Wiring up route %s %s to %s.%s', key, routePath, handlerName, methodData.operationId);
-                        registerRoute(app, auth, additionalMiddleware, key, routePath, methodData, methodData.produces || api.produces || null, handlerFunc, logger);
-
-                    }
-                });
-
+            app.get(route, function(req, res) {
+                res.json(apiToServe);
             });
-            swagCallback();
+        }
+
+        if (containsMultipartFormData(api)) {
+
+            //make sure we have the config for multer
+            if (_.keys(config.get('multer')).length === 0) {
+                logger.warn('No multer config found.  Required when using multipart form data.');
+            } else {
+                _upload = multer(config.get('multer'));
+            }
+        }
+
+        var basePath = api.basePath || '';
+        var handlerName = specName;
+
+        _.keys(api.paths).forEach(function (path) {
+            var data = api.paths[path];
+            var routePath = convertPathToExpress(path);
+
+            if (useBasePath) {
+                routePath = basePath + routePath;
+            }
+
+            if (data['x-handler']) {
+                handlerName = data['x-handler'];
+            }
+
+            //loop for http method keys, like get an post
+            _.keys(data).forEach(function (key) {
+                if (_.contains(httpMethods, key)) {
+                    var methodData = data[key];
+                    if (!methodData.operationId) {
+                        return logger.warn('Missing operationId in route "%s"', routePath);
+                    }
+
+                    var handlerMod = serviceLoader.getConsumer('handlers', handlerName);
+                    if (!handlerMod) {
+                        return logger.warn('Could not find handler module named "%s".', handlerName);
+                    }
+
+                    var handlerFunc = handlerMod[methodData.operationId];
+                    if (!handlerFunc) {
+                        return logger.warn('Could not find handler function "%s" for module "%s"', methodData.operationId, handlerName);
+                    }
+
+
+                    //Look for custom middleware functions defined on the handler path
+                    var additionalMiddleware = [];
+                    var middlewareList = methodData['x-middleware'];
+                    if (middlewareList) {
+                        if (!_.isArray(middlewareList)) {
+                            middlewareList = [middlewareList]; //turn into an array
+                        }
+                        middlewareList.forEach(function (mwName) {
+                            //middleware can either be of form <handler.func>
+                            //or just <func> in which case the currently handler is used
+                            var parts = mwName.split('.');
+                            if (parts.length === 1) {
+                                parts = [handlerName, parts[0]];
+                            }
+
+                            var mwHandlerMod = serviceLoader.getConsumer('handlers', parts[0]);
+                            if (!mwHandlerMod) {
+                                return logger.warn('Could not find middleware handler module named "%s".', parts[0]);
+                            }
+                            if (mwHandlerMod[parts[1]]) {
+                                additionalMiddleware.push(mwHandlerMod[parts[1]]); //add the mw function
+                            } else {
+                                return logger.warn('Could not find middleware function "%s" on module "%s".', parts[1], parts[0]);
+                            }
+                        });
+                    }
+
+                    logger.debug('Wiring up route %s %s to %s.%s', key, routePath, handlerName, methodData.operationId);
+                    registerRoute(app, auth, additionalMiddleware, key, routePath, methodData, methodData.produces || api.produces || null, handlerFunc, logger);
+
+                }
+            });
+
         });
-    }, function (err) {
-        return callback(err);
+
     });
 
+    callback();
 
 };
 
-//There are two possible places for loading swagger.
-//If we're part of a broader blueoak client-server project, blueoak is running
-//from a 'server' directory, and there's a sibling directory named 'common' which contains the swagger directory.
-//Otherwise we just look in the normal swagger folder within the project
-function isBlueoakProject() {
-    try {
-        return path.basename(global.__appDir) === 'server'
-            && fs.statSync(path.resolve(global.__appDir, '../common/swagger'));
-    } catch (err) {
-        //the fs.statSync will return false if dir doesn't exist
-        return false;
-    }
-
-}
 
 //determine if something in the spec uses formdata
 //The entire api can contain a consume field, or just an individual route
@@ -233,11 +157,6 @@ function containsMultipartFormData(api) {
     return foundMultipartData;
 }
 
-//Try to determine if this is supposed to be a swagger file
-//For now look for the required "swagger" field, which contains the version
-function isSwaggerFile(json) {
-    return json.swagger;
-}
 
 /**
  * app - express app
