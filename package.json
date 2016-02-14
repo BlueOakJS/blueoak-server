@@ -44,6 +44,7 @@
     "debug": "^2.2.0",
     "express": "^4.12.4",
     "express-static": "^1.0.3",
+    "json-schema-deref": "^0.2.5",
     "jsonwebtoken": "^5.4.1",
     "lodash": "^3.9.3",
     "multer": "^1.1.0",
