@@ -86,10 +86,8 @@ exports.init = function(logger, callback) {
                     return swagCallback(err);
                 }
                 specs.dereferenced[handlerName] = apiAsPlainJson;
+                return swagCallback();
             });
-            
-
-            return swagCallback();
         });
     }, function(err) {
         callback(err);
