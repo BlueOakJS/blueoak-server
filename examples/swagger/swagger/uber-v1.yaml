@@ -16,6 +16,8 @@ schemes:
 basePath: /v1
 produces:
   - application/json
+tags:
+  $ref: 'v1-assets/Tags.yaml'
 paths:
   /products:
     get:
