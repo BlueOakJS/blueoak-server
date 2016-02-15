@@ -6,10 +6,7 @@
     "middleware$": ["errors"]
   },
   "cors": {
-    "origin": [
-      "http://editor.swagger.io",
-      "http://localhost:8194"
-    ]
+    "origin": "*"
   },
 
   "body-parser": {
