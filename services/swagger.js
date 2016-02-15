@@ -8,8 +8,13 @@ var fs = require('fs');
 var debug = require('debug')('swagger');
 var async = require('async');
 var parser = require('swagger-parser');
+var deref = require('json-schema-deref');
 
-var specs = {};
+var specs = {
+    dereferenced: {},
+    bundled: {}
+};
+
 
 exports.init = function(logger, callback) {
 
@@ -45,7 +50,7 @@ exports.init = function(logger, callback) {
     //For each model, parse it, and automatically hook up the routes to the appropriate handler
     async.eachSeries(files, function parseSwagger(file, swagCallback) {
 
-        parser.dereference(file, function (err, api, metadata) {
+        parser.bundle(file, function (err, api, metadata) {
 
             if (err && path.extname(file) === '.yaml') {
                 return swagCallback(err);
@@ -74,9 +79,15 @@ exports.init = function(logger, callback) {
             var handlerName = path.basename(file); //use the swagger filename as our handler module id
             handlerName = handlerName.substring(0, handlerName.lastIndexOf('.')); //strip extensions
 
-            specs[handlerName] = api;
-
-            return swagCallback();
+            specs.bundled[handlerName] = api;
+            deref(api, function (err, apiAsPlainJson) {
+                if (err) {
+                    logger.error('Failed dereferencing swagger spec: ' + file);
+                    return swagCallback(err);
+                }
+                specs.dereferenced[handlerName] = apiAsPlainJson;
+                return swagCallback();
+            });
         });
     }, function(err) {
         callback(err);
@@ -84,8 +95,12 @@ exports.init = function(logger, callback) {
 
 };
 
-exports.getSpecs = function() {
-    return specs;
+exports.getSimpleSpecs = function() {
+    return specs.dereferenced;
+};
+
+exports.getPrettySpecs = function () {
+    return specs.bundled;
 };
 
 //Try to determine if this is supposed to be a swagger file

@@ -20,7 +20,7 @@ exports.init = function (app, auth, config, logger, serviceLoader, swagger, call
     var useLocalhost = cfg.useLocalhost;
     var context = cfg.context;
 
-    var specs = swagger.getSpecs();
+    var specs = swagger.getPrettySpecs();
     _.keys(specs).forEach(function(specName) {
         var api = specs[specName];
 
