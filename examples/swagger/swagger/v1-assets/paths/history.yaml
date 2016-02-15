@@ -1,0 +1,30 @@
+get:
+  summary: User Activity
+  description: |
+    The User Activity endpoint returns data about a user's lifetime activity with Uber. The response will include pickup locations and times, dropoff locations and times, the distance of past requests, and information about which products were requested.
+    
+    The history array in the response will have a maximum length based on the limit parameter. The response value count may exceed limit, therefore subsequent API requests may be necessary.
+  parameters:
+    - name: offset
+      in: query
+      type: integer
+      format: int32
+      description: |
+        Offset the list of returned results by this amount. Default is zero.
+    - name: limit
+      in: query
+      type: integer
+      format: int32
+      description: |
+        Number of items to retrieve. Default is 5, maximum is 100.
+  tags:
+    - User
+  responses:
+    200:
+      description: History information for the given user
+      schema:
+        $ref: '../definitions/Activities.yaml'
+    default:
+      description: Unexpected error
+      schema:
+        $ref: '../definitions/Error.yaml'

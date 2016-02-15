@@ -1,0 +1,10 @@
+# this is an example of a top-level object added by reference to the main swagger doc
+- name: Estimates
+  description: |
+    Give me your best guess.
+- name: Products
+  description: |
+    What vehicles and services are available?
+- name: User
+  description: |
+    Who'd want to use this anyway?

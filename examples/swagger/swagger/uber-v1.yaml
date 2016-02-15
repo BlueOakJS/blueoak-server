@@ -1,0 +1,49 @@
+# from editor.swagger.io, with the addition of external references (and some other changes)
+
+# this is an example of the Uber API
+# as a demonstration of an API spec in YAML
+swagger: '2.0'
+info:
+  title: Uber API
+  description: Move your app forward with the Uber API
+  version: "1.0.0"
+# the domain of the service
+host: localhost:3000
+# array of all schemes that your API supports
+schemes:
+  - http
+# will be prefixed to all paths
+basePath: /api/v1
+produces:
+  - application/json
+tags:
+  $ref: 'v1-assets/Tags.yaml'
+paths:
+  /products:
+    $ref: 'v1-assets/paths/products.yaml'
+  /estimates/price:
+    $ref: 'v1-assets/paths/estimates.price.yaml'
+  /estimates/time:
+    $ref: 'v1-assets/paths/estimates.time.yaml'
+  /me:
+    $ref: 'v1-assets/paths/me.yaml'
+  /history:
+    $ref: 'v1-assets/paths/history.yaml'
+
+# we keep the deinfitions, parameters, and responses sections in the main api document
+# this little bit of double entry (they're refered to already in the path documents)
+# allows the spec to be assembled as a bundle and shown as pretty as possible in swagger-ui
+
+definitions:
+  Product:
+    $ref: 'v1-assets/definitions/Product.yaml'
+  PriceEstimate:
+    $ref: 'v1-assets/definitions/PriceEstimate.yaml'
+  Profile:
+    $ref: 'v1-assets/definitions/Profile.yaml'
+  Activity:
+    $ref: 'v1-assets/definitions/Activity.yaml'
+  Activities:
+    $ref: 'v1-assets/definitions/Activities.yaml'
+  Error:
+    $ref: 'v1-assets/definitions/Error.yaml'

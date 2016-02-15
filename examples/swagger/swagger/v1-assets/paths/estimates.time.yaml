@@ -1,0 +1,39 @@
+get:
+  summary: Time Estimates
+  description: |
+    The Time Estimates endpoint returns ETAs for all products offered at a given location, with the responses expressed as integers in seconds. We recommend that this endpoint be called every minute to provide the most accurate, up-to-date ETAs.
+  parameters:
+    - name: start_latitude
+      in: query
+      description: Latitude component of start location.
+      required: true
+      type: number
+      format: double
+    - name: start_longitude
+      in: query
+      description: Longitude component of start location.
+      required: true
+      type: number
+      format: double
+    - name: customer_uuid
+      in: query
+      type: string
+      format: uuid
+      description: Unique customer identifier to be used for experience customization.
+    - name: product_id
+      in: query
+      type: string
+      description: Unique identifier representing a specific product for a given latitude & longitude.
+  tags:
+    - Estimates
+  responses:
+    200:
+      description: An array of products
+      schema:
+        type: array
+        items:
+          $ref: '../definitions/Product.yaml'
+    default:
+      description: Unexpected error
+      schema:
+        $ref: '../definitions/Error.yaml'
