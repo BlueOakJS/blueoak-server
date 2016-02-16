@@ -2,7 +2,7 @@
  * Copyright (c) 2015-2016 PointSource, LLC.
  * MIT Licensed
  */
-var server = require('blueoak-server');
+var server = require('../../');
 
 server.init(function(err) {
     if (err) {
