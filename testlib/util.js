@@ -51,7 +51,7 @@ exports.initService = function(module, config, injections, callback) {
 
     var args = [];
     di.getParamNames(module.init).forEach(function(name) {
-        args.push(injections[name]);
+        args.push(injections[normalizeServiceName(name)]);
     });
 
     if (di.hasCallback(module.init)) {
@@ -63,6 +63,17 @@ exports.initService = function(module, config, injections, callback) {
     }
 
 };
+
+//Copied from loader.js
+function normalizeServiceName(str) {
+    if (/^_.+_$/.test(str)) {
+        str = str.slice(1, str.length);
+        str = str.slice(0, str.length - 1);
+    }
+
+    return str.replace(/([A-Z])/g, '-$1').replace(/[-_\s]+/g, '-').toLowerCase();
+}
+
 
 /*
  * This method lets you include unmodified BO services into your tests. One use case is
