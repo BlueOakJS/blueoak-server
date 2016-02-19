@@ -4,13 +4,15 @@
 BlueOak Server is a NodeJS framework for building RESTful APIs.
 
 [![Build Status](https://travis-ci.org/BlueOakJS/blueoak-server.svg?branch=master)](https://travis-ci.org/BlueOakJS/blueoak-server)
+[![npm version](https://img.shields.io/npm/v/blueoak-server.svg)](https://www.npmjs.com/package/blueoak-server)
 
 BlueOak Server is _swagger-matic_, that is, it maximizes the value of your Swagger API by using it to drive runtime behavior.  
 BlueOak Server loads your Swagger API, connects the paths it defines to your implementation code, exposes that API to the network, and validates that every request is well-formed per that API.
 
-Check out the documentation on our wiki: https://github.com/BlueOakJS/blueoak-server/wiki
+Check out the documentation on our wiki: <https://github.com/BlueOakJS/blueoak-server/wiki>
 
-Why'd we do it? (and tell me more about it) - check out the [announcement blog][blog1].
+Why'd we do it? (and tell me more about it) - check out the [announcement blog][blog1].  
+How can it benefit me and my projects? - check out this [experience report][blog2].
 
 ### Overview
 
@@ -113,7 +115,11 @@ exports.init = function(config) {
 ```
 
 #### Swagger (OpenAPI)
+
 [Swagger](https://github.com/BlueOakJS/blueoak-server/wiki/Handlers#swagger) files in the _swagger_ directory are read during server startup and automatically wired up to handlers.  Swagger files can be in either json or yaml formats.
+
+We've really focused on making API development with Swagger and BlueOak Server to be excellent.  
+[Checkout our ideas on best practices][blog3].
 
 ### Installation
 
@@ -153,4 +159,7 @@ Read through the [docs](https://github.com/BlueOakJS/blueoak-server/wiki) and lo
 
 When you're ready to try it out, start from the [template](https://github.com/BlueOakJS/blueoak-server-template).
 
+<!-- links -->
 [blog1]: http://www.pointsource.com/blog/blueoak-server-released-to-open-source-to-accelerate-nodejs-development?utm_campaign=blueoak&utm_medium=social&utm_source=github&utm_content=PointSource
+[blog2]: http://www.pointsource.com/blog/nodejs-experience-report-building-a-custom-mobile-backend-with-blueoak-server?utm_campaign=blueoak&utm_medium=social&utm_source=github&utm_content=PointSource
+[blog3]: http://www.pointsource.com/blog/3-best-practices-for-api-development-with-swagger?utm_campaign=blueoak&utm_medium=social&utm_source=github&utm_content=PointSource
