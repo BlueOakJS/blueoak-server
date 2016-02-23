@@ -93,6 +93,26 @@ exports.init = function(app, fizzbuzz) {
   
 }
 ```
+#### Third-party Services
+Services can be published as npm modules and pulled into projects through the `npm install` command.
+
+For example, the bos-couchdb service adds the ability to connect to a CouchDB database.
+It can be installed to a blueoak-server project using
+
+```bash
+$ npm install bos-couchdb --save
+```
+
+Once installed, it can be used in any service or handler through the dependency-injected `bosCouchdb` parameter.
+
+```js
+exports.init = function(config, logger, bosCouchdb) {
+  var myDb = bosCouchdb.get('mydb');
+}
+
+```
+
+* [bos-couchdb](https://github.com/BlueOakJS/bos-couchdb) - service for connecting to CouchDB databases
 
 #### Config
 [Configuration](https://github.com/BlueOakJS/blueoak-server/wiki/Services#config) is stored in json files in the _config_ directory.  Values can be accessed through the `config` service in handers and services.  Configuration also supports layering on environment-specific config as well as encrypted values.
