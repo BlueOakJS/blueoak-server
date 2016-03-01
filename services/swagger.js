@@ -8,7 +8,6 @@ var fs = require('fs');
 var debug = require('debug')('swagger');
 var async = require('async');
 var parser = require('swagger-parser');
-var deref = require('json-schema-deref');
 
 var specs = {
     dereferenced: {},
@@ -50,29 +49,26 @@ exports.init = function(logger, callback) {
     //For each model, parse it, and automatically hook up the routes to the appropriate handler
     async.eachSeries(files, function parseSwagger(file, swagCallback) {
 
-        parser.bundle(file, function (err, api, metadata) {
-
-            if (err && path.extname(file) === '.yaml') {
-                return swagCallback(err);
-            }
+        parser.bundle(file, function (err, api) {
 
             if (err) {
-                //Was this an actual swagger file?  Could just be a partial swagger pointed to by a $ref
-                try {
-                    var json = JSON.parse(fs.readFileSync(file));
-
-                    //valid JSON
-                    if (isSwaggerFile(json)) {
-                        //this must be a swagger file, but it doesn't validate. fail
-                        return swagCallback(err);
+                var swagErr = err;
+                if (path.extname(file) !== '.yaml') {
+                    //Was this an actual swagger file?  Could just be a partial swagger pointed to by a $ref
+                    try {
+                        var json = JSON.parse(fs.readFileSync(file, {
+                            encoding: 'utf8'
+                        }));
+                        if (!isSwaggerFile(json)) {
+                            //invalid swagger file ... some other JSON or Swagger partial ... skip it
+                            logger.warn('Skipping non-Swagger JSON file %s', file);
+                            swagErr = null;
+                        }
+                    } catch (err) {
+                        logger.error('%s is not valid JSON', file);
                     }
-                } catch (err) {
-                    //wasn't even valid JSON, error out
-                    return swagCallback(err);
                 }
-
-                logger.warn('Skipping %s', file);
-                return swagCallback();
+                return swagCallback(swagErr);
             }
 
             //no error
@@ -80,7 +76,7 @@ exports.init = function(logger, callback) {
             handlerName = handlerName.substring(0, handlerName.lastIndexOf('.')); //strip extensions
 
             specs.bundled[handlerName] = api;
-            deref(api, function (err, apiAsPlainJson) {
+            parser.validate(api, function (err, apiAsPlainJson) {
                 if (err) {
                     logger.error('Failed dereferencing swagger spec: ' + file);
                     return swagCallback(err);
@@ -114,12 +110,12 @@ function isSwaggerFile(json) {
 //from a 'server' directory, and there's a sibling directory named 'common' which contains the swagger directory.
 //Otherwise we just look in the normal swagger folder within the project
 function isBlueoakProject() {
-    try {
-        return path.basename(global.__appDir) === 'server'
-            && fs.statSync(path.resolve(global.__appDir, '../common/swagger'));
-    } catch (err) {
-        //the fs.statSync will return false if dir doesn't exist
+    if ((path.basename(global.__appDir) !== 'server')) {
         return false;
     }
-
+    try {
+        return fs.statSync(path.resolve(global.__appDir, '../common/swagger')).isDirectory();
+    } catch (err) {
+        return false;
+    }
 }
