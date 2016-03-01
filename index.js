@@ -15,10 +15,10 @@ var project = require('./lib/project')(serviceLoader);
 
 global.services = serviceLoader.getRegistry();
 
-var forceShutdown = false; //if true, user hit ctrl+c and we don't want to restart workers
-
 //set the app root to the directory the main module was executed from
 global.__appDir = path.normalize(path.join(process.mainModule.filename, '../'));
+
+var workerNumberMap = {}; //map a worker pid to a worker number
 
 //Opts is optional
 module.exports.init = function (opts, callback) {
@@ -74,19 +74,13 @@ module.exports.init = function (opts, callback) {
                     return callback(err);
                 });
             } else {
-                async.timesSeries(workerCount, function(n, next) {
-                    forkWorker(next);
-                }, function(err, result) {
 
-                    cluster.on('exit', function(worker, code, signal) {
-                        if (!forceShutdown) {
-                            logger.info('Worked %d stopped (%s). Restarting', worker.process.pid, signal || code);
-                            forkWorker(function () {
-                                //restarted
-                                logger.info('Restarted worker process');
-                            });
-                        }
-                    });
+                //on exit, attempt to restart a worker process
+                cluster.on('exit', handleClusterWorkerExit);
+
+                async.timesSeries(workerCount, function(n, next) {
+                    forkWorker(n, next);
+                }, function(err, result) {
                     return callback(err);
                 });
             }
@@ -98,10 +92,26 @@ module.exports.init = function (opts, callback) {
     });
 };
 
-function forkWorker(callback) {
+function handleClusterWorkerExit(worker, code, signal) {
+    var logger = serviceLoader.get('logger');
+
+    if (worker.suicide === true) {
+
+    } else {
+        logger.info('Worker %d stopped (%s). Restarting', worker.process.pid, signal || code);
+        var workerNumber = workerNumberMap[worker.process.pid];
+        forkWorker(workerNumber, function () {
+            //restarted
+            logger.info('Restarted worker process');
+        });
+    }
+
+}
+
+function forkWorker(workerNumber, callback) {
     var logger = serviceLoader.get('logger');
     var worker = cluster.fork({decryptionKey: serviceLoader.get('config').decryptionKey});
-
+    workerNumberMap[worker.process.pid] = workerNumber;
     worker.on('message', function(msg) {
         try {
             var obj = JSON.parse(msg);
@@ -123,8 +133,13 @@ function forkWorker(callback) {
 
 //master will send a 'stop' message to all the workers when it's time to stop
 process.on('message', function(msg) {
-    if (msg === 'stop') {
-        stopServices();
+
+    var data = JSON.parse(msg);
+    if (data.cmd === 'stop') {
+
+        module.exports.stop(false, function() {
+            process.send(data);
+        });
     }
 });
 
@@ -152,12 +167,20 @@ process.on('SIGHUP', function() {
         //kill and restart each worker in series
         //This should give us 100% uptime as there will always be a worker available
         async.eachSeries(ids, function(id, next) {
-            cluster.workers[id].send('stop');
-            forkWorker(next);
+            var workerNumber = workerNumberMap[cluster.workers[id].process.pid];
+
+            sendCommand(cluster.workers[id], 'stop', function() {
+                cluster.workers[id].kill(0);
+                forkWorker(workerNumber, next);
+            });
+            //cluster.workers[id].send('stop');
+
+            //forkWorker(workerNumber, next);
         }, function(err, result) {
             if (err) {
                 logger.info(err);
             }
+
             logger.info('Restart complete');
         });
     } else if (cluster.isMaster) {
@@ -166,45 +189,81 @@ process.on('SIGHUP', function() {
 
 });
 
+function sendCommand(worker, command, callback) {
+    var payload = {
+        cmd: command,
+        id: worker.id
+    };
+
+    var listener = function(msg) {
+
+        var data = null;
+        if (typeof msg === 'object') {
+            data = msg;
+        } else {
+            data = JSON.parse(msg);
+        }
+        if (data.cmd === 'stop' && data.id === worker.id) {
+            worker.removeListener('message', arguments.callee);
+            return callback();
+        }
+    };
+
+    worker.on('message', listener);
+    worker.send(JSON.stringify(payload));
+
+}
 
 //Stop the server
 //if force, don't bother restarting.  We were probably stopped by a ctrl+c
-module.exports.stop = function (force) {
-    if (force) {
-        forceShutdown = true;
+module.exports.stop = function (force, callback) {
+    if (!callback) {
+        callback = function() {};
     }
-    stopServices();
 
     if (isClusteredMaster()) {
-        Object.keys(cluster.workers).forEach(function (id) {
-            cluster.workers[id].send('stop');
+        async.each(Object.keys(cluster.workers), function(id, next) {
+            var worker = cluster.workers[id];
+            sendCommand(worker, 'stop', function() {
+                if (force) {
+                    worker.kill(0);
+                } else {
+                    worker.process.exit(0);
+                }
+                next();
+            });
+        }, function(err) {
+            callback(err);
+        });
+    } else {
+        worker_stopServices(function() {
+            callback();
         });
     }
 
     //Just in case there's anything still running, give it a second and shut it down
-    setTimeout(function () {
-        process.exit();
-    }, 1000);
+ //   setTimeout(function () {
+ //       process.exit();
+ //   }, 1000);
 
 };
 
-function stopServices() {
+function worker_stopServices(callback) {
     //TODO: we should have a generic way of stopping all services
 
     //stop services on workers, or a master if it's a 1-worker cluster
     if (!isClusteredMaster()) {
-
         //try to do a graceful shutdown, note the express shutdown is async since it waits for requests to complete
         global.services.get('express').stop(function() {
+
             var cache = global.services.get('cache');
             if (cache && cache.stop) { //might not exist if server didn't finish starting
                 cache.stop();
             }
-
-            //and kill whatever is left
-            process.exit();
+            callback();
         });
-
+    } else {
+        return callback();
     }
 }
 
