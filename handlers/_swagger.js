@@ -20,7 +20,9 @@ exports.init = function (app, auth, config, logger, serviceLoader, swagger, call
     var useLocalhost = cfg.useLocalhost;
     var context = cfg.context;
 
-    var specs = swagger.getPrettySpecs();
+    var specs = swagger.getSimpleSpecs(); //this gets used for validation
+    var prettySpec = swagger.getPrettySpecs(); //this is what we serve
+
     _.keys(specs).forEach(function(specName) {
         var api = specs[specName];
 
@@ -30,7 +32,7 @@ exports.init = function (app, auth, config, logger, serviceLoader, swagger, call
             var route = context + '/' + specName; //strip extension
             logger.debug('Serving swagger spec at %s', route);
 
-            var apiToServe = _.cloneDeep(api); //clone it since we'll be modifying the host
+            var apiToServe = _.cloneDeep(prettySpec[specName]); //clone it since we'll be modifying the host
 
             //We swap the default host
             if (useLocalhost) {
