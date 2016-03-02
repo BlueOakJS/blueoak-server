@@ -52,11 +52,8 @@ exports.init = function (config) {
                 }
 
                 //if we're in clustered mode, throw the service name in the metadata
-                if (showLocation) {
-                    var location = getLocation();
-                    if (location) {
-                        meta.service = location;
-                    }
+                if (showLocation && typeof meta.service === 'undefined') {
+                    meta.service  = getLocation();
                 }
             }
 
@@ -204,6 +201,7 @@ function getLocation() {
             modNm = fpath.split('/').pop();
             rmodNm = modNm;
         }
+
     }
     return rmodNm;
 }
