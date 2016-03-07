@@ -1,0 +1,8 @@
+{
+  "express": {
+  },
+
+  "cluster": {
+    "maxWorkers": 1
+  }
+}
