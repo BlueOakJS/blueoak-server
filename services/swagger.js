@@ -48,42 +48,36 @@ exports.init = function(logger, callback) {
     //Loop through all our swagger models
     //For each model, parse it, and automatically hook up the routes to the appropriate handler
     async.eachSeries(files, function parseSwagger(file, swagCallback) {
-
-        parser.bundle(file, function (err, api) {
-
-            if (err) {
-                var swagErr = err;
-                if (path.extname(file) !== '.yaml') {
-                    //Was this an actual swagger file?  Could just be a partial swagger pointed to by a $ref
-                    try {
-                        var json = JSON.parse(fs.readFileSync(file, {
-                            encoding: 'utf8'
-                        }));
-                        if (!isSwaggerFile(json)) {
-                            //invalid swagger file ... some other JSON or Swagger partial ... skip it
-                            logger.warn('Skipping non-Swagger JSON file %s', file);
-                            swagErr = null;
-                        }
-                    } catch (err) {
-                        logger.error('%s is not valid JSON', file);
+        var handlerName = path.basename(file); //use the swagger filename as our handler module id
+        handlerName = handlerName.substring(0, handlerName.lastIndexOf('.')); //strip extensions
+        
+        var derefPromise = parser.validate(file);
+        parser.bundle(file)
+        .then(function (bundledApi) {
+            specs.bundled[handlerName] = bundledApi;
+            return derefPromise;
+        })
+        .then(function (dereferencedApi) {
+            specs.dereferenced[handlerName] = dereferencedApi;
+            return swagCallback();
+        })
+        .catch(function (error) {
+            // don't generate an error if it was a non-Swagger Spec JSON file
+            var swagErr = error;
+            if (path.extname(file) !== '.yaml') {
+                try {
+                    var json = JSON.parse(fs.readFileSync(file, {
+                        encoding: 'utf8'
+                    }));
+                    if (!isSwaggerFile(json)) {
+                        logger.info('Skipping non-Swagger JSON file %s', file);
+                        swagErr = null;
                     }
+                } catch (err) {
+                    logger.error('%s is not valid JSON', file);
                 }
-                return swagCallback(swagErr);
             }
-
-            //no error
-            var handlerName = path.basename(file); //use the swagger filename as our handler module id
-            handlerName = handlerName.substring(0, handlerName.lastIndexOf('.')); //strip extensions
-
-            specs.bundled[handlerName] = api;
-            parser.validate(api, function (err, apiAsPlainJson) {
-                if (err) {
-                    logger.error('Failed dereferencing swagger spec: ' + file);
-                    return swagCallback(err);
-                }
-                specs.dereferenced[handlerName] = apiAsPlainJson;
-                return swagCallback();
-            });
+            return swagCallback(swagErr);
         });
     }, function(err) {
         callback(err);
