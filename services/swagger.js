@@ -76,7 +76,7 @@ exports.init = function(logger, callback) {
             handlerName = handlerName.substring(0, handlerName.lastIndexOf('.')); //strip extensions
 
             specs.bundled[handlerName] = api;
-            parser.validate(api, function (err, apiAsPlainJson) {
+            parser.validate(file, function (err, apiAsPlainJson) {
                 if (err) {
                     logger.error('Failed dereferencing swagger spec: ' + file);
                     return swagCallback(err);
