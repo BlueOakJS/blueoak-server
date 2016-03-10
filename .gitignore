@@ -1,6 +1,8 @@
-node_modules
+node_modules/
+typings/
 tests-report.xml
 !test/unit/**/node_modules
 .idea
+.vscode/
 *.swp
 *.swo
