@@ -46,6 +46,9 @@
     },
     "winston/winston.d.ts": {
       "commit": "8b3b453a104bb2a949580bbb4e8c81c2a10138b3"
+    },
+    "assert/assert.d.ts": {
+      "commit": "89f1449d19aa1010f61dd8c7a44502bed42da678"
     }
   }
 }
