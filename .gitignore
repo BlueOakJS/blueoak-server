@@ -1,5 +1,6 @@
 node_modules/
 typings/
+coverage/
 tests-report.xml
 !test/unit/**/node_modules
 .idea
