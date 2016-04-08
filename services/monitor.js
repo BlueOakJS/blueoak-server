@@ -42,10 +42,8 @@ exports.stop = function() {
         } catch (err) {
             //probably not running;
         }
-
     }
-}
-
+};
 
 exports.express = function(prefix, genRoute) {
     if (!enabled) {
