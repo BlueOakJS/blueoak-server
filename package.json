@@ -1,6 +1,6 @@
 {
   "name": "blueoak-server",
-  "version": "2.1.2",
+  "version": "2.1.5",
   "description": "BlueOak Server",
   "repository": {
     "type": "git",
@@ -44,7 +44,6 @@
     "debug": "^2.2.0",
     "express": "^4.12.4",
     "express-static": "^1.0.3",
-    "json-schema-deref": "^0.2.5",
     "jsonwebtoken": "^5.4.1",
     "lodash": "^3.9.3",
     "multer": "^1.1.0",
@@ -66,7 +65,7 @@
     "winston": "^1.1.0"
   },
   "devDependencies": {
-    "eslint": "^1.10.3",
+    "eslint": "^2.4.0",
     "istanbul": "^0.4.1",
     "mocha": "^2.2.5",
     "mocha-jenkins-reporter": "^0.1.8"
