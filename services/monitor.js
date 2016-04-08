@@ -35,6 +35,17 @@ exports.enabled = function() {
     return enabled;
 };
 
+exports.stop = function() {
+    if (enabled && client) {
+        try {
+            client.close();
+        } catch (err) {
+            //probably not running;
+        }
+
+    }
+}
+
 
 exports.express = function(prefix, genRoute) {
     if (!enabled) {
@@ -76,7 +87,6 @@ exports.express = function(prefix, genRoute) {
             var duration = new Date().getTime() - startTime;
             client.timing(key + 'response_time', duration);
         });
-
 
         if (next) {
             return next();

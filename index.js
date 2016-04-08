@@ -96,7 +96,7 @@ function handleClusterWorkerExit(worker, code, signal) {
     var logger = serviceLoader.get('logger');
 
     if (worker.suicide === true) {
-
+        //no need to fork.  We wanted the worker to die.
     } else {
         logger.info('Worker %d stopped (%s). Restarting', worker.process.pid, signal || code);
         var workerNumber = workerNumberMap[worker.process.pid];
@@ -113,6 +113,7 @@ function forkWorker(workerNumber, callback) {
     var worker = cluster.fork({decryptionKey: serviceLoader.get('config').decryptionKey});
     workerNumberMap[worker.process.pid] = workerNumber;
     worker.on('message', function(msg) {
+
         try {
             var obj = JSON.parse(msg);
             logger[obj.level].apply(logger, obj.args);
@@ -133,7 +134,6 @@ function forkWorker(workerNumber, callback) {
 
 //master will send a 'stop' message to all the workers when it's time to stop
 process.on('message', function(msg) {
-
     var data = JSON.parse(msg);
     if (data.cmd === 'stop') {
 
@@ -146,7 +146,12 @@ process.on('message', function(msg) {
 
 //gracefully handle ctrl+c
 process.on('SIGINT', function() {
-    module.exports.stop(true);
+    module.exports.stop(true, function() {
+        //Just in case there's anything still running, shut it down
+        if (cluster.isMaster) {
+            process.exit(0);
+        }
+    });
 });
 
 
@@ -173,9 +178,7 @@ process.on('SIGHUP', function() {
                 cluster.workers[id].kill(0);
                 forkWorker(workerNumber, next);
             });
-            //cluster.workers[id].send('stop');
 
-            //forkWorker(workerNumber, next);
         }, function(err, result) {
             if (err) {
                 logger.info(err);
@@ -196,7 +199,6 @@ function sendCommand(worker, command, callback) {
     };
 
     var listener = function(msg) {
-
         var data = null;
         if (typeof msg === 'object') {
             data = msg;
@@ -226,7 +228,7 @@ module.exports.stop = function (force, callback) {
             var worker = cluster.workers[id];
             sendCommand(worker, 'stop', function() {
                 if (force) {
-                    worker.kill(0);
+                    worker.kill();
                 } else {
                     worker.process.exit(0);
                 }
@@ -240,12 +242,6 @@ module.exports.stop = function (force, callback) {
             callback();
         });
     }
-
-    //Just in case there's anything still running, give it a second and shut it down
- //   setTimeout(function () {
- //       process.exit();
- //   }, 1000);
-
 };
 
 function worker_stopServices(callback) {
@@ -259,6 +255,11 @@ function worker_stopServices(callback) {
             var cache = global.services.get('cache');
             if (cache && cache.stop) { //might not exist if server didn't finish starting
                 cache.stop();
+            }
+
+            var monitor = global.services.get('monitor');
+            if (monitor) {
+                monitor.stop();
             }
             callback();
         });
