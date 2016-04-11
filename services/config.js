@@ -38,6 +38,10 @@ exports.init = function(callback) {
                         return callback(err);
                     } else {
                         exports.decryptionKey = result;
+                        security.decryptObject(config, function (str) {
+                            //Decryption function
+                            return security.decrypt(str, result);
+                        });
                         return callback();
                     }
                 });
