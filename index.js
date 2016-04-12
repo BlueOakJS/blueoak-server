@@ -42,6 +42,7 @@ module.exports.init = function (opts, callback) {
                 var message = {cmd: 'startupComplete', pid: process.pid};
                 message.error = err.message;
                 process.send(message);
+                return; //return so that we don't attempt to initialize the worker
             }
         }
 
@@ -123,6 +124,10 @@ function forkWorker(workerNumber, callback) {
 
         if (msg.cmd === 'startupComplete') {
             if (msg.error) {
+
+                //kill worker
+                worker.kill();
+
                 //Callback with the error
                 return callback(new Error(msg.error));
             } else {
@@ -134,9 +139,14 @@ function forkWorker(workerNumber, callback) {
 
 //master will send a 'stop' message to all the workers when it's time to stop
 process.on('message', function(msg) {
-    var data = JSON.parse(msg);
-    if (data.cmd === 'stop') {
+    var data = null;
+    try {
+        data = JSON.parse(msg);
+    } catch (err) {
+        //wasn't json data
+    }
 
+    if (data && data.cmd === 'stop') {
         module.exports.stop(false, function() {
             process.send(data);
         });
