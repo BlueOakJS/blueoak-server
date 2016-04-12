@@ -30,7 +30,7 @@ exports.init = function(callback) {
         //
         //if process.env.decryptionKey is set, we're in single worker mode.
         //So even though we are a master, act more like a worker.
-        if (cluster.isMaster && !process.env.decryptionKey) {
+        if (cluster.isMaster && !exports.decryptionKey) {
             //Check if any of the config has encrypted data, in which case we need to prompt for a password
             if (security.containsEncryptedData(config)) {
                 getPassword(function(err, result) {
