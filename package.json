@@ -38,7 +38,7 @@
     "base64url": "^1.0.4",
     "body-parser": "^1.12.4",
     "cfenv": "^1.0.0",
-    "config": "^1.13.0",
+    "config": "^1.20.1",
     "cookie-session": "^1.2.0",
     "cors": "^2.6.0",
     "debug": "^2.2.0",
