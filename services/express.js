@@ -32,8 +32,26 @@ exports.init = function(logger, config, middleware, auth, serviceLoader, callbac
 };
 
 exports.stop = function(callback) {
+
     if (server) {
-        server.close(callback);
+        var closed = false;
+        
+        // Any keep-alive connection will keep the server from closing.
+        //Therefore give it 250ms, at which point let's return so that
+        //the process can exit.
+        var timer = setTimeout(function() {
+            if (!closed) {
+                closed = true;
+                callback();
+            }
+        }, 250);
+        
+        server.close(function() {
+            if (!closed) {
+                clearTimeout(timer)
+                callback();
+            }
+        });
     } else {
         if (callback) {
             return callback();
