@@ -5,6 +5,15 @@
 
 var logger = services.get('logger');
 
+exports.init = function(swagger) {
+    swagger.addFormat('pet-tag', function(data, schema) {
+        //check that a tag is uppercase
+        if (data !== data.toUpperCase()) {
+            return 'Pet tag must be all uppercase';
+        }
+    });
+};
+
 exports.findPets = function(req, res, next) {
     res.status(200).json({});
 };

@@ -8,6 +8,7 @@ var fs = require('fs');
 var debug = require('debug')('swagger');
 var async = require('async');
 var parser = require('swagger-parser');
+var tv4 = require('tv4');
 
 var specs = {
     dereferenced: {},
@@ -91,6 +92,10 @@ exports.getSimpleSpecs = function() {
 
 exports.getPrettySpecs = function () {
     return specs.bundled;
+};
+
+exports.addFormat = function(format, validationFunction) {
+    tv4.addFormat(format, validationFunction);
 };
 
 //Try to determine if this is supposed to be a swagger file

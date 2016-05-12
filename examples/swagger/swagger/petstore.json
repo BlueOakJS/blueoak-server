@@ -184,7 +184,8 @@
           "type": "string"
         },
         "tag": {
-          "type": "string"
+          "type": "string",
+          "format": "pet-tag"
         }
       }
     },
