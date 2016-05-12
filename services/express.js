@@ -42,14 +42,14 @@ exports.stop = function(callback) {
         var timer = setTimeout(function() {
             if (!closed) {
                 closed = true;
-                callback();
+                return callback();
             }
         }, 250);
         
         server.close(function() {
             if (!closed) {
-                clearTimeout(timer)
-                callback();
+                clearTimeout(timer);
+                return callback();
             }
         });
     } else {
