@@ -363,6 +363,35 @@ describe('Array validation test', function () {
     });
 });
 
+describe('Test array validation - issue #55', function () {
+    
+    it('Validate array parameter when array is given', function () {
+        assert.equal(swaggerUtil.validateParameterType({
+            type: 'array',
+            items: {
+                type: 'string',
+                enum: [ 'ANY', 'Type_A', 'Type_R', 'Type_S']
+            },
+            collectionFormat: 'csv',
+            default: ['ANY']
+        }, ['ANY', 'Type_A']).valid, SUCCESS);
+    });
+    
+    it('Validate array parameter when string is given', function () {
+        assert.equal(swaggerUtil.validateParameterType({
+            type: 'array',
+            items: {
+                type: 'string',
+                enum: [ 'ANY', 'Type_A', 'Type_R', 'Type_S']
+            },
+            collectionFormat: 'csv',
+            default: ['ANY']
+        }, 'ANY,Type_A').valid, SUCCESS);
+    });
+
+
+});
+
 describe('Test additional formats', function () {
 
     it('Invalid date-time fails', function () {
