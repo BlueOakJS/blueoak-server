@@ -7,6 +7,10 @@ var _ = require('lodash'),
     VError = require('verror'),
     multer = require('multer');
 
+// config Enum for when multer.storage property matches,
+// we set to multe.storage config to multer.memoryStorage()
+var MULTER_MEMORY_STORAGE = 'multerMemoryStorage';
+
 var _upload; //will get set to a configured multer instance if multipart form data is used
 var httpMethods = ['get', 'put', 'post', 'delete', 'options', 'head', 'patch'];
 
@@ -49,12 +53,12 @@ exports.init = function (app, auth, config, logger, serviceLoader, swagger, call
         }
 
         if (containsMultipartFormData(api)) {
-
             //make sure we have the config for multer
             if (_.keys(config.get('multer')).length === 0) {
                 logger.warn('No multer config found.  Required when using multipart form data.');
             } else {
-                _upload = multer(config.get('multer'));
+                var multerConfig = handleMulterConfig(config.get('multer'), logger, serviceLoader);
+                _upload = multer(multerConfig);
             }
         }
 
@@ -159,6 +163,34 @@ function containsMultipartFormData(api) {
     return foundMultipartData;
 }
 
+// Checks the multer config if the storage property is set to either the
+// memoryStorage enum or the name of a custom multerService implementing
+// a multer storage engine.
+function handleMulterConfig(multerConfig, logger, serviceLoader) {
+    // Special handling of storage
+    var storageString = _.get(multerConfig, 'storage');
+    if (storageString) {
+        var multerStorage;
+        if (storageString === MULTER_MEMORY_STORAGE) {
+            // simple memory storage
+            logger.debug('loading simple multer memoryStorage');
+            multerStorage = multer.memoryStorage();
+        } else {
+            // otherwise try and load the service for custom multer storage engine
+            logger.debug('loading custom multer storage service');
+            var multerService = serviceLoader.get(storageString);
+            if (!multerService) {
+                logger.warn('Multer config "storage" property must either be "' + MULTER_MEMORY_STORAGE + '"');
+                logger.warn('or the name of a service that returns a multer storage engine');
+            } else {
+                multerStorage = multerService.storage;
+            }
+        }
+        _.set(multerConfig, 'storage', multerStorage);
+    }
+
+    return multerConfig;
+}
 
 /**
  * app - express app

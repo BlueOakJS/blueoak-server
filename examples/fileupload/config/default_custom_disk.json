@@ -1,0 +1,22 @@
+//Default config for my app
+{
+  "express": {
+    "port": "3000",
+    "middleware": ["express-static", "body-parser"]
+  },
+  "cluster": {
+    "maxWorkers": 1
+  },
+  "body-parser": {
+    "json": {}
+  },
+
+  "express-static": {
+    "docs": "static"
+  },
+
+  "multer": {
+    "storage": "multerService" // the name of the service in services
+  }
+
+}
