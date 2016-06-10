@@ -1,5 +1,5 @@
-var multer = require('multer'),
-    log;
+var multer = require('multer');
+var log;
 
 exports.init = function (logger) {
     log = logger;
