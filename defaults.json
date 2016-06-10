@@ -49,7 +49,7 @@
 
   "node": {
     "version": {
-      "min": "^4.4.4 || ^5.11.1",
+      "min": "^4.4.4 || ^5.11.1 || ^6.1.0",
       "recommended": "4.4.4" //May '16 security update
     }
   }
