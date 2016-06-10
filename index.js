@@ -159,7 +159,18 @@ process.on('SIGINT', function() {
     module.exports.stop(true, function() {
         //Just in case there's anything still running, shut it down
         if (cluster.isMaster) {
-            process.exit(0);
+            var logger = serviceLoader.get('logger');
+            logger.info('Shutdown complete.');
+
+            //In a single-process server, the server might not shut down on its own
+            //because of keep-alive mode keeps the http server alive.
+            //See https://github.com/nodejs/node/issues/2642
+            //In such cases we want to do a process.exit(0) to force a shutdown.
+            //It's important that we DO NOT do a process.exit(0) in cluster mode
+            //as it might prevent workers from actually stopping.
+            if (!isClusteredMaster()) {
+                process.exit(0);
+            }
         }
     });
 });
