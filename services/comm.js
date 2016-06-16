@@ -2,7 +2,7 @@ var cluster = require('cluster');
 var subscriptions = {};
 
 exports.init =  function(logger) {
-    console.log("Creating comm lib")
+
 };
 
 exports.broadcast = function(event, payload) {
@@ -16,7 +16,7 @@ exports.broadcast = function(event, payload) {
     } else {
         process.send({cmd: 'broadcast', event: event, payload: payload});
     }
-}
+};
 
 //used internally to call the on(event) function
 exports._processBroadcast =  function(data) {
@@ -27,8 +27,8 @@ exports._processBroadcast =  function(data) {
             callback(data.payload);
         });
     }
-}
+};
 
 exports.on = function(event, callback) {
     subscriptions[event] = callback;
-}
+};
