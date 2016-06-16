@@ -113,6 +113,8 @@ function forkWorker(workerNumber, callback) {
     var logger = serviceLoader.get('logger');
     var worker = cluster.fork({decryptionKey: serviceLoader.get('config').decryptionKey});
     workerNumberMap[worker.process.pid] = workerNumber;
+
+    //these are messages from worker to master being processed within the master process
     worker.on('message', function(msg) {
 
         try {
@@ -133,24 +135,42 @@ function forkWorker(workerNumber, callback) {
             } else {
                 return callback();
             }
+        } else if (msg.cmd === 'broadcast') {
+            //send the broadcast message to every worker
+            var ids = _.map(cluster.workers, function(key, val) {
+                return val;
+            });
+            async.eachSeries(ids, function(id, next) {
+                cluster.workers[id].send(msg);
+                next();
+            }, function() {
+                //done
+            });
         }
     });
 }
 
-//master will send a 'stop' message to all the workers when it's time to stop
+//master will send a 'stop' message to all the workers when it's time to stop.
+//A 'broadcast' message is initiated by the comm service to send a message to all workers
 process.on('message', function(msg) {
-    var data = null;
+    var data = msg;
     try {
         data = JSON.parse(msg);
     } catch (err) {
         //wasn't json data
     }
 
-    if (data && data.cmd === 'stop') {
-        module.exports.stop(false, function() {
-            process.send(data);
-        });
+    if (data) {
+        if (data.cmd === 'stop') {
+            module.exports.stop(false, function() {
+                process.send(data);
+            });
+        } else if (data.cmd === 'broadcast') {
+            var comm = serviceLoader.get('comm');
+            comm._processBroadcast(data);
+        }
     }
+
 });
 
 
