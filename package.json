@@ -8,13 +8,14 @@
   },
   "license": "MIT",
   "main": "index.js",
-  "author": "Patrick Wolf <patrick.wolf@pointsource.com>",
+  "author": "PointSource LLC <github@pointsource.com>",
   "contributors": [
+    "Sean Kennedy <sean.kennedy@pointsource.com>",
     "Greg Considine <greg@greg-considine.com>",
     "Erik Daughtrey <erik.daughtrey@pointsource.com>",
+    "Erin Bartholomew <erin.bartholomew@pointsource.com>",
     "Benjamin Schell <ben@benschell.org>",
-    "Sean Kennedy <sean.kennedy@pointsource.com>",
-    "Erin Bartholomew <erin.bartholomew@pointsource.com>"
+    "Patrick Wolf <patrick.wolf@pointsource.com>"
   ],
   "keywords": [
     "node",
