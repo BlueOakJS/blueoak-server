@@ -136,10 +136,18 @@ exports.init = function(config) {
 
 #### Swagger (OpenAPI)
 
-[Swagger](https://github.com/BlueOakJS/blueoak-server/wiki/Handlers#swagger) files in the _swagger_ directory are read during server startup and automatically wired up to handlers.  Swagger files can be in either json or yaml formats.
+[Swagger](https://github.com/BlueOakJS/blueoak-server/wiki/Handlers#swagger) files in the _swagger_ directory are read during server startup and automatically wired up to handlers. Swagger files can be in either json or yaml formats.
 
 We've really focused on making API development with Swagger and BlueOak Server to be excellent.  
 [Checkout our ideas on best practices][blog3].
+
+At a high-level, BlueOak Server's Swagger support provides the following:
+* Automatic app routing from the API method to the function as defined in the Swagger
+* Request parameter validation, including the body model, based on your method definion
+* Reponse model validation based on your method definitions during development
+* JSON `$ref`s to external Swagger documents on the file system
+* Multiple top-level Swagger API definitions supporting delivery of multiple API base paths
+* Publishing of the fully compiled Swagger spec for input to by tools such as [`Swagger-UI`](http://swagger.io/swagger-ui/) and [`swagger-commander`](https://www.npmjs.com/package/swagger-commander)
 
 ### Installation
 
@@ -147,12 +155,26 @@ We've really focused on making API development with Swagger and BlueOak Server t
 $ npm install -g blueoak-server
 ```
 
-### Usage
-
-If installed globally, run *blueoak-server* from within your project's directory.
+-or-
 
 ```bash
+$ npm install --save blueoak-server
+```
+
+### Usage
+
+If installed globally, run _blueoak-server_ from within your project's directory.
+e.g.:
+```bash
 $ blueoak-server
+```
+
+If installed at a package level, call _blueoak-server_ in the `npm start` script.
+e.g.:
+```json
+  "scripts": {
+    "start": "blueoak-server"
+  }
 ```
 
 Alternatively, it can be launched programmatically from your own js script.
