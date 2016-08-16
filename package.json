@@ -65,9 +65,10 @@
     "winston": "^1.1.0"
   },
   "devDependencies": {
-    "eslint": "^2.4.0",
+    "assert": "^1.4.1",
+    "eslint": "^3.3.1",
     "istanbul": "^0.4.1",
-    "mocha": "^2.2.5",
+    "mocha": "^3.0.2",
     "mocha-jenkins-reporter": "^0.1.8"
   },
   "files": [
