@@ -5,7 +5,8 @@
 var _ = require('lodash'),
     swaggerUtil = require('../lib/swaggerUtil'),
     VError = require('verror'),
-    multer = require('multer');
+    multer = require('multer'),
+    util = require('util');
 
 // config Enum for when multer.storage property matches,
 // we set to multe.storage config to multer.memoryStorage()
@@ -13,9 +14,15 @@ var MULTER_MEMORY_STORAGE = 'multerMemoryStorage';
 
 var _upload; //will get set to a configured multer instance if multipart form data is used
 var httpMethods = ['get', 'put', 'post', 'delete', 'options', 'head', 'patch'];
+var responseModelValidationLevel;
 
 exports.init = function (app, auth, config, logger, serviceLoader, swagger, callback) {
     var cfg = config.get('swagger');
+    
+    responseModelValidationLevel = /error|warn/.test(cfg.validateResponseModels) ? cfg.validateResponseModels : 0;
+    if (responseModelValidationLevel) {
+        logger.info('Response model validation is on and set to level "%s"', responseModelValidationLevel);
+    }
 
     //default to true
     var useBasePath = cfg.useBasePath || cfg.useBasePath === undefined;
@@ -222,7 +229,7 @@ function registerRoute(app, auth, additionalMiddleware, method, path, data, allo
 
     app[method].call(app, path, additionalMiddleware, function (req, res, next) {
 
-        validateParameters(req, data, logger, function (err) {
+        validateRequestParameters(req, data, logger, function (err) {
             if (err) {
                 return next(err);
             }
@@ -242,6 +249,53 @@ function registerRoute(app, auth, additionalMiddleware, method, path, data, allo
                 });
             }
 
+            if (responseModelValidationLevel) {
+                var responseSender = res.send;
+                res.send = function (body) {
+                    var validationErrors, invalidBody;
+                    if (responseModelValidationLevel === 'error') {
+                        //we're going to check the model and send any valdiation errors back to the caller in the reponse
+                        //either in the `_response_validation_errors` property of the response, or of that property of the first and last array entries
+                        //we'll create a response object (or array entry) if there isn't one (we will break some client code)
+                        validationErrors = validateResponseModels(res, body, data, logger);
+                        if (validationErrors) {
+                            invalidBody = _.cloneDeep(body);
+                            if (Array.isArray(body)) {
+                                if (body.length === 0) {
+                                    body.push(validationErrors);
+                                } else {
+                                    body[0]._response_validation_errors = validationErrors;
+                                    if (body.length > 1) {
+                                        body[body.length - 1]._response_validation_errors = validationErrors;
+                                    }
+                                }
+                            } else {
+                                body = body || {};
+                                body._response_validation_errors = validationErrors;
+                            }
+                        }
+                    }
+                    
+                    //after this initial call (sometimes `send` will call itself again), we don't need to get the response for validation anymore
+                    res.send = responseSender;
+                    responseSender.call(res, body);
+                    
+                    if (responseModelValidationLevel === 'warn') {
+                        //when doing a warning only, do the work after the response has already been sent
+                        validationErrors = validateResponseModels(res, body, data, logger);
+                    }
+                    
+                    if (validationErrors) { // for both errors and warnings ...
+                        validationErrors.invalidResponse = {
+                            method: req.method,
+                            path: req.path,
+                            statusCode: res.statusCode,
+                            body: invalidBody || body
+                        };
+                        logger[responseModelValidationLevel]('Response validation error:', JSON.stringify(validationErrors, null, 2));
+                    }
+                };
+            }
             handlerFunc(req, res, next);
         });
 
@@ -280,7 +334,7 @@ function setDefaultHeaders(req, data, logger) {
 }
 
 
-function validateParameters(req, data, logger, callback) {
+function validateRequestParameters(req, data, logger, callback) {
 
     var parameters = _.toArray(data.parameters);
     for (var i = 0; i < parameters.length; i++) {
@@ -375,6 +429,53 @@ function validateParameters(req, data, logger, callback) {
         }
     }
     return callback();
+}
+
+function validateResponseModels(res, body, data, logger) {
+    if (!(res.statusCode >= 200 && res.statusCode < 300 || res.statusCode >= 400 && res.statusCode < 500)) {
+        //the statusCode for the response isn't in the range that we'd expect to be documented in the swagger
+        //i.e.: 200-299 (success) or 400-499 (request error)
+        return; 
+    }
+
+    var schemaPath = 'responses.%s.schema',
+        codeSchema = util.format(schemaPath, res.statusCode),
+        defaultSchema = util.format(schemaPath, 'default');
+    var modelSchema;
+    if (_.has(data, codeSchema)) {
+        modelSchema = _.get(data, codeSchema);
+    } else if (_.has(data, defaultSchema)) {
+        modelSchema = _.get(data, defaultSchema);
+    } else {
+        return _createValidationError('No response schema defined for %s %s with status code %s');
+    }
+    
+    var result = swaggerUtil.validateJSONType(modelSchema, body);
+    if (!result.valid) {
+        return _createValidationError('Error validating response body for %s %s with status code %s', result.errors);
+    }
+    return;
+    
+    function _createValidationError(message, subErrors) {
+        var error = new VError(message, res.req.method, res.req.path, res.statusCode);
+        error.name = 'ValidationError';
+        error.subErrors = subErrors;
+        
+        var explainer = {
+            message: error.message,
+            status: 422,
+            type: error.name
+        };
+        if (error.subErrors) {
+            explainer.validation_errors = [];
+            error.subErrors.forEach(function (subError) {
+                explainer.validation_errors.push({
+                    message: subError.message
+                });
+            });
+        }
+        return explainer;
+    }
 }
 
 function wrapCall(obj, funcName, toCall) {

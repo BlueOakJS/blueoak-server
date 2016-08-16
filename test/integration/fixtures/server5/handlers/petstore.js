@@ -3,13 +3,14 @@
  * MIT Licensed
  */
 exports.pets1 = function(req, res, next) {
-    res.json({
-        name: 'pets1'
+    res.send({
+        name: 'pets1',
+        id: 1
     });
 };
 
 exports.pets2 = function(req, res, next) {
-    res.json({
+    res.send({
         name: 'pets2'
     });
 };

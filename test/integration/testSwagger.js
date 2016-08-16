@@ -24,7 +24,7 @@ describe('SERVER5 - test simple REST calls from swagger spec', function () {
             done();
         });
     });
-    
+
     //override handler using x-handler
     it('GET /api/pets2', function (done) {
         request('http://localhost:' + (process.env.PORT || 5000) + '/api/pets2', function(err, resp, body) {
@@ -34,7 +34,7 @@ describe('SERVER5 - test simple REST calls from swagger spec', function () {
             done();
         });
     });
-    
+
     //override middleware using x-middleware
     it('GET /api/pets3', function (done) {
         request('http://localhost:' + (process.env.PORT || 5000) + '/api/pets3', function(err, resp, body) {
@@ -44,7 +44,7 @@ describe('SERVER5 - test simple REST calls from swagger spec', function () {
             done();
         });
     });
-    
+
     //override middleware using x-middleware array
     it('GET /api/pets4', function (done) {
         request('http://localhost:' + (process.env.PORT || 5000) + '/api/pets4', function(err, resp, body) {
@@ -54,7 +54,7 @@ describe('SERVER5 - test simple REST calls from swagger spec', function () {
             done();
         });
     });
-    
+
     //override middleware using x-middleware with custom handler name
     it('GET /api/pets5', function (done) {
         request('http://localhost:' + (process.env.PORT || 5000) + '/api/pets5', function(err, resp, body) {
@@ -164,6 +164,51 @@ describe('SERVER7 - test simple REST calls from yaml-based swagger spec', functi
             assert.ok(!err);
             var json = JSON.parse(body);
             assert.equal('foo', json.name);
+            done();
+        });
+    });
+});
+
+describe('SERVER5 + response validation "error" - test validation of response models using the "error" option', function () {
+    this.timeout(5000);
+
+    before(function (done) {
+        process.env.NODE_ENV = 'test-response-validation-errors';
+        util.launch('server5', { env: process.env }, done);
+    });
+
+    after(function (done) {
+        process.env.NODE_ENV = undefined;
+        util.finish(done);
+    });
+
+    it('GET /api/pets1 - no validation error', function (done) {
+        request('http://localhost:' + (process.env.PORT || 5000) + '/api/pets1', function (err, resp, body) {
+            assert.ok(!err);
+            var json = JSON.parse(body);
+            assert.equal(json.name, 'pets1');
+            assert.equal(json.id, 1);
+            assert.equal(json._response_validation_errors, undefined);
+            done();
+        });
+    });
+
+    it('GET /api/pets2 - validation error', function (done) {
+        request('http://localhost:' + (process.env.PORT || 5000) + '/api/pets2', function (err, resp, body) {
+            assert.ok(!err);
+            var json = JSON.parse(body);
+            assert.equal(json.name, 'pets2');
+            assert.equal(json.id, undefined);
+            assert.deepEqual(json._response_validation_errors, {
+                'message': 'Error validating response body for GET /api/pets2 with status code 200',
+                'status': 422,
+                'type': 'ValidationError',
+                'validation_errors': [
+                    {
+                        'message': 'Missing required property: id'
+                    }
+                ]
+            });
             done();
         });
     });
