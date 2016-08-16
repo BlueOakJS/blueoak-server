@@ -169,6 +169,57 @@ describe('SERVER7 - test simple REST calls from yaml-based swagger spec', functi
     });
 });
 
+describe('SERVER5 - request model validation', function () {
+    this.timeout(5000);
+    before(function (done) {
+        util.launch('server5', done);
+    });
+
+    after(function (done) {
+        util.finish(done);
+    });
+    
+    it('POST /api/pets2 - invalid model', function () {
+        request({
+            method: 'POST',
+            url: 'http://localhost:' + (process.env.PORT || 5000) + '/api/pets2',
+            json: true,
+            body: {
+                name: 'Buddy'
+            }
+        }, function (err, resp, body) {
+            assert.ok(!err);
+            assert.deepEqual(body, {
+                'message': 'Error validating request body',
+                'status': 422,
+                'type': 'ValidationError',
+                'validation_errors': [
+                    {
+                        'message': 'Missing required property: id'
+                    }
+                ]
+            });
+        });
+    });
+    
+    it('POST /api/pets2 - valid model', function () {
+        var model = {
+            name: 'Buddy Holly',
+            id: 19590203
+        };
+        request({
+            method: 'POST',
+            url: 'http://localhost:' + (process.env.PORT || 5000) + '/api/pets2',
+            json: true,
+            body: model
+        }, function (err, resp, body) {
+            assert.ok(!err);
+            assert.deepEqual(body, model);
+        });
+    });
+});
+
+
 describe('SERVER5 + response validation "error" - test validation of response models using the "error" option', function () {
     this.timeout(5000);
 

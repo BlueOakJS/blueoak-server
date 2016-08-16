@@ -52,6 +52,38 @@
             }
           }
         }
+      },
+      "post": {
+        "description": "Adds a new pet",
+        "operationId": "pets22",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "description": "new pet object",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/pet"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "pet added",
+            "schema": {
+              "$ref": "#/definitions/pet"
+            }
+          },
+          "422": {
+            "description": "Request Validation Error"
+          },
+          "default": {
+            "description": "unexpected error",
+            "schema": {
+              "$ref": "#/definitions/errorModel"
+            }
+          }
+        }
       }
     }
   },
