@@ -1,3 +1,8 @@
+discriminator: product_type
+required:
+      - product_type
+      - product_id
+
 properties:
   product_id:
     type: string
@@ -16,3 +21,7 @@ properties:
   image:
     type: string
     description: Image URL representing the product.
+  product_type:
+    type: string
+    description: type of product.
+

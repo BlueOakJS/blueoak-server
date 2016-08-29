@@ -47,3 +47,7 @@ definitions:
     $ref: 'v1-assets/definitions/Activities.yaml'
   Error:
     $ref: 'v1-assets/definitions/Error.yaml'
+  ToyProduct:
+    $ref: 'v1-assets/definitions/ToyProduct.yaml'
+  FoodProduct:
+    $ref: 'v1-assets/definitions/FoodProduct.yaml'
