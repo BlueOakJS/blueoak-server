@@ -1,6 +1,9 @@
 allOf:
       - $ref: '../definitions/Product.yaml'
+required:
+      - toy_type
 properties:
-  toy-type:
+  toy_type:
       type: string
       description: Description of toy.
+

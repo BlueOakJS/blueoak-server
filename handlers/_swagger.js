@@ -450,8 +450,8 @@ function validateResponseModels(res, body, data, logger, swaggerDoc) {
     } else {
         return _createValidationError('No response schema defined for %s %s with status code %s');
     }
-    var result = swaggerUtil.validateJSONType(modelSchema, body);
-    var pathToModelMap = swaggerUtil.getObjectsWithDiscriminator(modelSchema, {}, "root.");
+    var result = swaggerUtil.validateJSONType(modelSchema, JSON.parse(body));
+    var pathToModelMap = swaggerUtil.getObjectsWithDiscriminator(modelSchema);
     var polyMorphicValidationErrors = swaggerUtil.validateIndividualObjects(swaggerDoc, pathToModelMap, JSON.parse(body));
     if (!result.valid || polyMorphicValidationErrors.length != 0) {
         return _createValidationError('Error validating response body for %s %s with status code %s', result.errors.concat(polyMorphicValidationErrors));

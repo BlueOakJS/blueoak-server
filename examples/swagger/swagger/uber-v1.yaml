@@ -51,3 +51,7 @@ definitions:
     $ref: 'v1-assets/definitions/ToyProduct.yaml'
   FoodProduct:
     $ref: 'v1-assets/definitions/FoodProduct.yaml'
+  Label:
+      $ref: 'v1-assets/definitions/Label.yaml'
+  ToyLabel:
+      $ref: 'v1-assets/definitions/ToyLabel.yaml'
