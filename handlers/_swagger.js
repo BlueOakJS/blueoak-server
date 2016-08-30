@@ -228,7 +228,7 @@ function registerRoute(app, auth, additionalMiddleware, method, path, data, allo
 
     app[method].call(app, path, additionalMiddleware, function (req, res, next) {
 
-        validateRequestParameters(req, data, logger, function (err) {
+        validateRequestParameters(req, data, swaggerDoc, logger, function (err) {
             if (err) {
                 return next(err);
             }
@@ -251,13 +251,16 @@ function registerRoute(app, auth, additionalMiddleware, method, path, data, allo
             if (responseModelValidationLevel) {
                 var responseSender = res.send;
                 res.send = function (body) {
+                    body = JSON.parse(body);
                     var validationErrors, invalidBody;
+                    var validateResponse = validateResponseModels.bind({},res, body, data, logger, swaggerDoc);
                     if (responseModelValidationLevel === 'error') {
                         //we're going to check the model and send any valdiation errors back to the caller in the reponse
                         //either in the `_response_validation_errors` property of the response, or of that property of the first and last array entries
                         //we'll create a response object (or array entry) if there isn't one (we will break some client code)
-                        validationErrors = validateResponseModels(res, body, data, logger, swaggerDoc);
+                        validationErrors = validateResponse();
                         if (validationErrors) {
+                            res.statusCode = validationErrors.status;
                             invalidBody = _.cloneDeep(body);
                             if (Array.isArray(body)) {
                                 if (body.length === 0) {
@@ -277,11 +280,11 @@ function registerRoute(app, auth, additionalMiddleware, method, path, data, allo
                     
                     //after this initial call (sometimes `send` will call itself again), we don't need to get the response for validation anymore
                     res.send = responseSender;
-                    responseSender.call(res, body);
+                    responseSender.call(res, JSON.stringify(body));
                     
                     if (responseModelValidationLevel === 'warn') {
                         //when doing a warning only, do the work after the response has already been sent
-                        validationErrors = validateResponseModels(res, body, data, logger, specs);
+                        validationErrors = validateResponse();
                     }
                     
                     if (validationErrors) { // for both errors and warnings ...
@@ -291,7 +294,6 @@ function registerRoute(app, auth, additionalMiddleware, method, path, data, allo
                             statusCode: res.statusCode,
                             body: invalidBody || body
                         };
-
                         logger[responseModelValidationLevel]('Response validation error:', JSON.stringify(validationErrors, null, 2));
                     }
                 };
@@ -334,7 +336,7 @@ function setDefaultHeaders(req, data, logger) {
 }
 
 
-function validateRequestParameters(req, data, logger, callback) {
+function validateRequestParameters(req, data, swaggerDoc, logger, callback) {
 
     var parameters = _.toArray(data.parameters);
     for (var i = 0; i < parameters.length; i++) {
@@ -419,12 +421,12 @@ function validateRequestParameters(req, data, logger, callback) {
 
         } else if (parm.in === 'body') {
             var result = swaggerUtil.validateJSONType(parm.schema, req.body);
-            var pathToModelMap = swaggerUtil.getObjectsWithDiscriminator(parm.schema, {}, "");
-            var polyMorphicValidationResult = swaggerUtil.validateIndividualObjects(data, pathToModelMap, req.body);
-            if (!result.valid) {
+            var map = swaggerUtil.getObjectsWithDiscriminator(parm.schema);
+            var polyMorphicValidationErrors = swaggerUtil.validateIndividualObjects(swaggerDoc, map, req.body);
+            if (!result.valid || polyMorphicValidationErrors.length != 0) {
                 var error = new VError('Error validating request body');
                 error.name = 'ValidationError';
-                error.subErrors = result.errors;
+                error.subErrors = result.errors.concat(polyMorphicValidationErrors);
                 return callback(error);
             }
         }
@@ -450,9 +452,9 @@ function validateResponseModels(res, body, data, logger, swaggerDoc) {
     } else {
         return _createValidationError('No response schema defined for %s %s with status code %s');
     }
-    var result = swaggerUtil.validateJSONType(modelSchema, JSON.parse(body));
-    var pathToModelMap = swaggerUtil.getObjectsWithDiscriminator(modelSchema);
-    var polyMorphicValidationErrors = swaggerUtil.validateIndividualObjects(swaggerDoc, pathToModelMap, JSON.parse(body));
+    var result = swaggerUtil.validateJSONType(modelSchema, body);
+    var map = swaggerUtil.getObjectsWithDiscriminator(modelSchema);
+    var polyMorphicValidationErrors = swaggerUtil.validateIndividualObjects(swaggerDoc, map, body);
     if (!result.valid || polyMorphicValidationErrors.length != 0) {
         return _createValidationError('Error validating response body for %s %s with status code %s', result.errors.concat(polyMorphicValidationErrors));
     }

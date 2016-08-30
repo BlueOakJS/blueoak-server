@@ -25,7 +25,7 @@ properties:
     type: string
     description: type of product.
   labels:
-    type: array
+    type: object
     items:
       $ref: '../definitions/Label.yaml'
 

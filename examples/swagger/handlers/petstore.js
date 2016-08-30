@@ -24,7 +24,7 @@ exports.findPetById = function(req, res, next) {
 };
 
 exports.addPet = function(req, res, next) {
-    res.status(201).json({});
+    res.status(201).json({fake:""});
 };
 
 exports.deletePet = function(req, res, next) {
