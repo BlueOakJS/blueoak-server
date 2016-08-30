@@ -260,7 +260,6 @@ function registerRoute(app, auth, additionalMiddleware, method, path, data, allo
                         //we'll create a response object (or array entry) if there isn't one (we will break some client code)
                         validationErrors = validateResponse();
                         if (validationErrors) {
-                            res.statusCode = validationErrors.status;
                             invalidBody = _.cloneDeep(body);
                             if (Array.isArray(body)) {
                                 if (body.length === 0) {
@@ -442,19 +441,24 @@ function validateResponseModels(res, body, data, logger, swaggerDoc) {
     }
 
     var schemaPath = 'responses.%s.schema',
+        mapPath = 'responses.%s.map',
         codeSchema = util.format(schemaPath, res.statusCode),
-        defaultSchema = util.format(schemaPath, 'default');
+        defaultSchema = util.format(schemaPath, 'default'),
+        mapSchema = util.format(mapPath, res.statusCode),
+        defaultMapSchema = util.format(mapPath, 'default');
     var modelSchema;
+    var responseModelMap;
     if (_.has(data, codeSchema)) {
         modelSchema = _.get(data, codeSchema);
+        responseModelMap = _.get(data, mapSchema);
     } else if (_.has(data, defaultSchema)) {
         modelSchema = _.get(data, defaultSchema);
+        responseModelMap = _.get(data, defaultMapSchema);
     } else {
         return _createValidationError('No response schema defined for %s %s with status code %s');
     }
     var result = swaggerUtil.validateJSONType(modelSchema, body);
-    var map = swaggerUtil.getObjectsWithDiscriminator(modelSchema);
-    var polyMorphicValidationErrors = swaggerUtil.validateIndividualObjects(swaggerDoc, map, body);
+    var polyMorphicValidationErrors = swaggerUtil.validateIndividualObjects(swaggerDoc, responseModelMap, body);
     if (!result.valid || polyMorphicValidationErrors.length != 0) {
         return _createValidationError('Error validating response body for %s %s with status code %s', result.errors.concat(polyMorphicValidationErrors));
     }

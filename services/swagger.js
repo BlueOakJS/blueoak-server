@@ -8,6 +8,7 @@ var fs = require('fs');
 var debug = require('debug')('swagger');
 var async = require('async');
 var parser = require('swagger-parser');
+var swaggerUtil = require('../lib/swaggerUtil');
 var tv4 = require('tv4');
 
 var specs = {
@@ -60,6 +61,7 @@ exports.init = function(logger, callback) {
         })
         .then(function (dereferencedApi) {
             specs.dereferenced[handlerName] = dereferencedApi;
+            getDiscriminatorObjectsForResponseSchemas(dereferencedApi.paths);
             return swagCallback();
         })
         .catch(function (error) {
@@ -90,6 +92,10 @@ exports.getSimpleSpecs = function() {
     return specs.dereferenced;
 };
 
+exports.getResponseModelMap = function (handler, responseCode) {
+    return specs[handler]
+};
+
 exports.getPrettySpecs = function () {
     return specs.bundled;
 };
@@ -97,6 +103,22 @@ exports.getPrettySpecs = function () {
 exports.addFormat = function(format, validationFunction) {
     tv4.addFormat(format, validationFunction);
 };
+
+function getDiscriminatorObjectsForResponseSchemas(paths) {
+    var pathKeys = Object.keys(paths);
+    pathKeys.forEach(function (path) {
+        var methodKeys = Object.keys(paths[path]);
+        methodKeys.forEach(function (method) {
+            var responseCodeKeys = Object.keys(paths[path][method].responses);
+            responseCodeKeys.forEach(function (responseCode) {
+                var schema = paths[path][method].responses[responseCode].schema;
+                if (schema) {
+                    paths[path][method].responses[responseCode].map = swaggerUtil.getObjectsWithDiscriminator(schema);
+                }
+            });
+        });
+    });
+}
 
 //Try to determine if this is supposed to be a swagger file
 //For now look for the required "swagger" field, which contains the version
