@@ -251,7 +251,8 @@ function registerRoute(app, auth, additionalMiddleware, method, path, data, allo
             if (responseModelValidationLevel) {
                 var responseSender = res.send;
                 res.send = function (body) {
-                    body = JSON.parse(body);
+                    var isJson = typeof body === "string"; //body can come in as JSON or object, we want object
+                    body = isJson ? JSON.parse(body) : body;
                     var validationErrors, invalidBody;
                     var validateResponse = validateResponseModels.bind({},res, body, data, logger, swaggerDoc);
                     if (responseModelValidationLevel === 'error') {
@@ -279,7 +280,7 @@ function registerRoute(app, auth, additionalMiddleware, method, path, data, allo
                     
                     //after this initial call (sometimes `send` will call itself again), we don't need to get the response for validation anymore
                     res.send = responseSender;
-                    responseSender.call(res, JSON.stringify(body));
+                    responseSender.call(res, isJson ? JSON.stringify(body): body);
                     
                     if (responseModelValidationLevel === 'warn') {
                         //when doing a warning only, do the work after the response has already been sent

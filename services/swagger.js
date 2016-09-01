@@ -16,6 +16,8 @@ var specs = {
     bundled: {}
 };
 
+var httpMethods = ['get', 'put', 'post', 'delete', 'options', 'head', 'patch'];
+
 
 exports.init = function(logger, callback) {
 
@@ -109,13 +111,15 @@ function getDiscriminatorObjectsForResponseSchemas(paths) {
     pathKeys.forEach(function (path) {
         var methodKeys = Object.keys(paths[path]);
         methodKeys.forEach(function (method) {
-            var responseCodeKeys = Object.keys(paths[path][method].responses);
-            responseCodeKeys.forEach(function (responseCode) {
-                var schema = paths[path][method].responses[responseCode].schema;
-                if (schema) {
-                    paths[path][method].responses[responseCode].map = swaggerUtil.getObjectsWithDiscriminator(schema);
-                }
-            });
+            if (httpMethods.indexOf(method) != -1) {//is this key actually an http method
+                var responseCodeKeys = Object.keys(paths[path][method].responses);
+                responseCodeKeys.forEach(function (responseCode) {
+                    var schema = paths[path][method].responses[responseCode].schema;
+                    if (schema) {
+                        paths[path][method].responses[responseCode].map = swaggerUtil.getObjectsWithDiscriminator(schema);
+                    }
+                });
+            }
         });
     });
 }

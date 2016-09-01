@@ -44,8 +44,7 @@
   "swagger": {
     "context": "/swagger",
     "serve": true,
-    "useLocalhost": true,
-    "validateResponseModels": "error"
+    "useLocalhost": true
   },
 
   "node": {
