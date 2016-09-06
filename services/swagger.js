@@ -95,10 +95,6 @@ exports.getSimpleSpecs = function() {
     return specs.dereferenced;
 };
 
-exports.getResponseModelMap = function (handler, responseCode) {
-    return specs[handler]
-};
-
 exports.getPrettySpecs = function () {
     return specs.bundled;
 };
@@ -118,7 +114,7 @@ function getDiscriminatorObjectsForSchemas(paths, doResponseValidation) {
                     responseCodeKeys.forEach(function (responseCode) {
                         var schema = paths[path][method].responses[responseCode].schema;
                         if (schema) {
-                            paths[path][method].responses[responseCode].map = swaggerUtil.getObjectsWithDiscriminator(schema);
+                            paths[path][method].responses[responseCode]['x-map'] = swaggerUtil.getObjectsWithDiscriminator(schema);
                         }
                     });
                 }
@@ -127,7 +123,7 @@ function getDiscriminatorObjectsForSchemas(paths, doResponseValidation) {
                     requestParamKeys.forEach(function (param) {
                         var schema = paths[path][method].parameters[param].schema;
                         if (schema) {
-                            paths[path][method].parameters[param].map = swaggerUtil.getObjectsWithDiscriminator(schema);
+                            paths[path][method].parameters[param]['x-map'] = swaggerUtil.getObjectsWithDiscriminator(schema);
                         }
                     });
                 }

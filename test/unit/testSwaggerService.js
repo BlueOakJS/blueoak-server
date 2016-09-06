@@ -6,21 +6,51 @@ var _ = require('lodash'),
     assert = require('assert'),
     path = require('path'),
     config = require('../../testlib/mocks/config'),
+    logger = require('../../testlib/mocks/logger'),
     swaggerService = require('../../services/swagger'),
     swaggerUtil = require('../../lib/swaggerUtil');
 
 var swaggerExampleDir = path.resolve(__dirname, '../../examples/swagger'),
     swaggerExampleSpecs = 2;
+var httpMethods = ['get', 'put', 'post', 'delete', 'options', 'head', 'patch'];
 
 function initSwaggerService(rootDir, callback) {
     global.__appDir = rootDir;
-    swaggerService.init(config, callback);
+    swaggerService.init(logger, config, callback);
 }
 
 describe('Swagger spec building test', function () {
 
     before(function (callback) {
         initSwaggerService(swaggerExampleDir, callback);
+    });
+
+    it('responses/requests with schema have map property', function () {
+        _.forIn(swaggerService.getSimpleSpecs(), function (spec) {
+            _.forIn(spec.paths, function (path) {
+                _.forIn(path, function (method, methodKey) {
+                    if (httpMethods.indexOf(methodKey) != -1) {
+                        _.forIn(method.responses, function (response, key) {
+                            if (response.schema) {
+                                assert.ok(response.map, 'Simple specs ' + key + ' does not have a map property');
+                                if (JSON.stringify(response.schema).includes('"discriminator":')){
+                                    assert.ok(response.map.discriminator, 'Map for ' + key + ' does not have a discriminator property');
+                                }
+                            }
+                        });
+                        _.forIn(method.parameters, function (param, key) {
+                            if (param.in === "body") {//schema required
+                                assert.ok(param.schema, 'Simple specs ' + key + ' does not have a schema property');
+                                assert.ok(param.map, 'Simple specs ' + key + ' does not have a map property');
+                                if (JSON.stringify(param.schema).includes('"discriminator":')){
+                                    assert.ok(JSON.stringify(param.map).includes('"discriminator":'), 'Map for ' + key + ' does not have a discriminator property');
+                                }
+                            }
+                        });
+                    }
+                });
+            });
+        });
     });
 
     it('Has a spec for each top-level spec file', function () {
