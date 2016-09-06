@@ -19,7 +19,7 @@ var responseModelValidationLevel;
 exports.init = function (app, auth, config, logger, serviceLoader, swagger, callback) {
     var cfg = config.get('swagger');
     
-    responseModelValidationLevel = /error|warn/.test(cfg.validateResponseModels) ? cfg.validateResponseModels : 0;
+    responseModelValidationLevel = /error|warn|fail/.test(cfg.validateResponseModels) ? cfg.validateResponseModels : 0;
     if (responseModelValidationLevel) {
         logger.info('Response model validation is on and set to level "%s"', responseModelValidationLevel);
     }
@@ -253,12 +253,12 @@ function registerRoute(app, auth, additionalMiddleware, method, path, data, allo
                 var responseSender = res.send;
                 res.send = function (body) {
                     var validationErrors, invalidBody;
-                    if (responseModelValidationLevel === 'error' || responseModelValidationLevel === 'fail') {
-                        //we're going to check the model and send any valdiation errors back to the caller in the reponse
-                        //either in the `_response_validation_errors` property of the response, or of that property of the first and last array entries
-                        //we'll create a response object (or array entry) if there isn't one (we will break some client code)
-                        validationErrors = validateResponseModels(res, body, data, logger);
-                        if (validationErrors) {
+                    validationErrors = validateResponseModels(res, body, data, logger);
+                    if (validationErrors) {
+                        if (responseModelValidationLevel === 'error' || responseModelValidationLevel === 'fail') {
+                            //we're going to check the model and send any valdiation errors back to the caller in the reponse
+                            //either in the `_response_validation_errors` property of the response, or of that property of the first and last array entries
+                            //we'll create a response object (or array entry) if there isn't one (we will break some client code)
                             invalidBody = _.cloneDeep(body);
                             if (responseModelValidationLevel === 'error') {
                                 if (Array.isArray(body)) {
@@ -276,30 +276,23 @@ function registerRoute(app, auth, additionalMiddleware, method, path, data, allo
                                 }
                             }
                             else {//level is fail
-                                body = {response: body, validationErrors : validationErrors};
+                                body = {response: body, validationErrors: _.clone(validationErrors)};
                                 res.statusCode = validationErrors.status;
                             }
                         }
-                    }
-                    
-                    //after this initial call (sometimes `send` will call itself again), we don't need to get the response for validation anymore
-                    res.send = responseSender;
-                    responseSender.call(res, body);
-                    
-                    if (responseModelValidationLevel === 'warn') {
-                        //when doing a warning only, do the work after the response has already been sent
-                        validationErrors = validateResponseModels(res, body, data, logger);
-                    }
-                    
-                    if (validationErrors) { // for both errors and warnings ...
                         validationErrors.invalidResponse = {
                             method: req.method,
                             path: req.path,
                             statusCode: res.statusCode,
                             body: invalidBody || body
                         };
-                        logger[responseModelValidationLevel]('Response validation error:', JSON.stringify(validationErrors, null, 2));
+                        logger[responseModelValidationLevel === "warn" ? "warn" : "error"]('Response validation error:', JSON.stringify(validationErrors, null, 2));
                     }
+                    
+                    //after this initial call (sometimes `send` will call itself again), we don't need to get the response for validation anymore
+                    res.send = responseSender;
+                    responseSender.call(res, body);
+
                 };
             }
             handlerFunc(req, res, next);
