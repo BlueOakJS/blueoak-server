@@ -253,25 +253,31 @@ function registerRoute(app, auth, additionalMiddleware, method, path, data, allo
                 var responseSender = res.send;
                 res.send = function (body) {
                     var validationErrors, invalidBody;
-                    if (responseModelValidationLevel === 'error') {
+                    if (responseModelValidationLevel === 'error' || responseModelValidationLevel === 'fail') {
                         //we're going to check the model and send any valdiation errors back to the caller in the reponse
                         //either in the `_response_validation_errors` property of the response, or of that property of the first and last array entries
                         //we'll create a response object (or array entry) if there isn't one (we will break some client code)
                         validationErrors = validateResponseModels(res, body, data, logger);
                         if (validationErrors) {
                             invalidBody = _.cloneDeep(body);
-                            if (Array.isArray(body)) {
-                                if (body.length === 0) {
-                                    body.push(validationErrors);
-                                } else {
-                                    body[0]._response_validation_errors = validationErrors;
-                                    if (body.length > 1) {
-                                        body[body.length - 1]._response_validation_errors = validationErrors;
+                            if (responseModelValidationLevel === 'error') {
+                                if (Array.isArray(body)) {
+                                    if (body.length === 0) {
+                                        body.push(validationErrors);
+                                    } else {
+                                        body[0]._response_validation_errors = validationErrors;
+                                        if (body.length > 1) {
+                                            body[body.length - 1]._response_validation_errors = validationErrors;
+                                        }
                                     }
+                                } else {
+                                    body = body || {};
+                                    body._response_validation_errors = validationErrors;
                                 }
-                            } else {
-                                body = body || {};
-                                body._response_validation_errors = validationErrors;
+                            }
+                            else {//level is fail
+                                body = {response: body, validationErrors : validationErrors};
+                                res.statusCode = validationErrors.status;
                             }
                         }
                     }
@@ -463,7 +469,7 @@ function validateResponseModels(res, body, data, logger) {
         
         var explainer = {
             message: error.message,
-            status: 422,
+            status: 522,
             type: error.name
         };
         if (error.subErrors) {
