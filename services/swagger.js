@@ -19,8 +19,9 @@ var specs = {
 var httpMethods = ['get', 'put', 'post', 'delete', 'options', 'head', 'patch'];
 
 
-exports.init = function(logger, callback) {
-
+exports.init = function(logger, config, callback) {
+    var cfg = config.get('swagger');
+    var responseModelValidationLevel = /error|warn/.test(cfg.validateResponseModels) ? cfg.validateResponseModels : 0;
     var swaggerDir = null;
     if (isBlueoakProject()) {
         swaggerDir = path.resolve(global.__appDir, '../common/swagger');
@@ -63,7 +64,7 @@ exports.init = function(logger, callback) {
         })
         .then(function (dereferencedApi) {
             specs.dereferenced[handlerName] = dereferencedApi;
-            getDiscriminatorObjectsForResponseSchemas(dereferencedApi.paths);
+            getDiscriminatorObjectsForSchemas(dereferencedApi.paths, responseModelValidationLevel);
             return swagCallback();
         })
         .catch(function (error) {
@@ -106,19 +107,30 @@ exports.addFormat = function(format, validationFunction) {
     tv4.addFormat(format, validationFunction);
 };
 
-function getDiscriminatorObjectsForResponseSchemas(paths) {
+function getDiscriminatorObjectsForSchemas(paths, doResponseValidation) {
     var pathKeys = Object.keys(paths);
     pathKeys.forEach(function (path) {
         var methodKeys = Object.keys(paths[path]);
         methodKeys.forEach(function (method) {
             if (httpMethods.indexOf(method) != -1) {//is this key actually an http method
-                var responseCodeKeys = Object.keys(paths[path][method].responses);
-                responseCodeKeys.forEach(function (responseCode) {
-                    var schema = paths[path][method].responses[responseCode].schema;
-                    if (schema) {
-                        paths[path][method].responses[responseCode].map = swaggerUtil.getObjectsWithDiscriminator(schema);
-                    }
-                });
+                if (doResponseValidation) {
+                    var responseCodeKeys = Object.keys(paths[path][method].responses);
+                    responseCodeKeys.forEach(function (responseCode) {
+                        var schema = paths[path][method].responses[responseCode].schema;
+                        if (schema) {
+                            paths[path][method].responses[responseCode].map = swaggerUtil.getObjectsWithDiscriminator(schema);
+                        }
+                    });
+                }
+                if (paths[path][method].parameters) {
+                    var requestParamKeys = Object.keys(paths[path][method].parameters);
+                    requestParamKeys.forEach(function (param) {
+                        var schema = paths[path][method].parameters[param].schema;
+                        if (schema) {
+                            paths[path][method].parameters[param].map = swaggerUtil.getObjectsWithDiscriminator(schema);
+                        }
+                    });
+                }
             }
         });
     });

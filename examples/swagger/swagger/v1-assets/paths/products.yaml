@@ -27,7 +27,7 @@ get:
       schema:
         type: array
         items:
-          $ref: '../definitions/ToyProduct.yaml'
+          $ref: '../definitions/Product.yaml'
     default:
       description: Unexpected error
       schema:

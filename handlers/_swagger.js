@@ -421,8 +421,7 @@ function validateRequestParameters(req, data, swaggerDoc, logger, callback) {
 
         } else if (parm.in === 'body') {
             var result = swaggerUtil.validateJSONType(parm.schema, req.body);
-            var map = swaggerUtil.getObjectsWithDiscriminator(parm.schema);
-            var polyMorphicValidationErrors = swaggerUtil.validateIndividualObjects(swaggerDoc, map, req.body);
+            var polyMorphicValidationErrors = swaggerUtil.validateIndividualObjects(swaggerDoc, parm.map, req.body);
             if (!result.valid || polyMorphicValidationErrors.length != 0) {
                 var error = new VError('Error validating request body');
                 error.name = 'ValidationError';
