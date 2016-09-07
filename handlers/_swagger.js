@@ -42,7 +42,7 @@ exports.init = function (app, auth, config, logger, serviceLoader, swagger, call
             var route = context + '/' + specName; //strip extension
             logger.debug('Serving swagger spec at %s', route);
 
-            var apiToServe = _.cloneDeep(specs[specName]); //clone it since we'll be modifying the host
+            var apiToServe = _.cloneDeep(prettySpec[specName]); //clone it since we'll be modifying the host
 
             //We swap the default host
             if (useLocalhost) {
@@ -421,7 +421,7 @@ function validateRequestParameters(req, data, swaggerDoc, logger, callback) {
 
         } else if (parm.in === 'body') {
             var result = swaggerUtil.validateJSONType(parm.schema, req.body);
-            var polyMorphicValidationErrors = swaggerUtil.validateIndividualObjects(swaggerDoc, parm['x-map'], req.body);
+            var polyMorphicValidationErrors = swaggerUtil.validateIndividualObjects(swaggerDoc, parm['x-bos-generated-disc-map'], req.body);
             if (!result.valid || polyMorphicValidationErrors.length != 0) {
                 var error = new VError('Error validating request body');
                 error.name = 'ValidationError';
@@ -441,7 +441,7 @@ function validateResponseModels(res, body, data, logger, swaggerDoc) {
     }
 
     var schemaPath = 'responses.%s.schema',
-        mapPath = 'responses.%s.x-map',
+        mapPath = 'responses.%s.x-bos-generated-disc-map',
         codeSchema = util.format(schemaPath, res.statusCode),
         defaultSchema = util.format(schemaPath, 'default'),
         mapSchema = util.format(mapPath, res.statusCode),

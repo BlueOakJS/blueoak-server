@@ -25,25 +25,25 @@ describe('Swagger spec building test', function () {
         initSwaggerService(swaggerExampleDir, callback);
     });
 
-    it('responses/requests with schema have map property', function () {
+    it('responses/requests with schema have x-bos-generated-disc-map property', function () {
         _.forIn(swaggerService.getSimpleSpecs(), function (spec) {
             _.forIn(spec.paths, function (path) {
                 _.forIn(path, function (method, methodKey) {
                     if (httpMethods.indexOf(methodKey) != -1) {
                         _.forIn(method.responses, function (response, key) {
                             if (response.schema) {
-                                assert.ok(response.map, 'Simple specs ' + key + ' does not have a map property');
+                                assert.ok(response["x-bos-generated-disc-map"], 'Simple specs ' + key + ' does not have a x-bos-generated-disc-map property');
                                 if (JSON.stringify(response.schema).includes('"discriminator":')){
-                                    assert.ok(response.map.discriminator, 'Map for ' + key + ' does not have a discriminator property');
+                                    assert.ok(response["x-bos-generated-disc-map"].discriminator, 'x-bos-generated-disc-map for ' + key + ' does not have a discriminator property');
                                 }
                             }
                         });
                         _.forIn(method.parameters, function (param, key) {
                             if (param.in === "body") {//schema required
                                 assert.ok(param.schema, 'Simple specs ' + key + ' does not have a schema property');
-                                assert.ok(param.map, 'Simple specs ' + key + ' does not have a map property');
+                                assert.ok(param["x-bos-generated-disc-map"], 'Simple specs ' + key + ' does not have a x-bos-generated-disc-map property');
                                 if (JSON.stringify(param.schema).includes('"discriminator":')){
-                                    assert.ok(JSON.stringify(param.map).includes('"discriminator":'), 'Map for ' + key + ' does not have a discriminator property');
+                                    assert.ok(JSON.stringify(param["x-bos-generated-disc-map"]).includes('"discriminator":'), 'x-bos-generated-disc-map for ' + key + ' does not have a discriminator property');
                                 }
                             }
                         });

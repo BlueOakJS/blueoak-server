@@ -114,7 +114,7 @@ function getDiscriminatorObjectsForSchemas(paths, doResponseValidation) {
                     responseCodeKeys.forEach(function (responseCode) {
                         var schema = paths[path][method].responses[responseCode].schema;
                         if (schema) {
-                            paths[path][method].responses[responseCode]['x-map'] = swaggerUtil.getObjectsWithDiscriminator(schema);
+                            paths[path][method].responses[responseCode]['x-bos-generated-disc-map'] = swaggerUtil.getObjectsWithDiscriminator(schema);
                         }
                     });
                 }
@@ -123,7 +123,7 @@ function getDiscriminatorObjectsForSchemas(paths, doResponseValidation) {
                     requestParamKeys.forEach(function (param) {
                         var schema = paths[path][method].parameters[param].schema;
                         if (schema) {
-                            paths[path][method].parameters[param]['x-map'] = swaggerUtil.getObjectsWithDiscriminator(schema);
+                            paths[path][method].parameters[param]['x-bos-generated-disc-map'] = swaggerUtil.getObjectsWithDiscriminator(schema);
                         }
                     });
                 }
