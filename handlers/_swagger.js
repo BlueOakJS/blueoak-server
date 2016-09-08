@@ -15,10 +15,12 @@ var MULTER_MEMORY_STORAGE = 'multerMemoryStorage';
 var _upload; //will get set to a configured multer instance if multipart form data is used
 var httpMethods = ['get', 'put', 'post', 'delete', 'options', 'head', 'patch'];
 var responseModelValidationLevel;
+var polyMorphicValidation;
 
 exports.init = function (app, auth, config, logger, serviceLoader, swagger, callback) {
     var cfg = config.get('swagger');
     responseModelValidationLevel = /error|warn/.test(cfg.validateResponseModels) ? cfg.validateResponseModels : 0;
+    polyMorphicValidation = cfg.polyMorphicValidation;
     if (responseModelValidationLevel) {
         logger.info('Response model validation is on and set to level "%s"', responseModelValidationLevel);
     }
@@ -421,7 +423,10 @@ function validateRequestParameters(req, data, swaggerDoc, logger, callback) {
 
         } else if (parm.in === 'body') {
             var result = swaggerUtil.validateJSONType(parm.schema, req.body);
-            var polyMorphicValidationErrors = swaggerUtil.validateIndividualObjects(swaggerDoc, parm['x-bos-generated-disc-map'], req.body);
+            var polyMorphicValidationErrors = [];
+            if (polyMorphicValidation) {
+                polyMorphicValidationErrors = swaggerUtil.validateIndividualObjects(swaggerDoc, parm['x-bos-generated-disc-map'], req.body);
+            }
             if (!result.valid || polyMorphicValidationErrors.length != 0) {
                 var error = new VError('Error validating request body');
                 error.name = 'ValidationError';
@@ -458,7 +463,10 @@ function validateResponseModels(res, body, data, logger, swaggerDoc) {
         return _createValidationError('No response schema defined for %s %s with status code %s');
     }
     var result = swaggerUtil.validateJSONType(modelSchema, body);
-    var polyMorphicValidationErrors = swaggerUtil.validateIndividualObjects(swaggerDoc, responseModelMap, body);
+    var polyMorphicValidationErrors = [];
+    if (polyMorphicValidation) {
+        polyMorphicValidationErrors = swaggerUtil.validateIndividualObjects(swaggerDoc, responseModelMap, body);
+    }
     if (!result.valid || polyMorphicValidationErrors.length != 0) {
         return _createValidationError('Error validating response body for %s %s with status code %s', result.errors.concat(polyMorphicValidationErrors));
     }

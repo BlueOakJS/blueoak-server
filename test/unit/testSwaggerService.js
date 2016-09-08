@@ -25,16 +25,16 @@ describe('Swagger spec building test', function () {
         initSwaggerService(swaggerExampleDir, callback);
     });
 
-    it('responses/requests with schema have x-bos-generated-disc-map property', function () {
+    it.only('responses/requests with schema have x-bos-generated-disc-map property', function () {
         _.forIn(swaggerService.getSimpleSpecs(), function (spec) {
-            _.forIn(spec.paths, function (path) {
+            _.forIn(spec.paths, function (path, pathKey) {
                 _.forIn(path, function (method, methodKey) {
                     if (httpMethods.indexOf(methodKey) != -1) {
                         _.forIn(method.responses, function (response, key) {
                             if (response.schema) {
                                 assert.ok(response["x-bos-generated-disc-map"], 'Simple specs ' + key + ' does not have a x-bos-generated-disc-map property');
                                 if (JSON.stringify(response.schema).includes('"discriminator":')){
-                                    assert.ok(response["x-bos-generated-disc-map"].discriminator, 'x-bos-generated-disc-map for ' + key + ' does not have a discriminator property');
+                                    assert.ok(JSON.stringify(response["x-bos-generated-disc-map"]).includes('"discriminator":'), 'x-bos-generated-disc-map for ' + pathKey + '/' + key + ' does not have a discriminator property');
                                 }
                             }
                         });
@@ -51,6 +51,15 @@ describe('Swagger spec building test', function () {
                 });
             });
         });
+    });
+
+    it.only('has validation error indicating required field from implementing model is missing', function () {
+        var exampleData = require('./data/example.json');
+        var map = swaggerService.getSimpleSpecs()['api-v2'].paths['/policies/{id}'].get.responses['200']['x-bos-generated-disc-map'];
+        var polyMorphicValidationErrors = swaggerUtil.validateIndividualObjects(swaggerService.getSimpleSpecs()['api-v2'], map, exampleData);
+        assert.equal(polyMorphicValidationErrors.length, 1);
+        console.log(polyMorphicValidationErrors[0].message);
+        assert.ok(polyMorphicValidationErrors[0].message.includes("Missing required property"), "validation did not identify missing required property");
     });
 
     it('Has a spec for each top-level spec file', function () {

@@ -1,0 +1,9 @@
+{
+  "interestedParties": [
+    {
+      "kind": "OtherParty",
+      "interestedPartyReqField": "hey!",
+      "involvedPartyReqField": "hola!"
+    }
+  ]
+}
