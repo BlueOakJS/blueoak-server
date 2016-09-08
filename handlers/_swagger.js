@@ -253,7 +253,7 @@ function registerRoute(app, auth, additionalMiddleware, method, path, data, allo
             if (responseModelValidationLevel) {
                 var responseSender = res.send;
                 res.send = function (body) {
-                    var isJson = typeof body === "string"; //body can come in as JSON or object, we want object
+                    var isJson = typeof body === 'string'; //body can come in as JSON or object, we want object
                     body = isJson ? JSON.parse(body) : body;
                     var validationErrors, invalidBody;
                     var validateResponse = validateResponseModels.bind({},res, body, data, logger, swaggerDoc);

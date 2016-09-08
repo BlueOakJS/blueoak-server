@@ -11,7 +11,7 @@ var _ = require('lodash'),
     swaggerUtil = require('../../lib/swaggerUtil');
 
 var swaggerExampleDir = path.resolve(__dirname, '../../examples/swagger'),
-    swaggerExampleSpecs = 2;
+    swaggerExampleSpecs = 3;
 var httpMethods = ['get', 'put', 'post', 'delete', 'options', 'head', 'patch'];
 
 function initSwaggerService(rootDir, callback) {
@@ -32,18 +32,18 @@ describe('Swagger spec building test', function () {
                     if (httpMethods.indexOf(methodKey) != -1) {
                         _.forIn(method.responses, function (response, key) {
                             if (response.schema) {
-                                assert.ok(response["x-bos-generated-disc-map"], 'Simple specs ' + key + ' does not have a x-bos-generated-disc-map property');
+                                assert.ok(response['x-bos-generated-disc-map'], 'Simple specs ' + key + ' does not have a x-bos-generated-disc-map property');
                                 if (JSON.stringify(response.schema).includes('"discriminator":')){
-                                    assert.ok(JSON.stringify(response["x-bos-generated-disc-map"]).includes('"discriminator":'), 'x-bos-generated-disc-map for ' + pathKey + '/' + key + ' does not have a discriminator property');
+                                    assert.ok(JSON.stringify(response['x-bos-generated-disc-map']).includes('"discriminator":'), 'x-bos-generated-disc-map for ' + pathKey + '/' + key + ' does not have a discriminator property');
                                 }
                             }
                         });
                         _.forIn(method.parameters, function (param, key) {
-                            if (param.in === "body") {//schema required
+                            if (param.in === 'body') {//schema required
                                 assert.ok(param.schema, 'Simple specs ' + key + ' does not have a schema property');
-                                assert.ok(param["x-bos-generated-disc-map"], 'Simple specs ' + key + ' does not have a x-bos-generated-disc-map property');
+                                assert.ok(param['x-bos-generated-disc-map'], 'Simple specs ' + key + ' does not have a x-bos-generated-disc-map property');
                                 if (JSON.stringify(param.schema).includes('"discriminator":')){
-                                    assert.ok(JSON.stringify(param["x-bos-generated-disc-map"]).includes('"discriminator":'), 'x-bos-generated-disc-map for ' + key + ' does not have a discriminator property');
+                                    assert.ok(JSON.stringify(param['x-bos-generated-disc-map']).includes('"discriminator":'), 'x-bos-generated-disc-map for ' + key + ' does not have a discriminator property');
                                 }
                             }
                         });
@@ -59,7 +59,7 @@ describe('Swagger spec building test', function () {
         var polyMorphicValidationErrors = swaggerUtil.validateIndividualObjects(swaggerService.getSimpleSpecs()['api-v2'], map, exampleData);
         assert.equal(polyMorphicValidationErrors.length, 1);
         console.log(polyMorphicValidationErrors[0].message);
-        assert.ok(polyMorphicValidationErrors[0].message.includes("Missing required property"), "validation did not identify missing required property");
+        assert.ok(polyMorphicValidationErrors[0].message.includes('Missing required property'), 'validation did not identify missing required property');
     });
 
     it('Has a spec for each top-level spec file', function () {

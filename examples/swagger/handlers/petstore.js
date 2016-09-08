@@ -15,7 +15,7 @@ exports.init = function(swagger) {
 };
 
 exports.findPets = function(req, res, next) {
-    res.status(200).json([{fakeProp: "yo"}]);
+    res.status(200).json([]);
 };
 
 exports.findPetById = function(req, res, next) {
@@ -24,7 +24,7 @@ exports.findPetById = function(req, res, next) {
 };
 
 exports.addPet = function(req, res, next) {
-    res.status(201).json({fake:""});
+    res.status(201).json({});
 };
 
 exports.deletePet = function(req, res, next) {
