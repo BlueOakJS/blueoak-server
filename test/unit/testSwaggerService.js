@@ -33,7 +33,7 @@ describe('Swagger spec building test', function () {
                         _.forIn(method.responses, function (response, key) {
                             if (response.schema) {
                                 assert.ok(response['x-bos-generated-disc-map'], 'Simple specs ' + key + ' does not have a x-bos-generated-disc-map property');
-                                if (JSON.stringify(response.schema).includes('"discriminator":')){
+                                if (JSON.stringify(response.schema).includes('"discriminator":')) {
                                     assert.ok(JSON.stringify(response['x-bos-generated-disc-map']).includes('"discriminator":'), 'x-bos-generated-disc-map for ' + pathKey + '/' + key + ' does not have a discriminator property');
                                 }
                             }
@@ -42,7 +42,7 @@ describe('Swagger spec building test', function () {
                             if (param.in === 'body') {//schema required
                                 assert.ok(param.schema, 'Simple specs ' + key + ' does not have a schema property');
                                 assert.ok(param['x-bos-generated-disc-map'], 'Simple specs ' + key + ' does not have a x-bos-generated-disc-map property');
-                                if (JSON.stringify(param.schema).includes('"discriminator":')){
+                                if (JSON.stringify(param.schema).includes('"discriminator":')) {
                                     assert.ok(JSON.stringify(param['x-bos-generated-disc-map']).includes('"discriminator":'), 'x-bos-generated-disc-map for ' + key + ' does not have a discriminator property');
                                 }
                             }
