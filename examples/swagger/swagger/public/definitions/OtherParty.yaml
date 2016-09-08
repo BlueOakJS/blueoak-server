@@ -1,0 +1,14 @@
+allOf:
+  - $ref: 'InterestedParty.yaml'
+  - type: object
+    required:
+      - kind
+      - notes
+    properties:
+      kind:
+        type: string
+        enum:
+          - OtherParty
+      notes:
+        type: string
+

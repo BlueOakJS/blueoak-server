@@ -1,0 +1,10 @@
+allOf:
+  - $ref: 'Contact.yaml'
+  - type: object
+    discriminator: kind
+    required:
+      - kind
+    properties:
+      kind:
+        type: string
+

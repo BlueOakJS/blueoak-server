@@ -1,0 +1,11 @@
+allOf:
+  - $ref: 'InvolvedParty.yaml'
+  - type: object
+    required:
+      - kind
+      - interestedPartyReqField
+    properties:
+      kind:
+        type: string
+      interestedPartyReqField:
+        type: string

@@ -1,0 +1,27 @@
+swagger: '2.0'
+info:
+  version: 2.0.0-rc.1
+  title: Test API
+    
+basePath: /api/v2
+produces:
+  - application/json
+paths:
+  $ref: 'public/paths.yaml'
+
+### WARNING: EVERYTHING AFTER THIS LINE IS GENERATED
+### ref-compiler: BEGIN
+definitions:
+  Contact:
+    $ref: 'public\definitions\Contact.yaml'
+  InterestedParty:
+    $ref: 'public\definitions\InterestedParty.yaml'
+  InvolvedParty:
+    $ref: 'public\definitions\InvolvedParty.yaml'
+  OtherParty:
+    $ref: 'public\definitions\OtherParty.yaml'
+  Party:
+    $ref: 'public\definitions\Party.yaml'
+  Policy:
+    $ref: 'public\definitions\Policy.yaml'
+
