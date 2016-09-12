@@ -1,12 +1,14 @@
 allOf:
-  - $ref: 'Party.yaml'
+  - $ref: 'CuriousPerson.yaml'
   - type: object
     required:
       - kind
-      - involvedPartyReqField
+      - notes
     properties:
       kind:
         type: string
-      involvedPartyReqField:
+        enum:
+          - OtherPerson
+      notes:
         type: string
 

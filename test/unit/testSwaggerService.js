@@ -55,7 +55,7 @@ describe('Swagger spec building test', function () {
 
     it('has validation error indicating required field from implementing model is missing', function () {
         var exampleData = require('./data/example.json');
-        var map = swaggerService.getSimpleSpecs()['api-v2'].paths['/policies/{id}'].get.responses['200']['x-bos-generated-disc-map'];
+        var map = swaggerService.getSimpleSpecs()['api-v2'].paths['/superfuntime/{id}'].get.responses['200']['x-bos-generated-disc-map'];
         var polyMorphicValidationErrors = swaggerUtil.validateIndividualObjects(swaggerService.getSimpleSpecs()['api-v2'], map, exampleData);
         assert.equal(polyMorphicValidationErrors.length, 1);
         console.log(polyMorphicValidationErrors[0].message);

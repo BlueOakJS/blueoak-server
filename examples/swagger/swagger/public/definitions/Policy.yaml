@@ -1,8 +1,0 @@
-type: object
-properties:
-    interestedParties:
-      type: array
-      items:
-        $ref: 'InterestedParty.yaml'
-
-

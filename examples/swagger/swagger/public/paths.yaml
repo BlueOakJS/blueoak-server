@@ -1,3 +1,3 @@
-/policies/{id}:
-  $ref: 'paths/policies-{id}.yaml'
+/superfuntime/{id}:
+  $ref: 'paths/superfuntime-{id}.yaml'
 
