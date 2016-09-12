@@ -56,10 +56,10 @@ describe('Swagger spec building test', function () {
     it('has validation error indicating required field from implementing model is missing', function () {
         var exampleData = require('./data/example.json');
         var map = swaggerService.getSimpleSpecs()['api-v2'].paths['/superfuntime/{id}'].get.responses['200']['x-bos-generated-disc-map'];
-        var polyMorphicValidationErrors = swaggerUtil.validateIndividualObjects(swaggerService.getSimpleSpecs()['api-v2'], map, exampleData);
-        assert.equal(polyMorphicValidationErrors.length, 1);
-        console.log(polyMorphicValidationErrors[0].message);
-        assert.ok(polyMorphicValidationErrors[0].message.includes('Missing required property'), 'validation did not identify missing required property');
+        var polymorphicValidationErrors = swaggerUtil.validateIndividualObjects(swaggerService.getSimpleSpecs()['api-v2'], map, exampleData);
+        assert.equal(polymorphicValidationErrors.length, 1);
+        console.log(polymorphicValidationErrors[0].message);
+        assert.ok(polymorphicValidationErrors[0].message.includes('Missing required property'), 'validation did not identify missing required property');
     });
 
     it('Has a spec for each top-level spec file', function () {
