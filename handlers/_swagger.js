@@ -132,7 +132,7 @@ exports.init = function (app, auth, config, logger, serviceLoader, swagger, call
                     }
 
                     logger.debug('Wiring up route %s %s to %s.%s', key, routePath, handlerName, methodData.operationId);
-                    registerRoute(app, auth, additionalMiddleware, key, routePath, methodData, methodData.produces || api.produces || null, handlerFunc, logger, api);
+                    registerRoute(app, auth, additionalMiddleware, key, routePath, methodData, methodData.produces || api.produces || null, handlerFunc, api, logger);
 
                 }
             });
@@ -209,9 +209,10 @@ function handleMulterConfig(multerConfig, logger, serviceLoader) {
  * data - swagger spec associated with the path
  * allowedTypes - the 'produces' data from the swagger spec
  * handlerFunc - handler callback function
+ * swaggerDoc - root swagger document for this api
  * logger - the logger service
  */
-function registerRoute(app, auth, additionalMiddleware, method, path, data, allowedTypes, handlerFunc, logger, swaggerDoc) {
+function registerRoute(app, auth, additionalMiddleware, method, path, data, allowedTypes, handlerFunc, swaggerDoc, logger) {
     var authMiddleware = auth.getAuthMiddleware() || [];
     additionalMiddleware = authMiddleware.concat(additionalMiddleware);
 

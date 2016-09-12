@@ -108,7 +108,7 @@ function getDiscriminatorObjectsForSchemas(paths, doResponseValidation) {
     pathKeys.forEach(function (path) {
         var methodKeys = Object.keys(paths[path]);
         methodKeys.forEach(function (method) {
-            if (httpMethods.indexOf(method) != -1) {//is this key actually an http method
+            if (httpMethods.indexOf(method) !== -1) {//is this key actually an http method
                 if (doResponseValidation) {
                     var responseCodeKeys = Object.keys(paths[path][method].responses);
                     responseCodeKeys.forEach(function (responseCode) {

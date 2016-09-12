@@ -1,6 +1,3 @@
-/**
- * Created by shepp on 8/27/2016.
- */
 exports.init = function() {
 
 };

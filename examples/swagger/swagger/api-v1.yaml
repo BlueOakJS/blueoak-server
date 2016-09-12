@@ -3,14 +3,11 @@ info:
   version: 2.0.0-rc.1
   title: Test API
     
-basePath: /api/v2
+basePath: /api/v1
 produces:
   - application/json
 paths:
   $ref: 'public/paths.yaml'
-
-### WARNING: EVERYTHING AFTER THIS LINE IS GENERATED
-### ref-compiler: BEGIN
 definitions:
   Contact:
     $ref: 'public\definitions\Contact.yaml'
