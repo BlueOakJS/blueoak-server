@@ -428,7 +428,7 @@ function validateRequestParameters(req, data, swaggerDoc, logger, callback) {
             if (polymorphicValidation) {
                 polymorphicValidationErrors = swaggerUtil.validateIndividualObjects(swaggerDoc, parm['x-bos-generated-disc-map'], req.body);
             }
-            if (!result.valid || polymorphicValidationErrors.length != 0) {
+            if (!result.valid || polymorphicValidationErrors.length > 0) {
                 var error = new VError('Error validating request body');
                 error.name = 'ValidationError';
                 error.subErrors = result.errors.concat(polymorphicValidationErrors);
@@ -468,7 +468,7 @@ function validateResponseModels(res, body, data, logger, swaggerDoc) {
     if (polymorphicValidation) {
         polymorphicValidationErrors = swaggerUtil.validateIndividualObjects(swaggerDoc, responseModelMap, body);
     }
-    if (!result.valid || polymorphicValidationErrors.length != 0) {
+    if (!result.valid || polymorphicValidationErrors.length > 0) {
         return _createValidationError('Error validating response body for %s %s with status code %s', result.errors.concat(polymorphicValidationErrors));
     }
     return;
