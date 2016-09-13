@@ -286,7 +286,7 @@ function registerRoute(app, auth, additionalMiddleware, method, path, data, allo
                             statusCode: res.statusCode,
                             body: invalidBody || body
                         };
-                        logger[responseModelValidationLevel === "warn" ? "warn" : "error"]('Response validation error:', JSON.stringify(validationErrors, null, 2));
+                        logger[responseModelValidationLevel === 'warn' ? 'warn' : 'error']('Response validation error:', JSON.stringify(validationErrors, null, 2));
                     }
                     
                     //after this initial call (sometimes `send` will call itself again), we don't need to get the response for validation anymore
