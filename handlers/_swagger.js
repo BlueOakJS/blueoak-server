@@ -20,7 +20,7 @@ var polymorphicValidation;
 exports.init = function (app, auth, config, logger, serviceLoader, swagger, callback) {
     var cfg = config.get('swagger');
     responseModelValidationLevel = /error|warn/.test(cfg.validateResponseModels) ? cfg.validateResponseModels : 0;
-    polymorphicValidation = cfg.polymorphicValidation;
+    polymorphicValidation = _.get(cfg, 'polymorphicValidation', true);
     if (responseModelValidationLevel) {
         logger.info('Response model validation is on and set to level "%s"', responseModelValidationLevel);
     }

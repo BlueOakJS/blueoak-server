@@ -11,10 +11,3 @@ properties:
     enum:
       - Female
       - Male
-  preferredContactMethod:
-    type: string
-    enum:
-      - Email
-      - Cell
-      - Home
-      - Work
