@@ -1,0 +1,6 @@
+allOf:
+      - $ref: '../definitions/Label.yaml'
+      - properties:
+          age:
+              type: number
+              description: age of model.

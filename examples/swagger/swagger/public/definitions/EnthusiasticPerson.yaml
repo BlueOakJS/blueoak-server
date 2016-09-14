@@ -1,0 +1,12 @@
+allOf:
+  - $ref: 'Person.yaml'
+  - type: object
+    required:
+      - kind
+      - enthusiasticPersonReqField
+    properties:
+      kind:
+        type: string
+      enthusiasticPersonReqField:
+        type: string
+

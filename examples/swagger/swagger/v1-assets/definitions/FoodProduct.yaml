@@ -1,0 +1,6 @@
+allOf:
+      - $ref: '../definitions/Product.yaml'
+properties:
+  food_type:
+      type: string
+      description: Description of food.

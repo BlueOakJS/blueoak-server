@@ -3,5 +3,5 @@
  * MIT Licensed
  */
 exports.get = function() {
-    
+    return {validateResponseModels: 'error'};
 };

@@ -1,0 +1,3 @@
+/superfuntime/{id}:
+  $ref: 'paths/superfuntime-{id}.yaml'
+
