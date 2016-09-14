@@ -21,7 +21,7 @@ var httpMethods = ['get', 'put', 'post', 'delete', 'options', 'head', 'patch'];
 
 exports.init = function(logger, config, callback) {
     var cfg = config.get('swagger');
-    var responseModelValidationLevel = /error|warn/.test(cfg.validateResponseModels) ? cfg.validateResponseModels : 0;
+    var responseModelValidationLevel = /error|warn|fail/.test(cfg.validateResponseModels) ? cfg.validateResponseModels : 0;
     var swaggerDir = null;
     if (isBlueoakProject()) {
         swaggerDir = path.resolve(global.__appDir, '../common/swagger');

@@ -1,5 +1,6 @@
 get:
   summary: Get super fun time
+  operationId: getFunTimeById
   tags:
     - Fun Times
   parameters:

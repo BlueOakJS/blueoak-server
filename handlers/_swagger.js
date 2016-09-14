@@ -260,7 +260,7 @@ function registerRoute(app, auth, additionalMiddleware, method, path, data, allo
                     var isJson = typeof body === 'string'; //body can come in as JSON or object, we want object
                     body = isJson ? JSON.parse(body) : body;
                     var validationErrors, invalidBody;
-                    validationErrors = validateResponseModels(res, body, data, logger);
+                    validationErrors = validateResponseModels(res, body, data, swaggerDoc, logger);
                     if (validationErrors) {
                         if (responseModelValidationLevel === 'error' || responseModelValidationLevel === 'fail') {
                             //we're going to check the model and send any valdiation errors back to the caller in the reponse
@@ -279,7 +279,7 @@ function registerRoute(app, auth, additionalMiddleware, method, path, data, allo
                                     }
                                 } else {
                                     body = body || {};
-                                    body._response_validation_errors = validationErrors;
+                                    body._response_validation_errors = _.clone(validationErrors);
                                 }
                             }
                             else {//level is fail
@@ -440,7 +440,7 @@ function validateRequestParameters(req, data, swaggerDoc, logger, callback) {
     return callback();
 }
 
-function validateResponseModels(res, body, data, logger, swaggerDoc) {
+function validateResponseModels(res, body, data, swaggerDoc, logger) {
     if (!(res.statusCode >= 200 && res.statusCode < 300 || res.statusCode >= 400 && res.statusCode < 500)) {
         //the statusCode for the response isn't in the range that we'd expect to be documented in the swagger
         //i.e.: 200-299 (success) or 400-499 (request error)
