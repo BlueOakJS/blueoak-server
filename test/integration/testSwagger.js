@@ -265,12 +265,12 @@ describe('SERVER5 + response validation "error" - test validation of response mo
     });
 });
 
-describe.only('SERVER11 + response validation "error" - test validation of response models using the "fail" option', function () {
+describe('SERVER11 + response validation "error" - test validation of response models using the "fail" option', function () {
     this.timeout(5000);
 
     before(function (done) {
         process.env.NODE_ENV = 'test-response-validation-errors';
-        util.launch('server11', { env: process.env, exec: 'C:/Users/shepp/AppData/Roaming/npm/blueoak-server.cmd'}, done);
+        util.launch('server11', { env: process.env }, done);
     });
 
     after(function (done) {

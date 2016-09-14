@@ -19,8 +19,9 @@ exports.launch = function (fixtureName, opts, done) {
     }
 
     var output = '';
+    var bosPath = path.resolve(__dirname, opts.exec);
     if (process.platform === 'win32') {
-        lastLaunch = child_process.exec(path.resolve(__dirname, opts.exec),
+        lastLaunch = child_process.exec('node ' + bosPath,
             {
                 'cwd': path.resolve(__dirname, 'fixtures/' + fixtureName),
                 'env': opts.env
@@ -33,7 +34,7 @@ exports.launch = function (fixtureName, opts, done) {
             });
     }
     else {
-        lastLaunch = child_process.execFile(path.resolve(__dirname, opts.exec), [],
+        lastLaunch = child_process.execFile(bosPath, [],
             {
                 'cwd': path.resolve(__dirname, 'fixtures/' + fixtureName),
                 'env': opts.env
