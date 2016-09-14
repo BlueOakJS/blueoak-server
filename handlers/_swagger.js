@@ -20,11 +20,13 @@ var polymorphicValidation;
 exports.init = function (app, auth, config, logger, serviceLoader, swagger, callback) {
     var cfg = config.get('swagger');
     responseModelValidationLevel = /error|warn/.test(cfg.validateResponseModels) ? cfg.validateResponseModels : 0;
-    polymorphicValidation = _.get(cfg, 'polymorphicValidation', true);
+    polymorphicValidation = (cfg.polymorphicValidation !== false);//default to true
     if (responseModelValidationLevel) {
         logger.info('Response model validation is on and set to level "%s"', responseModelValidationLevel);
     }
-
+    if (!polymorphicValidation) {
+        logger.info('Polymorphic validation is OFF"');
+    }
     //default to true
     var useBasePath = cfg.useBasePath || cfg.useBasePath === undefined;
 
