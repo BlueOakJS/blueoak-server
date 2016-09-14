@@ -1,0 +1,11 @@
+get:
+  summary: Get super fun time
+  tags:
+    - Fun Times
+  parameters:
+    - $ref: '../parameters/PathId.yaml'
+  responses:
+    200:
+      schema:
+        $ref: '../definitions/SuperFunTime.yaml'
+      description: I want a super fun time

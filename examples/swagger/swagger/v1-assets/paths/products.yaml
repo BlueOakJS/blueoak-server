@@ -1,5 +1,6 @@
 get:
   summary: Product Types
+  operationId: getProducts
   description: |
     The Products endpoint returns information about the *Uber* products
     offered at a given location. The response includes the display name
@@ -9,13 +10,13 @@ get:
     - name: latitude
       in: query
       description: Latitude component of location.
-      required: true
+      required: false
       type: number
       format: double
     - name: longitude
       in: query
       description: Longitude component of location.
-      required: true
+      required: false
       type: number
       format: double
   tags:

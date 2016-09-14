@@ -1,0 +1,13 @@
+properties:
+  firstName:
+    type: string
+  lastName:
+    type: string
+  email:
+    type: string
+    format: email
+  gender:
+    type: string
+    enum:
+      - Female
+      - Male

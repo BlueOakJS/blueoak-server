@@ -1,0 +1,9 @@
+{
+  "curiousPeople": [
+    {
+      "kind": "OtherPerson",
+      "curiousPersonReqField": "hey!",
+      "enthusiasticPersonReqField": "hola!"
+    }
+  ]
+}

@@ -15,15 +15,19 @@ var MULTER_MEMORY_STORAGE = 'multerMemoryStorage';
 var _upload; //will get set to a configured multer instance if multipart form data is used
 var httpMethods = ['get', 'put', 'post', 'delete', 'options', 'head', 'patch'];
 var responseModelValidationLevel;
+var polymorphicValidation;
 
 exports.init = function (app, auth, config, logger, serviceLoader, swagger, callback) {
     var cfg = config.get('swagger');
     
     responseModelValidationLevel = /error|warn|fail/.test(cfg.validateResponseModels) ? cfg.validateResponseModels : 0;
+    polymorphicValidation = (cfg.polymorphicValidation !== false);//default to true
     if (responseModelValidationLevel) {
         logger.info('Response model validation is on and set to level "%s"', responseModelValidationLevel);
     }
-
+    if (!polymorphicValidation) {
+        logger.info('Polymorphic validation is OFF"');
+    }
     //default to true
     var useBasePath = cfg.useBasePath || cfg.useBasePath === undefined;
 
@@ -131,7 +135,7 @@ exports.init = function (app, auth, config, logger, serviceLoader, swagger, call
                     }
 
                     logger.debug('Wiring up route %s %s to %s.%s', key, routePath, handlerName, methodData.operationId);
-                    registerRoute(app, auth, additionalMiddleware, key, routePath, methodData, methodData.produces || api.produces || null, handlerFunc, logger);
+                    registerRoute(app, auth, additionalMiddleware, key, routePath, methodData, methodData.produces || api.produces || null, handlerFunc, api, logger);
 
                 }
             });
@@ -208,9 +212,10 @@ function handleMulterConfig(multerConfig, logger, serviceLoader) {
  * data - swagger spec associated with the path
  * allowedTypes - the 'produces' data from the swagger spec
  * handlerFunc - handler callback function
+ * swaggerDoc - root swagger document for this api
  * logger - the logger service
  */
-function registerRoute(app, auth, additionalMiddleware, method, path, data, allowedTypes, handlerFunc, logger) {
+function registerRoute(app, auth, additionalMiddleware, method, path, data, allowedTypes, handlerFunc, swaggerDoc, logger) {
     var authMiddleware = auth.getAuthMiddleware() || [];
     additionalMiddleware = authMiddleware.concat(additionalMiddleware);
 
@@ -229,7 +234,7 @@ function registerRoute(app, auth, additionalMiddleware, method, path, data, allo
 
     app[method].call(app, path, additionalMiddleware, function (req, res, next) {
 
-        validateRequestParameters(req, data, logger, function (err) {
+        validateRequestParameters(req, data, swaggerDoc, logger, function (err) {
             if (err) {
                 return next(err);
             }
@@ -252,6 +257,8 @@ function registerRoute(app, auth, additionalMiddleware, method, path, data, allo
             if (responseModelValidationLevel) {
                 var responseSender = res.send;
                 res.send = function (body) {
+                    var isJson = typeof body === 'string'; //body can come in as JSON or object, we want object
+                    body = isJson ? JSON.parse(body) : body;
                     var validationErrors, invalidBody;
                     validationErrors = validateResponseModels(res, body, data, logger);
                     if (validationErrors) {
@@ -288,10 +295,10 @@ function registerRoute(app, auth, additionalMiddleware, method, path, data, allo
                         };
                         logger[responseModelValidationLevel === 'warn' ? 'warn' : 'error']('Response validation error:', JSON.stringify(validationErrors, null, 2));
                     }
-                    
+
                     //after this initial call (sometimes `send` will call itself again), we don't need to get the response for validation anymore
                     res.send = responseSender;
-                    responseSender.call(res, body);
+                    responseSender.call(res, isJson ? JSON.stringify(body): body);
 
                 };
             }
@@ -333,7 +340,7 @@ function setDefaultHeaders(req, data, logger) {
 }
 
 
-function validateRequestParameters(req, data, logger, callback) {
+function validateRequestParameters(req, data, swaggerDoc, logger, callback) {
 
     var parameters = _.toArray(data.parameters);
     for (var i = 0; i < parameters.length; i++) {
@@ -418,11 +425,14 @@ function validateRequestParameters(req, data, logger, callback) {
 
         } else if (parm.in === 'body') {
             var result = swaggerUtil.validateJSONType(parm.schema, req.body);
-
-            if (!result.valid) {
+            var polymorphicValidationErrors = [];
+            if (polymorphicValidation) {
+                polymorphicValidationErrors = swaggerUtil.validateIndividualObjects(swaggerDoc, parm['x-bos-generated-disc-map'], req.body);
+            }
+            if (!result.valid || polymorphicValidationErrors.length > 0) {
                 var error = new VError('Error validating request body');
                 error.name = 'ValidationError';
-                error.subErrors = result.errors;
+                error.subErrors = result.errors.concat(polymorphicValidationErrors);
                 return callback(error);
             }
         }
@@ -430,7 +440,7 @@ function validateRequestParameters(req, data, logger, callback) {
     return callback();
 }
 
-function validateResponseModels(res, body, data, logger) {
+function validateResponseModels(res, body, data, logger, swaggerDoc) {
     if (!(res.statusCode >= 200 && res.statusCode < 300 || res.statusCode >= 400 && res.statusCode < 500)) {
         //the statusCode for the response isn't in the range that we'd expect to be documented in the swagger
         //i.e.: 200-299 (success) or 400-499 (request error)
@@ -438,20 +448,29 @@ function validateResponseModels(res, body, data, logger) {
     }
 
     var schemaPath = 'responses.%s.schema',
+        mapPath = 'responses.%s.x-bos-generated-disc-map',
         codeSchema = util.format(schemaPath, res.statusCode),
-        defaultSchema = util.format(schemaPath, 'default');
+        defaultSchema = util.format(schemaPath, 'default'),
+        mapSchema = util.format(mapPath, res.statusCode),
+        defaultMapSchema = util.format(mapPath, 'default');
     var modelSchema;
+    var responseModelMap;
     if (_.has(data, codeSchema)) {
         modelSchema = _.get(data, codeSchema);
+        responseModelMap = _.get(data, mapSchema);
     } else if (_.has(data, defaultSchema)) {
         modelSchema = _.get(data, defaultSchema);
+        responseModelMap = _.get(data, defaultMapSchema);
     } else {
         return _createValidationError('No response schema defined for %s %s with status code %s');
     }
-    
     var result = swaggerUtil.validateJSONType(modelSchema, body);
-    if (!result.valid) {
-        return _createValidationError('Error validating response body for %s %s with status code %s', result.errors);
+    var polymorphicValidationErrors = [];
+    if (polymorphicValidation) {
+        polymorphicValidationErrors = swaggerUtil.validateIndividualObjects(swaggerDoc, responseModelMap, body);
+    }
+    if (!result.valid || polymorphicValidationErrors.length > 0) {
+        return _createValidationError('Error validating response body for %s %s with status code %s', result.errors.concat(polymorphicValidationErrors));
     }
     return;
     
