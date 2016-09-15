@@ -19,7 +19,8 @@ exports.launch = function (fixtureName, opts, done) {
     }
 
     var output = '';
-    lastLaunch = child_process.execFile(path.resolve(__dirname, opts.exec), [],
+    var bosPath = path.resolve(__dirname, opts.exec);
+    lastLaunch = child_process.exec('node ' + bosPath,
         {
             'cwd': path.resolve(__dirname, 'fixtures/' + fixtureName),
             'env': opts.env
@@ -29,7 +30,8 @@ exports.launch = function (fixtureName, opts, done) {
                 console.warn(err, stderr);
             }
             output += stdout + stderr;
-        });
+        }
+    );
     setTimeout(function () {
         output = output.length > 50 ? output : null; //if output > 50, probably contains a stack tracegu
         done(output);
@@ -37,8 +39,14 @@ exports.launch = function (fixtureName, opts, done) {
 };
 
 exports.finish = function (done) {
-    lastLaunch.kill('SIGINT');
+    if (process.platform === 'win32') {
+        child_process.exec('taskkill /PID ' + lastLaunch.pid + ' /T /F');
+    }
+    else {
+        lastLaunch.kill('SIGINT');
+    }
     setTimeout(function () {
         done();
     }, 2500);
 };
+

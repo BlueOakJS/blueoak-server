@@ -252,7 +252,53 @@ describe('SERVER5 + response validation "error" - test validation of response mo
             assert.equal(json.id, undefined);
             assert.deepEqual(json._response_validation_errors, {
                 'message': 'Error validating response body for GET /api/pets2 with status code 200',
-                'status': 422,
+                'status': 522,
+                'type': 'ValidationError',
+                'validation_errors': [
+                    {
+                        'message': 'Missing required property: id'
+                    }
+                ]
+            });
+            done();
+        });
+    });
+});
+
+describe('SERVER11 + response validation "error" - test validation of response models using the "fail" option', function () {
+    this.timeout(5000);
+
+    before(function (done) {
+        process.env.NODE_ENV = 'test-response-validation-errors';
+        util.launch('server11', { env: process.env }, done);
+    });
+
+    after(function (done) {
+        process.env.NODE_ENV = undefined;
+        util.finish(done);
+    });
+
+    it('GET /api/pets1 - no validation error', function (done) {
+        request('http://localhost:' + (process.env.PORT || 5000) + '/api/pets1', function (err, resp, body) {
+            assert.ok(!err);
+            var json = JSON.parse(body);
+            assert.equal(json.name, 'pets1');
+            assert.equal(json.id, 1);
+            assert.equal(json.response, undefined);
+            assert.equal(json.validationErrors, undefined);
+            done();
+        });
+    });
+
+    it('GET /api/pets2 - validation error', function (done) {
+        request('http://localhost:' + (process.env.PORT || 5000) + '/api/pets2', function (err, resp, body) {
+            assert.ok(!err);
+            var json = JSON.parse(body);
+            assert.equal(resp.statusCode, 522);
+            assert.notEqual(json.response, undefined);
+            assert.deepEqual(json.validationErrors, {
+                'message': 'Error validating response body for GET /api/pets2 with status code 200',
+                'status': 522,
                 'type': 'ValidationError',
                 'validation_errors': [
                     {
