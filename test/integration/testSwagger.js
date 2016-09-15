@@ -284,8 +284,6 @@ describe('SERVER11 + response validation "error" - test validation of response m
             var json = JSON.parse(body);
             assert.equal(json.name, 'pets1');
             assert.equal(json.id, 1);
-            assert.equal(json.response, undefined);
-            assert.equal(json.validationErrors, undefined);
             done();
         });
     });
@@ -295,8 +293,7 @@ describe('SERVER11 + response validation "error" - test validation of response m
             assert.ok(!err);
             var json = JSON.parse(body);
             assert.equal(resp.statusCode, 522);
-            assert.notEqual(json.response, undefined);
-            assert.deepEqual(json.validationErrors, {
+            assert.deepEqual(json, {
                 'message': 'Error validating response body for GET /api/pets2 with status code 200',
                 'status': 522,
                 'type': 'ValidationError',
@@ -304,7 +301,15 @@ describe('SERVER11 + response validation "error" - test validation of response m
                     {
                         'message': 'Missing required property: id'
                     }
-                ]
+                ],
+                'invalidResponse': {
+                    'body': {
+                        'name': 'pets2'
+                    },
+                    'method': 'GET',
+                    'path': '/api/pets2',
+                    'statusCode': 200
+                }
             });
             done();
         });

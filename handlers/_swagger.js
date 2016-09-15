@@ -21,7 +21,7 @@ exports.init = function (app, auth, config, logger, serviceLoader, swagger, call
     var cfg = config.get('swagger');
 
     responseModelValidationLevel = swagger.getResponseModelValidationLevel();
-    polymorphicValidation = swagger.isPolyMorphicValidation();
+    polymorphicValidation = swagger.isPolymorphicValidationEnabled();
     httpMethods = swagger.getValidHttpMethods();
 
     //default to true
@@ -278,50 +278,59 @@ function registerRoute(app, auth, additionalMiddleware, method, path, data, allo
                             return;
                         }
                     }
-                    var validationErrors, invalidBody;
-                    validationErrors = validateResponseModels(res, body, data, swaggerDoc, logger);
+                    var validationErrors = validateResponseModels(res, body, data, swaggerDoc, logger);
+                    // we're going to check the model for any validation errors, and handle them based on the validation level
                     if (validationErrors) {
-                        //we're going to check the model for any validation errors, and handle them based on the validation level
-                        //'warn'
-                            //response is sent back to the caller unmodified, errors are only logged
-                        //'error'
-                            //errors added in the `_response_validation_errors` property of the response, or of that property of the first and last array entries
-                            //we'll create a response object (or array entry) if there isn't one (we will break some client code)
-                        //'fail'
-                            // changes the actual http response code to 522 and separates out the validation errors and response body.
-                            // May break client code, so this should only be used when developing/testing an API in stand alone
+                        // 'error'
+                        // errors added in the `_response_validation_errors` property of the response,
+                        // or of that property of the first and last array entries
+                        // we'll create a response object (or array entry) if there isn't one (we will break some client code)
+                        var alteredBody;
                         if (responseModelValidationLevel === 'error') {
-                            invalidBody = _.cloneDeep(body);
-                            if (Array.isArray(body)) {
-                                if (body.length === 0) {
-                                    body.push(validationErrors);
+                            var invalidBodyDetails = _.cloneDeep(validationErrors);
+                            alteredBody = _.cloneDeep(body);
+                            if (Array.isArray(alteredBody)) {
+                                if (alteredBody.length === 0) {
+                                    alteredBody.push(invalidBodyDetails);
                                 } else {
-                                    body[0]._response_validation_errors = validationErrors;
-                                    if (body.length > 1) {
-                                        body[body.length - 1]._response_validation_errors = validationErrors;
+                                    alteredBody[0]._response_validation_errors = invalidBodyDetails;
+                                    if (alteredBody.length > 1) {
+                                        alteredBody[alteredBody.length - 1]._response_validation_errors = invalidBodyDetails;
                                     }
                                 }
                             } else {
-                                body = body || {};
-                                body._response_validation_errors = _.clone(validationErrors);
+                                alteredBody = alteredBody || {};
+                                alteredBody._response_validation_errors = invalidBodyDetails;
                             }
-                        } else if (responseModelValidationLevel === 'fail') {
-                            body = {response: body, validationErrors: _.clone(validationErrors)};
-                            res.statusCode = validationErrors.status;
                         }
+                        
+                        // 'warn'
+                        // response is sent back to the caller unmodified, errors (this model here) are only logged (see below)
                         validationErrors.invalidResponse = {
                             method: req.method,
                             path: req.path,
                             statusCode: res.statusCode,
-                            body: invalidBody || body
+                            body: body || null
                         };
+                        
+                        // 'fail'
+                        // changes the actual http response code to 522 and separates out the validation errors and response body.
+                        // Will break client code, so this should only be used when developing/testing an API in stand alone
+                        if (responseModelValidationLevel === 'fail') {
+                            body = validationErrors;
+                            res.statusCode = validationErrors.status;
+                        } else if (alteredBody) {
+                            body = alteredBody;
+                        }
+                        
+                        // in all cases, log the validation errors
                         logger[responseModelValidationLevel === 'warn' ? 'warn' : 'error']
                             ('Response validation error:', JSON.stringify(validationErrors, null, 2));
                     }
 
-                    //after this initial call (sometimes `send` will call itself again), we don't need to get the response for validation anymore
+                    // after this initial call (sometimes `send` will call itself again), we don't need to get the response for validation anymore
                     res.send = responseSender;
-                    responseSender.call(res, isBodyValid ? body: JSON.stringify(body));//if we unJSONified at the beginning, reJSONify
+                    responseSender.call(res, isBodyValid ? body: JSON.stringify(body)); // if we unJSONified at the beginning, reJSONify
 
                 };
             }

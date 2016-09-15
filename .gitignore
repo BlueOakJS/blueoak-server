@@ -7,3 +7,4 @@ tests-report.xml
 .vscode/
 *.swp
 *.swo
+*.log

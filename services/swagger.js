@@ -104,7 +104,7 @@ exports.getResponseModelValidationLevel = function () {
     return responseModelValidationLevel;
 };
 
-exports.isPolyMorphicValidation = function () {
+exports.isPolymorphicValidationEnabled = function () {
     return polymorphicValidation;
 };
 
