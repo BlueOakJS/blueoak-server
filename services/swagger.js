@@ -18,10 +18,19 @@ var specs = {
 
 var httpMethods = ['get', 'put', 'post', 'delete', 'options', 'head', 'patch'];
 
+var responseModelValidationLevel;
+var polymorphicValidation;
 
 exports.init = function(logger, config, callback) {
     var cfg = config.get('swagger');
-    var responseModelValidationLevel = /error|warn|fail/.test(cfg.validateResponseModels) ? cfg.validateResponseModels : 0;
+    responseModelValidationLevel = /error|warn|fail/.test(cfg.validateResponseModels) ? cfg.validateResponseModels : 0;
+    polymorphicValidation = (cfg.polymorphicValidation !== false);//default to true
+    if (responseModelValidationLevel) {
+        logger.info('Response model validation is on and set to level "%s"', responseModelValidationLevel);
+    }
+    if (!polymorphicValidation) {
+        logger.info('Polymorphic validation is OFF"');
+    }
     var swaggerDir = null;
     if (isBlueoakProject()) {
         swaggerDir = path.resolve(global.__appDir, '../common/swagger');
@@ -89,6 +98,18 @@ exports.init = function(logger, config, callback) {
         callback(err);
     });
 
+};
+
+exports.getResponseModelValidationLevel = function () {
+    return responseModelValidationLevel;
+};
+
+exports.isPolyMorphicValidation = function () {
+    return polymorphicValidation;
+};
+
+exports.getValidHttpMethods = function () {
+    return httpMethods;
 };
 
 exports.getSimpleSpecs = function() {

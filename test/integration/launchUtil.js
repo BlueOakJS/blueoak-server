@@ -20,32 +20,18 @@ exports.launch = function (fixtureName, opts, done) {
 
     var output = '';
     var bosPath = path.resolve(__dirname, opts.exec);
-    if (process.platform === 'win32') {
-        lastLaunch = child_process.exec('node ' + bosPath,
-            {
-                'cwd': path.resolve(__dirname, 'fixtures/' + fixtureName),
-                'env': opts.env
-            },
-            function (err, stdout, stderr) {
-                if (err) {
-                    console.warn(err, stderr);
-                }
-                output += stdout + stderr;
-            });
-    }
-    else {
-        lastLaunch = child_process.execFile(bosPath, [],
-            {
-                'cwd': path.resolve(__dirname, 'fixtures/' + fixtureName),
-                'env': opts.env
-            },
-            function (err, stdout, stderr) {
-                if (err) {
-                    console.warn(err, stderr);
-                }
-                output += stdout + stderr;
-            });
-    }
+    lastLaunch = child_process.exec('node ' + bosPath,
+        {
+            'cwd': path.resolve(__dirname, 'fixtures/' + fixtureName),
+            'env': opts.env
+        },
+        function (err, stdout, stderr) {
+            if (err) {
+                console.warn(err, stderr);
+            }
+            output += stdout + stderr;
+        }
+    );
     setTimeout(function () {
         output = output.length > 50 ? output : null; //if output > 50, probably contains a stack tracegu
         done(output);

@@ -13,24 +13,19 @@ var _ = require('lodash'),
 var MULTER_MEMORY_STORAGE = 'multerMemoryStorage';
 
 var _upload; //will get set to a configured multer instance if multipart form data is used
-var httpMethods = ['get', 'put', 'post', 'delete', 'options', 'head', 'patch'];
+var httpMethods;
 var responseModelValidationLevel;
 var polymorphicValidation;
 
 exports.init = function (app, auth, config, logger, serviceLoader, swagger, callback) {
     var cfg = config.get('swagger');
-    
-    responseModelValidationLevel = /error|warn|fail/.test(cfg.validateResponseModels) ? cfg.validateResponseModels : 0;
-    polymorphicValidation = (cfg.polymorphicValidation !== false);//default to true
-    if (responseModelValidationLevel) {
-        logger.info('Response model validation is on and set to level "%s"', responseModelValidationLevel);
-    }
-    if (!polymorphicValidation) {
-        logger.info('Polymorphic validation is OFF"');
-    }
+
+    responseModelValidationLevel = swagger.getResponseModelValidationLevel();
+    polymorphicValidation = swagger.isPolyMorphicValidation();
+    httpMethods = swagger.getValidHttpMethods();
+
     //default to true
     var useBasePath = cfg.useBasePath || cfg.useBasePath === undefined;
-
     var serveSpec = cfg.serve;
     var useLocalhost = cfg.useLocalhost;
     var context = cfg.context;
@@ -257,35 +252,44 @@ function registerRoute(app, auth, additionalMiddleware, method, path, data, allo
             if (responseModelValidationLevel) {
                 var responseSender = res.send;
                 res.send = function (body) {
-                    var isJson = typeof body === 'string'; //body can come in as JSON or object, we want object
-                    body = isJson ? JSON.parse(body) : body;
+                    var isJson = typeof body === 'string'; //body can come in as JSON, we want it unJSONified
+                    try {
+                        body = isJson ? JSON.parse(body) : body;
+                    }
+                    catch (err) {
+                        return next(err);
+                    }
                     var validationErrors, invalidBody;
                     validationErrors = validateResponseModels(res, body, data, swaggerDoc, logger);
                     if (validationErrors) {
-                        if (responseModelValidationLevel === 'error' || responseModelValidationLevel === 'fail') {
-                            //we're going to check the model and send any valdiation errors back to the caller in the reponse
-                            //either in the `_response_validation_errors` property of the response, or of that property of the first and last array entries
+                        //we're going to check the model for any validation errors, and handle them based on the validation level
+                        //'warn'
+                            //response is sent back to the caller unmodified, errors are only logged
+                        //'error'
+                            //errors added in the `_response_validation_errors` property of the response, or of that property of the first and last array entries
                             //we'll create a response object (or array entry) if there isn't one (we will break some client code)
+                        //'fail'
+                            // changes the actual http response code to 522 and separates out the validation errors and response body.
+                            // May break client code, so this should only be used when developing/testing an API in stand alone
+                        if (responseModelValidationLevel === 'error') {
                             invalidBody = _.cloneDeep(body);
-                            if (responseModelValidationLevel === 'error') {
-                                if (Array.isArray(body)) {
-                                    if (body.length === 0) {
-                                        body.push(validationErrors);
-                                    } else {
-                                        body[0]._response_validation_errors = validationErrors;
-                                        if (body.length > 1) {
-                                            body[body.length - 1]._response_validation_errors = validationErrors;
-                                        }
-                                    }
+                            if (Array.isArray(body)) {
+                                if (body.length === 0) {
+                                    body.push(validationErrors);
                                 } else {
-                                    body = body || {};
-                                    body._response_validation_errors = _.clone(validationErrors);
+                                    body[0]._response_validation_errors = validationErrors;
+                                    if (body.length > 1) {
+                                        body[body.length - 1]._response_validation_errors = validationErrors;
+                                    }
                                 }
+                            } else {
+                                body = body || {};
+                                body._response_validation_errors = _.clone(validationErrors);
                             }
-                            else {//level is fail
-                                body = {response: body, validationErrors: _.clone(validationErrors)};
-                                res.statusCode = validationErrors.status;
-                            }
+                        }
+                        else if (responseModelValidationLevel === 'fail') {
+                            body = {response: body, validationErrors: _.clone(validationErrors)};
+                            res.statusCode = validationErrors.status;
                         }
                         validationErrors.invalidResponse = {
                             method: req.method,
@@ -293,12 +297,13 @@ function registerRoute(app, auth, additionalMiddleware, method, path, data, allo
                             statusCode: res.statusCode,
                             body: invalidBody || body
                         };
-                        logger[responseModelValidationLevel === 'warn' ? 'warn' : 'error']('Response validation error:', JSON.stringify(validationErrors, null, 2));
+                        logger[responseModelValidationLevel === 'warn' ? 'warn' : 'error']
+                            ('Response validation error:', JSON.stringify(validationErrors, null, 2));
                     }
 
                     //after this initial call (sometimes `send` will call itself again), we don't need to get the response for validation anymore
                     res.send = responseSender;
-                    responseSender.call(res, isJson ? JSON.stringify(body): body);
+                    responseSender.call(res, isJson ? JSON.stringify(body): body);//if we unJSONified at the beginning, reJSONify
 
                 };
             }
