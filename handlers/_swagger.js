@@ -198,6 +198,21 @@ function handleMulterConfig(multerConfig, logger, serviceLoader) {
     return multerConfig;
 }
 
+function isValidDataType(body) {
+    if (typeof body === 'object') {
+        return true;
+    } else if (Array.isArray(body)) {
+        if (body.length === 0) {
+            return true;
+        } else if (typeof body[0] === 'object') {
+            return true;
+        }
+    } else if (!body) {
+        return true;
+    }
+    return false;
+}
+
 /**
  * app - express app
  * auth - auth service
@@ -252,12 +267,16 @@ function registerRoute(app, auth, additionalMiddleware, method, path, data, allo
             if (responseModelValidationLevel) {
                 var responseSender = res.send;
                 res.send = function (body) {
-                    var isJson = typeof body === 'string'; //body can come in as JSON, we want it unJSONified
-                    try {
-                        body = isJson ? JSON.parse(body) : body;
-                    }
-                    catch (err) {
-                        return next(err);
+                    var isBodyValid = isValidDataType(body);
+                    if (!isBodyValid) {
+                        try { //body can come in as JSON, we want it unJSONified
+                            body = JSON.parse(body);
+                        } catch (err) {
+                            logger.error('Unexpected format when attempting to validate response');
+                            res.send = responseSender;
+                            responseSender.call(res, body);
+                            return;
+                        }
                     }
                     var validationErrors, invalidBody;
                     validationErrors = validateResponseModels(res, body, data, swaggerDoc, logger);
@@ -286,8 +305,7 @@ function registerRoute(app, auth, additionalMiddleware, method, path, data, allo
                                 body = body || {};
                                 body._response_validation_errors = _.clone(validationErrors);
                             }
-                        }
-                        else if (responseModelValidationLevel === 'fail') {
+                        } else if (responseModelValidationLevel === 'fail') {
                             body = {response: body, validationErrors: _.clone(validationErrors)};
                             res.statusCode = validationErrors.status;
                         }
@@ -303,7 +321,7 @@ function registerRoute(app, auth, additionalMiddleware, method, path, data, allo
 
                     //after this initial call (sometimes `send` will call itself again), we don't need to get the response for validation anymore
                     res.send = responseSender;
-                    responseSender.call(res, isJson ? JSON.stringify(body): body);//if we unJSONified at the beginning, reJSONify
+                    responseSender.call(res, isBodyValid ? body: JSON.stringify(body));//if we unJSONified at the beginning, reJSONify
 
                 };
             }
@@ -449,7 +467,7 @@ function validateResponseModels(res, body, data, swaggerDoc, logger) {
     if (!(res.statusCode >= 200 && res.statusCode < 300 || res.statusCode >= 400 && res.statusCode < 500)) {
         //the statusCode for the response isn't in the range that we'd expect to be documented in the swagger
         //i.e.: 200-299 (success) or 400-499 (request error)
-        return; 
+        return;
     }
 
     var schemaPath = 'responses.%s.schema',
@@ -478,12 +496,12 @@ function validateResponseModels(res, body, data, swaggerDoc, logger) {
         return _createValidationError('Error validating response body for %s %s with status code %s', result.errors.concat(polymorphicValidationErrors));
     }
     return;
-    
+
     function _createValidationError(message, subErrors) {
         var error = new VError(message, res.req.method, res.req.path, res.statusCode);
         error.name = 'ValidationError';
         error.subErrors = subErrors;
-        
+
         var explainer = {
             message: error.message,
             status: 522,
