@@ -458,8 +458,16 @@ function validateRequestParameters(req, data, swaggerDoc, logger, callback) {
         } else if (parm.in === 'body') {
             var result = swaggerUtil.validateJSONType(parm.schema, req.body);
             var polymorphicValidationErrors = [];
-            if (polymorphicValidation) {
+            if (polymorphicValidation !== 'off') {
                 polymorphicValidationErrors = swaggerUtil.validateIndividualObjects(swaggerDoc, parm['x-bos-generated-disc-map'], req.body);
+                if (polymorphicValidationErrors.length > 0 && polymorphicValidation === 'warn') {
+                    var warning = {
+                        errors: polymorphicValidationErrors,
+                        body: body || null
+                    };
+                    logger.warn('Request body polymorphic validation error for %s %s:', req.method, req.path, JSON.stringify(warning, null, 2));
+                    polymorphicValidationErrors = [];
+                }
             }
             if (!result.valid || polymorphicValidationErrors.length > 0) {
                 var error = new VError('Error validating request body');
@@ -498,7 +506,7 @@ function validateResponseModels(res, body, data, swaggerDoc, logger) {
     }
     var result = swaggerUtil.validateJSONType(modelSchema, body);
     var polymorphicValidationErrors = [];
-    if (polymorphicValidation) {
+    if (polymorphicValidation !== 'off') {
         polymorphicValidationErrors = swaggerUtil.validateIndividualObjects(swaggerDoc, responseModelMap, body);
     }
     if (!result.valid || polymorphicValidationErrors.length > 0) {

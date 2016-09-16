@@ -21,16 +21,22 @@ var httpMethods = ['get', 'put', 'post', 'delete', 'options', 'head', 'patch'];
 var responseModelValidationLevel;
 var polymorphicValidation;
 
-exports.init = function(logger, config, callback) {
+exports.init = function (logger, config, callback) {
     var cfg = config.get('swagger');
-    responseModelValidationLevel = /error|warn|fail/.test(cfg.validateResponseModels) ? cfg.validateResponseModels : 0;
-    polymorphicValidation = (cfg.polymorphicValidation !== false);//default to true
+
+    // default responseModelValidationLevel to level zero, i.e. off
+    responseModelValidationLevel = /warn|error|fail/.test(cfg.validateResponseModels) ? cfg.validateResponseModels : 0;
     if (responseModelValidationLevel) {
         logger.info('Response model validation is on and set to level "%s"', responseModelValidationLevel);
     }
-    if (!polymorphicValidation) {
-        logger.info('Polymorphic validation is OFF"');
+
+    // default polymorphicValidation to 'on'; allow both 'off' and false to turn it off
+    polymorphicValidation = /on|warn|off/.test(cfg.polymorphicValidation) ? cfg.polymorphicValidation :
+        ((cfg.polymorphicValidation === false) ? 'off' : 'on');
+    if (polymorphicValidation !== 'on') {
+        logger.info('Polymorphic validation is disabled (%s)', polymorphicValidation);
     }
+
     var swaggerDir = null;
     if (isBlueoakProject()) {
         swaggerDir = path.resolve(global.__appDir, '../common/swagger');
@@ -64,37 +70,37 @@ exports.init = function(logger, config, callback) {
     async.eachSeries(files, function parseSwagger(file, swagCallback) {
         var handlerName = path.basename(file); //use the swagger filename as our handler module id
         handlerName = handlerName.substring(0, handlerName.lastIndexOf('.')); //strip extensions
-        
+
         var derefPromise = parser.validate(file);
         parser.bundle(file)
-        .then(function (bundledApi) {
-            specs.bundled[handlerName] = bundledApi;
-            return derefPromise;
-        })
-        .then(function (dereferencedApi) {
-            specs.dereferenced[handlerName] = dereferencedApi;
-            getDiscriminatorObjectsForSchemas(dereferencedApi.paths, responseModelValidationLevel);
-            return swagCallback();
-        })
-        .catch(function (error) {
-            // don't generate an error if it was a non-Swagger Spec JSON file
-            var swagErr = error;
-            if (path.extname(file) !== '.yaml') {
-                try {
-                    var json = JSON.parse(fs.readFileSync(file, {
-                        encoding: 'utf8'
-                    }));
-                    if (!isSwaggerFile(json)) {
-                        logger.info('Skipping non-Swagger JSON file %s', file);
-                        swagErr = null;
+            .then(function (bundledApi) {
+                specs.bundled[handlerName] = bundledApi;
+                return derefPromise;
+            })
+            .then(function (dereferencedApi) {
+                specs.dereferenced[handlerName] = dereferencedApi;
+                getDiscriminatorObjectsForSchemas(dereferencedApi.paths, responseModelValidationLevel);
+                return swagCallback();
+            })
+            .catch(function (error) {
+                // don't generate an error if it was a non-Swagger Spec JSON file
+                var swagErr = error;
+                if (path.extname(file) !== '.yaml') {
+                    try {
+                        var json = JSON.parse(fs.readFileSync(file, {
+                            encoding: 'utf8'
+                        }));
+                        if (!isSwaggerFile(json)) {
+                            logger.info('Skipping non-Swagger JSON file %s', file);
+                            swagErr = null;
+                        }
+                    } catch (err) {
+                        logger.error('%s is not valid JSON', file);
                     }
-                } catch (err) {
-                    logger.error('%s is not valid JSON', file);
                 }
-            }
-            return swagCallback(swagErr);
-        });
-    }, function(err) {
+                return swagCallback(swagErr);
+            });
+    }, function (err) {
         callback(err);
     });
 
@@ -112,7 +118,7 @@ exports.getValidHttpMethods = function () {
     return httpMethods;
 };
 
-exports.getSimpleSpecs = function() {
+exports.getSimpleSpecs = function () {
     return specs.dereferenced;
 };
 
@@ -120,7 +126,7 @@ exports.getPrettySpecs = function () {
     return specs.bundled;
 };
 
-exports.addFormat = function(format, validationFunction) {
+exports.addFormat = function (format, validationFunction) {
     tv4.addFormat(format, validationFunction);
 };
 
