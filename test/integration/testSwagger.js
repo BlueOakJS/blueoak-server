@@ -195,7 +195,9 @@ describe('SERVER5 - request model validation', function () {
                 'type': 'ValidationError',
                 'validation_errors': [
                     {
-                        'message': 'Missing required property: id'
+                        'field': '',
+                        'message': 'Missing required property: id',
+                        'schemaPath': '/required/0'
                     }
                 ]
             });
@@ -258,6 +260,8 @@ describe('SERVER5 + response model validation - using the "error" option', funct
                 'type': 'ValidationError',
                 'validation_errors': [
                     {
+                        'field': '/id',
+                        'schemaPath': '/required/0',
                         'message': 'Missing required property: id'
                     }
                 ]
@@ -299,7 +303,9 @@ describe('SERVER11 + response model validation - using the "fail" option', funct
                 'type': 'ValidationError',
                 'validation_errors': [
                     {
-                        'message': 'Missing required property: id'
+                        'message': 'Missing required property: id',
+                        'field': '/id',
+                        'schemaPath': '/required/0'
                     }
                 ],
                 'invalidResponse': {
