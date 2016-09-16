@@ -11,13 +11,14 @@ var di = require('../lib/di'),
     stripJsonComments = require('strip-json-comments');
 
 //creates a mock config service
-function getConfigService(cfg) {
+function getConfigService(configObject) {
     return {
         get: function(id) {
-            return cfg[id] || {};
+            return configObject[id] || {};
         }
     };
 }
+exports.createConfigService = getConfigService;
 
 //create a mock logger
 var logger = require('./mocks/logger');
@@ -31,20 +32,19 @@ var monitor = require('./mocks/monitor');
 //config, logger, and monitor are handled automatically, anything else needs to be included in the injections map
 //callback is optional as well
 exports.initService = function(module, config, injections, callback) {
-    //injections is optional
-    if (!injections) {
-        injections = {};
-    }
-
+    // injections and callbackare optional ...
     if (_.isFunction(injections)) {
         callback = injections;
         injections = {};
+    } else {
+        if (!injections) {
+            injections = {};
+        }
+        if (!callback) {
+            callback = function() {};
+        }
     }
-
-    if (!callback) {
-        callback = function() {};
-    }
-
+    
     injections.config = getConfigService(config);
     injections.logger = logger;
     injections.monitor = monitor;
@@ -113,7 +113,7 @@ exports.injectCore = function (modules, config, callback) {
         modules = [modules];
     }
 
-    for (var j = 0; i < modules.length; j++) {
+    for (var j = 0; j < modules.length; j++) {
 
         if (coreModules.indexOf(modules[j]) === -1) {
             throw new Error('Given module name is not a core service');

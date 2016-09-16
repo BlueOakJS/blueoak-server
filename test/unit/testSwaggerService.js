@@ -7,28 +7,27 @@ var _ = require('lodash'),
     path = require('path'),
     logger = require('../../testlib/mocks/logger'),
     swaggerService = require('../../services/swagger'),
-    swaggerUtil = require('../../lib/swaggerUtil');
+    swaggerUtil = require('../../lib/swaggerUtil'),
+    testUtil = require('../../testlib/util');
 
 var swaggerExampleDir = path.resolve(__dirname, '../../examples/swagger'),
     swaggerExampleSpecs = 3;
 var httpMethods = ['get', 'put', 'post', 'delete', 'options', 'head', 'patch'];
 
 var swaggerValidateResponsesConfig = {
-    validateResponseModels: 'error'
+    swagger: {
+        polymorphicValidation: 'on',
+        validateResponseModels: 'error'
+    }
 };
 
 function initSwaggerService(rootDir, swaggerConfig, callback) {
     global.__appDir = rootDir;
     if (typeof swaggerConfig === 'function') {
         callback = swaggerConfig;
-        swaggerConfig = null;
+        swaggerConfig = {};
     }
-    var config = {
-        get: function (key) {
-            return (key === 'swagger') ? swaggerConfig : undefined;
-        }
-    };
-    swaggerService.init(logger, config, callback);
+    swaggerService.init(logger, testUtil.createConfigService(swaggerConfig), callback);
 }
 
 describe('Swagger spec building test', function () {
