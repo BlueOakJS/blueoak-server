@@ -542,7 +542,10 @@ function validateResponseModels(res, body, data, swaggerDoc, logger) {
             explainer.validation_errors = [];
             error.subErrors.forEach(function (subError) {
                 explainer.validation_errors.push({
-                    message: subError.message
+                    message: subError.message,
+                    field: (subError.params.key) ? subError.dataPath + '/' + subError.params.key : subError.dataPath,
+                    schemaPath: subError.schemaPath,
+                    model: subError.model
                 });
             });
         }
