@@ -19,7 +19,10 @@ exports.init = function (app, logger) {
                 payload.validation_errors = [];
                 err.subErrors.forEach(function(subError) {
                     payload.validation_errors.push({
-                        message: subError.message
+                        message: subError.message,
+                        field: subError.dataPath,
+                        schemaPath: subError.schemaPath,
+                        model: subError.model
                     });
                 });
             }
