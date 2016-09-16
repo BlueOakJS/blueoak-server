@@ -1,7 +1,21 @@
 {
   "logger": {
-    "levels": { "silly": 0, "debug": 1, "verbose": 2, "info": 3, "warn": 4, "error": 5 },
-    "colors": { "silly": "magenta", "debug": "cyan", "verbose": "blue", "info": "green", "warn": "yellow", "error": "red" },
+    "levels": {
+      "silly": 0,
+      "debug": 1,
+      "verbose": 2,
+      "info": 3,
+      "warn": 4,
+      "error": 5
+    },
+    "colors": {
+      "silly": "magenta",
+      "debug": "cyan",
+      "verbose": "blue",
+      "info": "green",
+      "warn": "yellow",
+      "error": "red"
+    },
     "transports": [
       {
         "package": "winston",
@@ -14,39 +28,33 @@
     ],
     "showLocation": true
   },
-
   "crashDump": {
     "enable": false,
     "length": 1000,
     "type": "console"
   },
-
   "cluster": {
     "maxWorkers": 1
   },
-
   "session": {
     "type": "cookie"
   },
-
   "express": {
     "port": 3000
   },
-
   "monitor": {
     "port": 8125 //statsd port
   },
-
   "express-monitor": {
     "prefix": "express"
   },
-
   "swagger": {
     "context": "/swagger",
     "serve": true,
-    "useLocalhost": true
+    "useLocalhost": true,
+    "polymorphicValidation": "on",
+    "validateResponseModels": false
   },
-
   "node": {
     "version": {
       "min": "^4.4.4 || ^5.11.1 || ^6.1.0",

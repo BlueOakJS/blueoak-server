@@ -23,24 +23,19 @@ var polymorphicValidation;
 
 exports.init = function (logger, config, callback) {
     var cfg = config.get('swagger');
-    
-    if (!cfg) {
-        responseModelValidationLevel = 0;
-        polymorphicValidation = 'on';
-    } else {
-        // default responseModelValidationLevel to level zero, i.e. off
-        responseModelValidationLevel = /warn|error|fail/.test(cfg.validateResponseModels) ?
-            cfg.validateResponseModels : 0;
-        if (responseModelValidationLevel) {
-            logger.info('Response model validation is on and set to level "%s"', responseModelValidationLevel);
-        }
 
-        // default polymorphicValidation to 'on'; allow both 'off' and false to turn it off
-        polymorphicValidation = /on|warn|off/.test(cfg.polymorphicValidation) ?
-            cfg.polymorphicValidation : ((cfg.polymorphicValidation === false) ? 'off' : 'on');
-        if (polymorphicValidation !== 'on') {
-            logger.info('Polymorphic validation is disabled (%s)', polymorphicValidation);
-        }
+    // default responseModelValidationLevel to level zero, i.e. off
+    responseModelValidationLevel = /warn|error|fail/.test(cfg.validateResponseModels) ?
+        cfg.validateResponseModels : 0;
+    if (responseModelValidationLevel) {
+        logger.info('Response model validation is on and set to level "%s"', responseModelValidationLevel);
+    }
+
+    // default polymorphicValidation to 'on'; allow both 'off' and false to turn it off
+    polymorphicValidation = /on|warn|off/.test(cfg.polymorphicValidation) ?
+        cfg.polymorphicValidation : ((cfg.polymorphicValidation === false) ? 'off' : 'on');
+    if (polymorphicValidation !== 'on') {
+        logger.info('Polymorphic validation is disabled (%s)', polymorphicValidation);
     }
 
     var swaggerDir = null;
