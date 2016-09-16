@@ -8,6 +8,7 @@ var request = require('request'),
 
 describe('SERVER1 - test simple REST calls', function () {
     this.timeout(5000);
+
     before(function (done) {
         util.launch('server1', done);
     });
@@ -18,7 +19,7 @@ describe('SERVER1 - test simple REST calls', function () {
 
     it('GET /endpoint1', function (done) {
         request('http://localhost:' + (process.env.PORT || 5000) + '/endpoint1', function(err, resp, body) {
-            assert.ok(!err);
+            assert.equal(null, err);
             var json = JSON.parse(body);
             assert.equal('endpoint1', json.name);
             done();
@@ -27,7 +28,7 @@ describe('SERVER1 - test simple REST calls', function () {
 
     it('POST /endpoint1', function (done) {
         request.post('http://localhost:' + (process.env.PORT || 5000) + '/endpoint1', function(err, resp, body) {
-            assert.ok(!err);
+            assert.equal(null, err);
             var json = JSON.parse(body);
             assert.equal('endpoint1', json.name);
             done();
@@ -36,7 +37,7 @@ describe('SERVER1 - test simple REST calls', function () {
 
     it('PUT /endpoint1', function (done) {
         request.put('http://localhost:' + (process.env.PORT || 5000) + '/endpoint1', function(err, resp, body) {
-            assert.ok(!err);
+            assert.equal(null, err);
             var json = JSON.parse(body);
             assert.equal('endpoint1', json.name);
             done();
@@ -45,7 +46,7 @@ describe('SERVER1 - test simple REST calls', function () {
 
     it('DELETE /endpoint1', function (done) {
         request.del('http://localhost:' + (process.env.PORT || 5000) + '/endpoint1', function(err, resp, body) {
-            assert.ok(!err);
+            assert.equal(null, err);
             var json = JSON.parse(body);
             assert.equal('endpoint1', json.name);
             done();

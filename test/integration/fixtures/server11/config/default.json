@@ -28,5 +28,9 @@
         }
       }
     ]
+  },
+  
+  "swagger": {
+    "validateResponseModels": "fail"
   }
 }

@@ -17,8 +17,8 @@ describe('SERVER5 - test simple REST calls from swagger spec', function () {
     });
 
     it('GET /api/pets1', function (done) {
-        request('http://localhost:' + (process.env.PORT || 5000) + '/api/pets1', function(err, resp, body) {
-            assert.ok(!err);
+        request('http://localhost:' + (process.env.PORT || 5000) + '/api/pets1', function (err, resp, body) {
+            assert.equal(null, err);
             var json = JSON.parse(body);
             assert.equal('pets1', json.name);
             done();
@@ -27,8 +27,8 @@ describe('SERVER5 - test simple REST calls from swagger spec', function () {
 
     //override handler using x-handler
     it('GET /api/pets2', function (done) {
-        request('http://localhost:' + (process.env.PORT || 5000) + '/api/pets2', function(err, resp, body) {
-            assert.ok(!err);
+        request('http://localhost:' + (process.env.PORT || 5000) + '/api/pets2', function (err, resp, body) {
+            assert.equal(null, err);
             var json = JSON.parse(body);
             assert.equal('pets2', json.name);
             done();
@@ -37,8 +37,8 @@ describe('SERVER5 - test simple REST calls from swagger spec', function () {
 
     //override middleware using x-middleware
     it('GET /api/pets3', function (done) {
-        request('http://localhost:' + (process.env.PORT || 5000) + '/api/pets3', function(err, resp, body) {
-            assert.ok(!err);
+        request('http://localhost:' + (process.env.PORT || 5000) + '/api/pets3', function (err, resp, body) {
+            assert.equal(null, err);
             var json = JSON.parse(body);
             assert.equal('pets3', json.name);
             done();
@@ -47,8 +47,8 @@ describe('SERVER5 - test simple REST calls from swagger spec', function () {
 
     //override middleware using x-middleware array
     it('GET /api/pets4', function (done) {
-        request('http://localhost:' + (process.env.PORT || 5000) + '/api/pets4', function(err, resp, body) {
-            assert.ok(!err);
+        request('http://localhost:' + (process.env.PORT || 5000) + '/api/pets4', function (err, resp, body) {
+            assert.equal(null, err);
             var json = JSON.parse(body);
             assert.equal('pets4', json.name);
             done();
@@ -57,8 +57,8 @@ describe('SERVER5 - test simple REST calls from swagger spec', function () {
 
     //override middleware using x-middleware with custom handler name
     it('GET /api/pets5', function (done) {
-        request('http://localhost:' + (process.env.PORT || 5000) + '/api/pets5', function(err, resp, body) {
-            assert.ok(!err);
+        request('http://localhost:' + (process.env.PORT || 5000) + '/api/pets5', function (err, resp, body) {
+            assert.equal(null, err);
             var json = JSON.parse(body);
             assert.equal('pets5', json.name);
             done();
@@ -66,8 +66,8 @@ describe('SERVER5 - test simple REST calls from swagger spec', function () {
     });
 
     it('GET spec from /swagger/petstore', function (done) {
-        request('http://localhost:' + (process.env.PORT || 5000) + '/swagger/petstore', function(err, resp, body) {
-            assert.ok(!err);
+        request('http://localhost:' + (process.env.PORT || 5000) + '/swagger/petstore', function (err, resp, body) {
+            assert.equal(null, err);
             var json = JSON.parse(body);
             assert.equal('localhost:5000', json.host);
             done();
@@ -89,8 +89,8 @@ describe('SERVER8 - test swagger spec with blueoak project structure', function 
     });
 
     it('GET /api/pets1', function (done) {
-        request('http://localhost:' + (process.env.PORT || 5000) + '/api/pets1', function(err, resp, body) {
-            assert.ok(!err);
+        request('http://localhost:' + (process.env.PORT || 5000) + '/api/pets1', function (err, resp, body) {
+            assert.equal(null, err);
             var json = JSON.parse(body);
             assert.equal('pets1', json.name);
             done();
@@ -99,8 +99,8 @@ describe('SERVER8 - test swagger spec with blueoak project structure', function 
 
     //override handler using x-handler
     it('GET /api/pets2', function (done) {
-        request('http://localhost:' + (process.env.PORT || 5000) + '/api/pets2', function(err, resp, body) {
-            assert.ok(!err);
+        request('http://localhost:' + (process.env.PORT || 5000) + '/api/pets2', function (err, resp, body) {
+            assert.equal(null, err);
             var json = JSON.parse(body);
             assert.equal('pets2', json.name);
             done();
@@ -109,8 +109,8 @@ describe('SERVER8 - test swagger spec with blueoak project structure', function 
 
     //override middleware using x-middleware
     it('GET /api/pets3', function (done) {
-        request('http://localhost:' + (process.env.PORT || 5000) + '/api/pets3', function(err, resp, body) {
-            assert.ok(!err);
+        request('http://localhost:' + (process.env.PORT || 5000) + '/api/pets3', function (err, resp, body) {
+            assert.equal(null, err);
             var json = JSON.parse(body);
             assert.equal('pets3', json.name);
             done();
@@ -119,8 +119,8 @@ describe('SERVER8 - test swagger spec with blueoak project structure', function 
 
     //override middleware using x-middleware array
     it('GET /api/pets4', function (done) {
-        request('http://localhost:' + (process.env.PORT || 5000) + '/api/pets4', function(err, resp, body) {
-            assert.ok(!err);
+        request('http://localhost:' + (process.env.PORT || 5000) + '/api/pets4', function (err, resp, body) {
+            assert.equal(null, err);
             var json = JSON.parse(body);
             assert.equal('pets4', json.name);
             done();
@@ -129,8 +129,8 @@ describe('SERVER8 - test swagger spec with blueoak project structure', function 
 
     //override middleware using x-middleware with custom handler name
     it('GET /api/pets5', function (done) {
-        request('http://localhost:' + (process.env.PORT || 5000) + '/api/pets5', function(err, resp, body) {
-            assert.ok(!err);
+        request('http://localhost:' + (process.env.PORT || 5000) + '/api/pets5', function (err, resp, body) {
+            assert.equal(null, err);
             var json = JSON.parse(body);
             assert.equal('pets5', json.name);
             done();
@@ -151,7 +151,7 @@ describe('SERVER7 - test simple REST calls from yaml-based swagger spec', functi
 
     it('GET /v2/pet/1', function (done) {
         request('http://localhost:' + (process.env.PORT || 5000) + '/v2/pet/1', function (err, resp, body) {
-            assert.ok(!err);
+            assert.equal(null, err);
             var json = JSON.parse(body);
             assert.equal('pets1', json.name);
             done();
@@ -161,7 +161,7 @@ describe('SERVER7 - test simple REST calls from yaml-based swagger spec', functi
     //foo is defined in a yaml containing references
     it('GET /foo', function (done) {
         request('http://localhost:' + (process.env.PORT || 5000) + '/foo', function (err, resp, body) {
-            assert.ok(!err);
+            assert.equal(null, err);
             var json = JSON.parse(body);
             assert.equal('foo', json.name);
             done();
@@ -178,8 +178,8 @@ describe('SERVER5 - request model validation', function () {
     after(function (done) {
         util.finish(done);
     });
-    
-    it('POST /api/pets2 - invalid model', function () {
+
+    it('POST /api/pets2 - invalid model', function (done) {
         request({
             method: 'POST',
             url: 'http://localhost:' + (process.env.PORT || 5000) + '/api/pets2',
@@ -188,7 +188,7 @@ describe('SERVER5 - request model validation', function () {
                 name: 'Buddy'
             }
         }, function (err, resp, body) {
-            assert.ok(!err);
+            assert.equal(null, err);
             assert.deepEqual(body, {
                 'message': 'Error validating request body',
                 'status': 422,
@@ -199,10 +199,11 @@ describe('SERVER5 - request model validation', function () {
                     }
                 ]
             });
+            done();
         });
     });
-    
-    it('POST /api/pets2 - valid model', function () {
+
+    it('POST /api/pets2 - valid model', function (done) {
         var model = {
             name: 'Buddy Holly',
             id: 19590203
@@ -213,8 +214,9 @@ describe('SERVER5 - request model validation', function () {
             json: true,
             body: model
         }, function (err, resp, body) {
-            assert.ok(!err);
+            assert.equal(null, err);
             assert.deepEqual(body, model);
+            done();
         });
     });
 });
@@ -229,13 +231,13 @@ describe('SERVER5 + response validation "error" - test validation of response mo
     });
 
     after(function (done) {
-        process.env.NODE_ENV = undefined;
         util.finish(done);
+        process.env.NODE_ENV = undefined;
     });
 
     it('GET /api/pets1 - no validation error', function (done) {
         request('http://localhost:' + (process.env.PORT || 5000) + '/api/pets1', function (err, resp, body) {
-            assert.ok(!err);
+            assert.equal(null, err);
             var json = JSON.parse(body);
             assert.equal(json.name, 'pets1');
             assert.equal(json.id, 1);
@@ -246,7 +248,7 @@ describe('SERVER5 + response validation "error" - test validation of response mo
 
     it('GET /api/pets2 - validation error', function (done) {
         request('http://localhost:' + (process.env.PORT || 5000) + '/api/pets2', function (err, resp, body) {
-            assert.ok(!err);
+            assert.equal(null, err);
             var json = JSON.parse(body);
             assert.equal(json.name, 'pets2');
             assert.equal(json.id, undefined);
@@ -269,18 +271,16 @@ describe('SERVER11 + response validation "error" - test validation of response m
     this.timeout(5000);
 
     before(function (done) {
-        process.env.NODE_ENV = 'test-response-validation-errors';
-        util.launch('server11', { env: process.env }, done);
+        util.launch('server11', done);
     });
 
     after(function (done) {
-        process.env.NODE_ENV = undefined;
         util.finish(done);
     });
 
     it('GET /api/pets1 - no validation error', function (done) {
         request('http://localhost:' + (process.env.PORT || 5000) + '/api/pets1', function (err, resp, body) {
-            assert.ok(!err);
+            assert.equal(null, err);
             var json = JSON.parse(body);
             assert.equal(json.name, 'pets1');
             assert.equal(json.id, 1);
@@ -290,7 +290,7 @@ describe('SERVER11 + response validation "error" - test validation of response m
 
     it('GET /api/pets2 - validation error', function (done) {
         request('http://localhost:' + (process.env.PORT || 5000) + '/api/pets2', function (err, resp, body) {
-            assert.ok(!err);
+            assert.equal(null, err);
             var json = JSON.parse(body);
             assert.equal(resp.statusCode, 522);
             assert.deepEqual(json, {

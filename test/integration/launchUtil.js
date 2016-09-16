@@ -5,7 +5,7 @@
 var path = require('path'),
     child_process = require('child_process');
 
-var lastLaunch = null;
+var lastLaunch, output;
 
 exports.launch = function (fixtureName, opts, done) {
 
@@ -18,8 +18,8 @@ exports.launch = function (fixtureName, opts, done) {
         opts.exec = '../../bin/blueoak-server.js';
     }
 
-    var output = '';
     var bosPath = path.resolve(__dirname, opts.exec);
+    output = '';
     lastLaunch = child_process.exec('node ' + bosPath,
         {
             'cwd': path.resolve(__dirname, 'fixtures/' + fixtureName),
@@ -33,20 +33,27 @@ exports.launch = function (fixtureName, opts, done) {
         }
     );
     setTimeout(function () {
-        output = output.length > 50 ? output : null; //if output > 50, probably contains a stack tracegu
+        // stack traces usually start with 'Error:', if there's that pattern, return it
+        output = /^Error:*/m.test(output) ? output : null;
         done(output);
     }, 4000);
 };
 
-exports.finish = function (done) {
+exports.finish = function (done) {    
     if (process.platform === 'win32') {
         child_process.exec('taskkill /PID ' + lastLaunch.pid + ' /T /F');
     }
     else {
         lastLaunch.kill('SIGINT');
     }
-    setTimeout(function () {
+
+    if (output) {
+        // there was an "error" on launch, just be done
         done();
-    }, 2500);
+    } else {
+        lastLaunch.on('exit', function (code, signal) {
+            done();
+        });
+    }
 };
 
