@@ -48,7 +48,8 @@ function registerDeclarativeRoutes(app, config, routes, serviceLoader, auth, log
 
         var handlerFunc = handlerMod[handlerParts[1]];
         if (!handlerFunc) {
-            return logger.warn('Could not find handler function "%s" for module "%s"', handlerParts[1], handlerParts[0]);
+            return logger.warn('Could not find handler function "%s" for module "%s"',
+                handlerParts[1], handlerParts[0]);
         }
 
         //Some other projects have defined their own auth scheme.

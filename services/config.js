@@ -92,7 +92,7 @@ function loadFromIndividualConfigFile(key) {
 
         var json = {};
         try {
-            var json = JSON.parse(stripJsonComments(content.toString()));
+            json = JSON.parse(stripJsonComments(content.toString()));
         } catch (err) {
             console.warn('Error parsing JSON for %s', toLoad);
         }

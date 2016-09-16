@@ -222,7 +222,7 @@ describe('SERVER5 - request model validation', function () {
 });
 
 
-describe('SERVER5 + response validation "error" - test validation of response models using the "error" option', function () {
+describe('SERVER5 + response model validation - using the "error" option', function () {
     this.timeout(5000);
 
     before(function (done) {
@@ -267,7 +267,7 @@ describe('SERVER5 + response validation "error" - test validation of response mo
     });
 });
 
-describe('SERVER11 + response validation "error" - test validation of response models using the "fail" option', function () {
+describe('SERVER11 + response model validation - using the "fail" option', function () {
     this.timeout(5000);
 
     before(function (done) {

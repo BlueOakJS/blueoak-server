@@ -99,7 +99,8 @@ module.exports.authenticate = function(req, res, next) {
     if (req.session.auth) {
         if (req.session.auth.expiration > Date.now()) {
             setUserData(req);
-            debug('Access token %s is valid for %s seconds', req.session.auth.id, (req.session.auth.expiration - Date.now()) / 1000);
+            debug('Access token %s is valid for %s seconds', req.session.auth.id,
+                (req.session.auth.expiration - Date.now()) / 1000);
             return next();
         } else {
             debug('Access token expired for %s.', req.session.auth.id);
@@ -295,7 +296,7 @@ function getToken(data, callback) {
             });
         }
     });
-};
+}
 
 function getProfileData(token, callback) {
     request.get(PROFILE_URL, {'auth': {'bearer': token}},

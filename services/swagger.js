@@ -23,18 +23,24 @@ var polymorphicValidation;
 
 exports.init = function (logger, config, callback) {
     var cfg = config.get('swagger');
+    
+    if (!cfg) {
+        responseModelValidationLevel = 0;
+        polymorphicValidation = 'on';
+    } else {
+        // default responseModelValidationLevel to level zero, i.e. off
+        responseModelValidationLevel = /warn|error|fail/.test(cfg.validateResponseModels) ?
+            cfg.validateResponseModels : 0;
+        if (responseModelValidationLevel) {
+            logger.info('Response model validation is on and set to level "%s"', responseModelValidationLevel);
+        }
 
-    // default responseModelValidationLevel to level zero, i.e. off
-    responseModelValidationLevel = /warn|error|fail/.test(cfg.validateResponseModels) ? cfg.validateResponseModels : 0;
-    if (responseModelValidationLevel) {
-        logger.info('Response model validation is on and set to level "%s"', responseModelValidationLevel);
-    }
-
-    // default polymorphicValidation to 'on'; allow both 'off' and false to turn it off
-    polymorphicValidation = /on|warn|off/.test(cfg.polymorphicValidation) ? cfg.polymorphicValidation :
-        ((cfg.polymorphicValidation === false) ? 'off' : 'on');
-    if (polymorphicValidation !== 'on') {
-        logger.info('Polymorphic validation is disabled (%s)', polymorphicValidation);
+        // default polymorphicValidation to 'on'; allow both 'off' and false to turn it off
+        polymorphicValidation = /on|warn|off/.test(cfg.polymorphicValidation) ?
+            cfg.polymorphicValidation : ((cfg.polymorphicValidation === false) ? 'off' : 'on');
+        if (polymorphicValidation !== 'on') {
+            logger.info('Polymorphic validation is disabled (%s)', polymorphicValidation);
+        }
     }
 
     var swaggerDir = null;
@@ -141,7 +147,8 @@ function getDiscriminatorObjectsForSchemas(paths, doResponseValidation) {
                     responseCodeKeys.forEach(function (responseCode) {
                         var schema = paths[path][method].responses[responseCode].schema;
                         if (schema) {
-                            paths[path][method].responses[responseCode]['x-bos-generated-disc-map'] = swaggerUtil.getObjectsWithDiscriminator(schema);
+                            paths[path][method].responses[responseCode]['x-bos-generated-disc-map'] =
+                                swaggerUtil.getObjectsWithDiscriminator(schema);
                         }
                     });
                 }
@@ -150,7 +157,8 @@ function getDiscriminatorObjectsForSchemas(paths, doResponseValidation) {
                     requestParamKeys.forEach(function (param) {
                         var schema = paths[path][method].parameters[param].schema;
                         if (schema) {
-                            paths[path][method].parameters[param]['x-bos-generated-disc-map'] = swaggerUtil.getObjectsWithDiscriminator(schema);
+                            paths[path][method].parameters[param]['x-bos-generated-disc-map'] =
+                                swaggerUtil.getObjectsWithDiscriminator(schema);
                         }
                     });
                 }

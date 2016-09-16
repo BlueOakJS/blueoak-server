@@ -69,10 +69,8 @@ module.exports.authenticate = function (req, res, next) {
         
         var bearer = extractToken(bearerToken);
         if (!bearer) {
-            return res.sendStatus(400);  //bad request, malformed beared
+            return res.sendStatus(400);  //bad request, malformed bearer
         }
-        
-        var bearer = bearerToken.split(' ')[1];
 
         //we need to decode just the header of the jwt so that we can figure out the kid
         //TODO: Validate that bearer token is well formed before trying to split

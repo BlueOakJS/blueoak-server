@@ -83,7 +83,8 @@ exports.init = function (config) {
     module.exports['getComponentLogger'] = function (component) {
         var theLogger = this.logger;
         if (!this.components || !this.components[component] || !this.components[component].loglevels) {
-            theLogger.error('The component logger ' + component + ' is not configured or not configured properly. Using base logger.');
+            theLogger.error('The component logger ' + component +
+                ' is not configured or not configured properly. Using base logger.');
             return theLogger;
         }
         var loglevels = this.components[component].loglevels;
@@ -145,11 +146,12 @@ exports.init = function (config) {
                 console.log('' + data.ts + ' ' + data.level + ': ' + util.format.apply(null, data.args));
             };
 
-            for (var i = bufferIdx; i < bufferData.length; i++) {
+            var i;
+            for (i = bufferIdx; i < bufferData.length; i++) {
                 log(bufferData[i]);
             }
 
-            for (var i = 0; i < bufferIdx; i++) {
+            for (i = 0; i < bufferIdx; i++) {
                 log(bufferData[i]);
             }
         }

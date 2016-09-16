@@ -13,7 +13,7 @@ exports.init = function (monitor, config) {
     if (cfg.type === 'redis') {
         impl = services.get('redis').cacheInterface;
     } else {
-        var cfg = config.get('node-cache');
+        cfg = config.get('node-cache');
         impl = require('../lib/nodeCacheInterface')(cfg);
     }
 

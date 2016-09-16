@@ -113,15 +113,15 @@ exports.injectCore = function (modules, config, callback) {
         modules = [modules];
     }
 
-    for (var i = 0; i < modules.length; i++) {
+    for (var j = 0; i < modules.length; j++) {
 
-        if (coreModules.indexOf(modules[i]) === -1) {
+        if (coreModules.indexOf(modules[j]) === -1) {
             throw new Error('Given module name is not a core service');
         }
 
-        initializedModules[modules[i]] = require('../services/' + modules[i]);
+        initializedModules[modules[j]] = require('../services/' + modules[j]);
 
-        this.initService(initializedModules[modules[i]], config, function (error) {
+        this.initService(initializedModules[modules[j]], config, function (error) {
             if (error) {
                 throw new Error('Unable to inject core service');
             }

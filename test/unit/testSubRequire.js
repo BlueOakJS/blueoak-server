@@ -46,7 +46,7 @@ describe('Subrequire test', function () {
         assert.equal(mod.__id, 'test');
         assert.equal(mod.test(), 'test4');
 
-        var mod = subrequire('express', 'test'); //load relative to test
+        mod = subrequire('express', 'test'); //load relative to test
         assert.equal(mod.__id, 'express');
         assert.equal(mod.test(), 'test4_express');
 

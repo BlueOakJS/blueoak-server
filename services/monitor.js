@@ -58,7 +58,6 @@ exports.express = function(prefix, genRoute) {
                 return;
             }
 
-            var duration = new Date().getTime() - startTime;
             var key = '';
             if (genRoute) {
                 var routeName = req.route.path;

@@ -13,12 +13,12 @@ var origAppDir = global.__appDir;
 describe('Test Util test', function () {
 
     //The logger will try to read global.__appDir, so make sure it's set
-    beforeEach(function () {
+    before(function () {
         global.__appDir = path.resolve(__dirname);
     });
 
     //restore __appDir to its original value
-    afterEach(function () {
+    after(function () {
         global.__appDir = origAppDir;
     });
 

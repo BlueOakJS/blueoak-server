@@ -16,7 +16,8 @@ var _ = require('lodash'),
 var _logger;
 var server;
 
-exports.init = function(logger, config, middleware, auth, serviceLoader, callback) { //should start after middleware and auth
+// should start after middleware and auth
+exports.init = function(logger, config, middleware, auth, serviceLoader, callback) {
     _logger = logger;
     var cfg = config.get('express');
 

@@ -19,7 +19,8 @@ var vm = require('vm');
 var callbacks = {};
 var cfg = null;
 
-module.exports.init = function(logger, config, app, middleware, serviceLoader, callback) { //dep on middleware ensures it starts after middleware
+// the dependency on middleware ensures it starts after middleware
+module.exports.init = function(logger, config, app, middleware, serviceLoader, callback) {
     logger.info('Starting auth services');
     cfg = config.get('auth');
 

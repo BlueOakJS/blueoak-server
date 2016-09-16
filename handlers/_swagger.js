@@ -98,7 +98,8 @@ exports.init = function (app, auth, config, logger, serviceLoader, swagger, call
 
                     var handlerFunc = handlerMod[methodData.operationId];
                     if (!handlerFunc) {
-                        return logger.warn('Could not find handler function "%s" for module "%s"', methodData.operationId, handlerName);
+                        return logger.warn('Could not find handler function "%s" for module "%s"',
+                            methodData.operationId, handlerName);
                     }
 
 
@@ -124,13 +125,15 @@ exports.init = function (app, auth, config, logger, serviceLoader, swagger, call
                             if (mwHandlerMod[parts[1]]) {
                                 additionalMiddleware.push(mwHandlerMod[parts[1]]); //add the mw function
                             } else {
-                                return logger.warn('Could not find middleware function "%s" on module "%s".', parts[1], parts[0]);
+                                return logger.warn('Could not find middleware function "%s" on module "%s".',
+                                    parts[1], parts[0]);
                             }
                         });
                     }
 
                     logger.debug('Wiring up route %s %s to %s.%s', key, routePath, handlerName, methodData.operationId);
-                    registerRoute(app, auth, additionalMiddleware, key, routePath, methodData, methodData.produces || api.produces || null, handlerFunc, api, logger);
+                    registerRoute(app, auth, additionalMiddleware, key, routePath, methodData,
+                        methodData.produces || api.produces || null, handlerFunc, api, logger);
 
                 }
             });
@@ -225,7 +228,9 @@ function isValidDataType(body) {
  * swaggerDoc - root swagger document for this api
  * logger - the logger service
  */
-function registerRoute(app, auth, additionalMiddleware, method, path, data, allowedTypes, handlerFunc, swaggerDoc, logger) {
+function registerRoute(app, auth, additionalMiddleware, method, path, data, allowedTypes, handlerFunc, swaggerDoc,
+    logger) {
+
     var authMiddleware = auth.getAuthMiddleware() || [];
     additionalMiddleware = authMiddleware.concat(additionalMiddleware);
 
@@ -258,7 +263,7 @@ function registerRoute(app, auth, additionalMiddleware, method, path, data, allo
                     if (name === 'Content-Type') {
                         var type = value.split(';')[0]; //parse off the optional encoding
                         if (!_.contains(allowedTypes, type)) {
-                            logger.warn('Invalid content type specified: ' + type + '. Expecting one of ' + allowedTypes);
+                            logger.warn('Invalid content type specified: %s. Expecting one of %s', type, allowedTypes);
                         }
                     }
                 });
@@ -279,12 +284,12 @@ function registerRoute(app, auth, additionalMiddleware, method, path, data, allo
                         }
                     }
                     var validationErrors = validateResponseModels(res, body, data, swaggerDoc, logger);
-                    // we're going to check the model for any validation errors, and handle them based on the validation level
+                    // check the model for any validation errors, and handle them based on the validation level
                     if (validationErrors) {
                         // 'error'
                         // errors added in the `_response_validation_errors` property of the response,
                         // or of that property of the first and last array entries
-                        // we'll create a response object (or array entry) if there isn't one (we will break some client code)
+                        // we'll create a response object (or array entry) if there isn't one (will break client code)
                         var alteredBody;
                         if (responseModelValidationLevel === 'error') {
                             var invalidBodyDetails = _.cloneDeep(validationErrors);
@@ -295,7 +300,8 @@ function registerRoute(app, auth, additionalMiddleware, method, path, data, allo
                                 } else {
                                     alteredBody[0]._response_validation_errors = invalidBodyDetails;
                                     if (alteredBody.length > 1) {
-                                        alteredBody[alteredBody.length - 1]._response_validation_errors = invalidBodyDetails;
+                                        alteredBody[alteredBody.length - 1]._response_validation_errors =
+                                            invalidBodyDetails;
                                     }
                                 }
                             } else {
@@ -305,7 +311,7 @@ function registerRoute(app, auth, additionalMiddleware, method, path, data, allo
                         }
                         
                         // 'warn'
-                        // response is sent back to the caller unmodified, errors (this model here) are only logged (see below)
+                        // response is sent to the caller unmodified, errors (this model) are only logged (see below)
                         validationErrors.invalidResponse = {
                             method: req.method,
                             path: req.path,
@@ -314,8 +320,8 @@ function registerRoute(app, auth, additionalMiddleware, method, path, data, allo
                         };
                         
                         // 'fail'
-                        // changes the actual http response code to 522 and separates out the validation errors and response body.
-                        // Will break client code, so this should only be used when developing/testing an API in stand alone
+                        // changes the http response code to 522 and separates the validation errors and response body.
+                        // Will break client code; should only be used when developing/testing an API in stand alone
                         if (responseModelValidationLevel === 'fail') {
                             body = validationErrors;
                             res.statusCode = validationErrors.status;
@@ -324,13 +330,16 @@ function registerRoute(app, auth, additionalMiddleware, method, path, data, allo
                         }
                         
                         // in all cases, log the validation errors
-                        logger[responseModelValidationLevel === 'warn' ? 'warn' : 'error']
-                            ('Response validation error:', JSON.stringify(validationErrors, null, 2));
+                        logger[responseModelValidationLevel === 'warn' ? 'warn' : 'error'](
+                            'Response validation error:', JSON.stringify(validationErrors, null, 2)
+                        );
                     }
 
-                    // after this initial call (sometimes `send` will call itself again), we don't need to get the response for validation anymore
+                    // after this initial call (sometimes `send` will call itself again),
+                    // we don't need to get the response for validation anymore
                     res.send = responseSender;
-                    responseSender.call(res, isBodyValid ? body: JSON.stringify(body)); // if we unJSONified at the beginning, reJSONify
+                    // if we parsed JSON at the start, reJSONify
+                    responseSender.call(res, isBodyValid ? body: JSON.stringify(body));
 
                 };
             }
@@ -377,20 +386,21 @@ function validateRequestParameters(req, data, swaggerDoc, logger, callback) {
     var parameters = _.toArray(data.parameters);
     for (var i = 0; i < parameters.length; i++) {
         var parm = parameters[i];
+        var error, result;
 
         if (parm.in === 'query') {
 
             if (parm.required && typeof(req.query[parm.name]) === 'undefined') {
                 logger.warn('Missing query parameter "%s" for operation "%s"', parm.name, data.operationId);
-                var error = new VError('Missing %s query parameter', parm.name);
+                error = new VError('Missing %s query parameter', parm.name);
                 error.name = 'ValidationError';
                 return callback(error);
 
             } else if (typeof req.query[parm.name] !== 'undefined') {
-                var result = swaggerUtil.validateParameterType(parm, req.query[parm.name]);
+                result = swaggerUtil.validateParameterType(parm, req.query[parm.name]);
 
                 if (!result.valid) {
-                    var error = new VError('Error validating query parameter %s', parm.name);
+                    error = new VError('Error validating query parameter %s', parm.name);
                     error.name = 'ValidationError';
                     error.subErrors = result.errors;
                     return callback(error);
@@ -401,15 +411,15 @@ function validateRequestParameters(req, data, swaggerDoc, logger, callback) {
 
             if (parm.required && typeof(req.get(parm.name)) === 'undefined') {
                 logger.warn('Missing header "%s" for operation "%s"', parm.name, data.operationId);
-                var error = new VError('Missing %s header', parm.name);
+                error = new VError('Missing %s header', parm.name);
                 error.name = 'ValidationError';
                 return callback(error);
 
             } else if (typeof req.get(parm.name) !== 'undefined') {
-                var result = swaggerUtil.validateParameterType(parm, req.get(parm.name));
+                result = swaggerUtil.validateParameterType(parm, req.get(parm.name));
 
                 if (!result.valid) {
-                    var error = new VError('Error validating %s header', parm.name);
+                    error = new VError('Error validating %s header', parm.name);
                     error.name = 'ValidationError';
                     error.subErrors = result.errors;
                     return callback(error);
@@ -418,36 +428,37 @@ function validateRequestParameters(req, data, swaggerDoc, logger, callback) {
 
         } else if (parm.in === 'path') {
 
-            var result = swaggerUtil.validateParameterType(parm, req.params[parm.name]);
+            result = swaggerUtil.validateParameterType(parm, req.params[parm.name]);
             if (!result.valid) {
-                var error = new VError('Error validating %s path parameter', parm.name);
+                error = new VError('Error validating %s path parameter', parm.name);
                 error.name = 'ValidationError';
                 error.subErrors = result.errors;
                 return callback(error);
             }
 
         } else if (parm.in === 'formData') {
-            //fyi, the swagger parser will fail if the user didn't set consumes to multipart/form-data or application/x-www-form-urlencoded
+            // fyi, the swagger parser will fail if the user didn't set 'consumes' to
+            // multipart/form-data or application/x-www-form-urlencoded
 
             if (parm.required && parm.type === 'file') {
                 if (!req.files[parm.name]) {
                     logger.warn('Missing form parameter "%s" for operation "%s"', parm.name, data.operationId);
-                    var error = new VError('Missing %s form parameter', parm.name);
+                    error = new VError('Missing %s form parameter', parm.name);
                     error.name = 'ValidationError';
                     return callback(error);
                 }
             } else if (parm.required) { //something other than file
                 if (!req.body[parm.name]) { //multer puts the non-file parameters in the request body
                     logger.warn('Missing form parameter "%s" for operation "%s"', parm.name, data.operationId);
-                    var error = new VError('Missing %s form parameter', parm.name);
+                    error = new VError('Missing %s form parameter', parm.name);
                     error.name = 'ValidationError';
                     return callback(error);
                 } else {
                     //go through the param-parsing code which is able to take text and validate
                     //it as any type, such as number, or array
-                    var result = swaggerUtil.validateParameterType(parm, req.body[parm.name]);
+                    result = swaggerUtil.validateParameterType(parm, req.body[parm.name]);
                     if (!result.valid) {
-                        var error = new VError('Error validating form parameter %s', parm.name);
+                        error = new VError('Error validating form parameter %s', parm.name);
                         error.name = 'ValidationError';
                         error.subErrors = result.errors;
                         return callback(error);
@@ -456,21 +467,23 @@ function validateRequestParameters(req, data, swaggerDoc, logger, callback) {
             }
 
         } else if (parm.in === 'body') {
-            var result = swaggerUtil.validateJSONType(parm.schema, req.body);
+            result = swaggerUtil.validateJSONType(parm.schema, req.body);
             var polymorphicValidationErrors = [];
             if (polymorphicValidation !== 'off') {
-                polymorphicValidationErrors = swaggerUtil.validateIndividualObjects(swaggerDoc, parm['x-bos-generated-disc-map'], req.body);
+                polymorphicValidationErrors = swaggerUtil.validateIndividualObjects(swaggerDoc,
+                    parm['x-bos-generated-disc-map'], req.body);
                 if (polymorphicValidationErrors.length > 0 && polymorphicValidation === 'warn') {
                     var warning = {
                         errors: polymorphicValidationErrors,
-                        body: body || null
+                        body: req.body || null
                     };
-                    logger.warn('Request body polymorphic validation error for %s %s:', req.method, req.path, JSON.stringify(warning, null, 2));
+                    logger.warn('Request body polymorphic validation error for %s %s:', req.method, req.path,
+                        JSON.stringify(warning, null, 2));
                     polymorphicValidationErrors = [];
                 }
             }
             if (!result.valid || polymorphicValidationErrors.length > 0) {
-                var error = new VError('Error validating request body');
+                error = new VError('Error validating request body');
                 error.name = 'ValidationError';
                 error.subErrors = result.errors.concat(polymorphicValidationErrors);
                 return callback(error);
@@ -510,7 +523,8 @@ function validateResponseModels(res, body, data, swaggerDoc, logger) {
         polymorphicValidationErrors = swaggerUtil.validateIndividualObjects(swaggerDoc, responseModelMap, body);
     }
     if (!result.valid || polymorphicValidationErrors.length > 0) {
-        return _createValidationError('Error validating response body for %s %s with status code %s', result.errors.concat(polymorphicValidationErrors));
+        return _createValidationError('Error validating response body for %s %s with status code %s',
+            result.errors.concat(polymorphicValidationErrors));
     }
     return;
 
