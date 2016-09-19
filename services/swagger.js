@@ -83,7 +83,7 @@ exports.init = function (logger, config, callback) {
                 if (polymorphicValidation !== 'off') {
                     getDiscriminatorObjectsForSchemas(dereferencedApi.paths, responseModelValidationLevel);
                 }
-                overridePropertiesForInheritingModels(dereferencedApi.definitions);
+                overrideInheritedProperties(dereferencedApi.definitions);
                 return swagCallback();
             })
             .catch(function (error) {
@@ -134,7 +134,7 @@ exports.addFormat = function (format, validationFunction) {
     tv4.addFormat(format, validationFunction);
 };
 
-function overridePropertiesForInheritingModels(definitions) {
+function overrideInheritedProperties(definitions) {
     Object.keys(definitions).forEach(function (defn) {
         var props = {};
         if (definitions[defn].hasOwnProperty('allOf')) {
