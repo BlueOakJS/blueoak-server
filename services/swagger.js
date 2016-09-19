@@ -80,7 +80,10 @@ exports.init = function (logger, config, callback) {
             })
             .then(function (dereferencedApi) {
                 specs.dereferenced[handlerName] = dereferencedApi;
-                getDiscriminatorObjectsForSchemas(dereferencedApi.paths, responseModelValidationLevel);
+                if (polymorphicValidation !== 'off') {
+                    getDiscriminatorObjectsForSchemas(dereferencedApi.paths, responseModelValidationLevel);
+                }
+                overridePropertiesForInheritingModels(dereferencedApi.definitions);
                 return swagCallback();
             })
             .catch(function (error) {
@@ -130,6 +133,34 @@ exports.getPrettySpecs = function () {
 exports.addFormat = function (format, validationFunction) {
     tv4.addFormat(format, validationFunction);
 };
+
+function overridePropertiesForInheritingModels(definitions) {
+    Object.keys(definitions).forEach(function (defn) {
+        var props = {};
+        if (definitions[defn].hasOwnProperty('allOf')) {
+            for (var i = 0; i < definitions[defn].allOf.length; i++) {
+                //have to clone so that inherited definitions are not affected
+                definitions[defn].allOf[i] = swaggerUtil.deepClone(definitions[defn].allOf[i]);
+                overrideProps(definitions[defn].allOf[i], props);
+            }
+            definitions[defn].properties = props;
+        }
+    });
+}
+
+function overrideProps(item, props) {
+    if (item.hasOwnProperty('allOf')) {
+        item.allOf.forEach(function (subItem) {
+            overrideProps(subItem, props);
+        });
+    }
+    if (item.properties) {
+        Object.keys(item.properties).forEach(function (key) {
+            props[key] = item.properties[key];
+        });
+        delete item.properties;
+    }
+}
 
 function getDiscriminatorObjectsForSchemas(paths, doResponseValidation) {
     var pathKeys = Object.keys(paths);

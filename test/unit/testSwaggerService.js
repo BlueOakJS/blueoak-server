@@ -84,6 +84,14 @@ describe('Swagger spec building test', function () {
             'validation did not identify missing required property');
     });
 
+    it('Model properties can be overridden', function () {
+        var personDefn = swaggerService.getSimpleSpecs()['api-v1'].definitions.Person;
+        var enthusiasticPersonDefn = swaggerService.getSimpleSpecs()['api-v1'].definitions.EnthusiasticPerson;
+        //kind property should have been overriden by enthusiastic person
+        assert.notEqual(personDefn.properties.kind.enum, undefined);
+        assert.equal(enthusiasticPersonDefn.properties.kind.enum, undefined);
+    });
+
     it('Has a spec for each top-level spec file', function () {
         assert.equal(_.keys(swaggerService.getSimpleSpecs()).length, swaggerExampleSpecs);
         assert.equal(_.keys(swaggerService.getPrettySpecs()).length, swaggerExampleSpecs);
