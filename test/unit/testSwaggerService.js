@@ -85,11 +85,12 @@ describe('Swagger spec building test', function () {
     });
 
     it('Model properties can be overridden', function () {
-        var personDefn = swaggerService.getSimpleSpecs()['api-v1'].definitions.Person;
-        var enthusiasticPersonDefn = swaggerService.getSimpleSpecs()['api-v1'].definitions.EnthusiasticPerson;
-        //kind property should have been overriden by enthusiastic person
-        assert.notEqual(personDefn.properties.kind.enum, undefined);
-        assert.equal(enthusiasticPersonDefn.properties.kind.enum, undefined);
+        var curiousPersonDefn = swaggerService.getSimpleSpecs()['api-v1'].definitions.CuriousPerson;
+        //kind enum should have been overriden by curious person
+        //required property should contain curious person required properties AND
+         //any required properties from inherited models
+        assert.equal(curiousPersonDefn.properties.kind.enum[0], 'CuriousPerson');
+        assert.equal(curiousPersonDefn.required.length, 3);
     });
 
     it('Has a spec for each top-level spec file', function () {

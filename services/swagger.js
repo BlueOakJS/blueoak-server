@@ -10,6 +10,7 @@ var async = require('async');
 var parser = require('swagger-parser');
 var swaggerUtil = require('../lib/swaggerUtil');
 var tv4 = require('tv4');
+var _ = require('lodash');
 
 var specs = {
     dereferenced: {},
@@ -83,7 +84,7 @@ exports.init = function (logger, config, callback) {
                 if (polymorphicValidation !== 'off') {
                     getDiscriminatorObjectsForSchemas(dereferencedApi.paths, responseModelValidationLevel);
                 }
-                overrideInheritedProperties(dereferencedApi.definitions);
+                flattenModelDefinitions(dereferencedApi.definitions);
                 return swagCallback();
             })
             .catch(function (error) {
@@ -134,31 +135,37 @@ exports.addFormat = function (format, validationFunction) {
     tv4.addFormat(format, validationFunction);
 };
 
-function overrideInheritedProperties(definitions) {
+function flattenModelDefinitions(definitions) {
     Object.keys(definitions).forEach(function (defn) {
-        var props = {};
+        var flattenedDefn = {};
         if (definitions[defn].hasOwnProperty('allOf')) {
             for (var i = 0; i < definitions[defn].allOf.length; i++) {
                 //have to clone so that inherited definitions are not affected
-                definitions[defn].allOf[i] = swaggerUtil.deepClone(definitions[defn].allOf[i]);
-                overrideProps(definitions[defn].allOf[i], props);
+                definitions[defn].allOf[i] = _.cloneDeep(definitions[defn].allOf[i]);
+                flattenModel(definitions[defn].allOf[i], flattenedDefn);
             }
-            definitions[defn].properties = props;
+            flattenedDefn.required = Object.keys(flattenedDefn.required);
+            definitions[defn] = flattenedDefn;
+            delete definitions[defn].allOf;
         }
     });
 }
 
-function overrideProps(item, props) {
+function flattenModel(item, props) {
+    //have to convert 'required' array to object for merging purposes
+    if (item.required && Array.isArray(item.required)) {
+        var requiredObj = {};
+        item.required.reduce(function (prevVal, currentVal, idx) {
+            prevVal[currentVal] = idx;
+            return prevVal;
+        }, requiredObj);
+        item.required = requiredObj;
+    }
+    _.merge(props, item);
     if (item.hasOwnProperty('allOf')) {
         item.allOf.forEach(function (subItem) {
-            overrideProps(subItem, props);
+            flattenModel(subItem, props);
         });
-    }
-    if (item.properties) {
-        Object.keys(item.properties).forEach(function (key) {
-            props[key] = item.properties[key];
-        });
-        delete item.properties;
     }
 }
 

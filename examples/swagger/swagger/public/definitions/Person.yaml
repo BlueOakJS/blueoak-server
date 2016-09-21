@@ -7,6 +7,4 @@ allOf:
     properties:
       kind:
         type: string
-        enum:
-         - AngryPerson
 
