@@ -27,10 +27,11 @@
     "api"
   ],
   "scripts": {
-    "test": "JUNIT_REPORT_PATH=tests-report.xml mocha --check-leaks --reporter mocha-jenkins-reporter --globals services,__appDir test/unit; npm run lint",
+    "test": "npm run test-style && npm run test-unit && npm run test-integration",
+    "test-unit": "JUNIT_REPORT_PATH=tests-report.xml mocha --check-leaks --reporter mocha-jenkins-reporter --globals services,__appDir test/unit",
     "test-integration": "mocha test/integration",
     "test-cov": "istanbul cover node_modules/mocha/bin/_mocha --report html -- test/unit",
-    "lint": "eslint index.js auth examples handlers lib middleware services test testlib && echo lint complete."
+    "test-style": "eslint index.js auth examples handlers lib middleware services test testlib && echo lint complete."
   },
   "bin": {
     "blueoak-server": "bin/blueoak-server.js"
