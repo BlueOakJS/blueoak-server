@@ -282,6 +282,11 @@ function registerRoute(app, auth, additionalMiddleware, method, path, data, allo
                             responseSender.call(res, body);
                             return;
                         }
+                    } else {
+                        // if the response object has a property which is an object that implements toJSON() ...
+                        // it will cause validation to fail (it'll be an object while a string will be expected)
+                        // this dumb-looking code, ensures that we're validating what will be sent over the wire
+                        body = JSON.parse(JSON.stringify(body));
                     }
                     var validationErrors = validateResponseModels(res, body, data, swaggerDoc, logger);
                     // check the model for any validation errors, and handle them based on the validation level
