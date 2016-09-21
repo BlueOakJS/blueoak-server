@@ -136,6 +136,10 @@ exports.addFormat = function (format, validationFunction) {
 };
 
 function flattenModelDefinitions(definitions) {
+    if (!definitions) {
+        return;
+    }
+
     Object.keys(definitions).forEach(function (defn) {
         if (definitions[defn].hasOwnProperty('allOf')) {
             var flattenedDefn = {};
@@ -144,9 +148,7 @@ function flattenModelDefinitions(definitions) {
                 definitions[defn].allOf[i] = _.cloneDeep(definitions[defn].allOf[i]);
                 mergeToFlatModel(flattenedDefn, definitions[defn].allOf[i]);
             }
-            flattenedDefn.required = Object.keys(flattenedDefn.required);
             definitions[defn] = flattenedDefn;
-            delete definitions[defn].allOf;
         }
     });
 }
@@ -165,6 +167,7 @@ function mergeToFlatModel(flatModel, model) {
             mergeToFlatModel(flatModel, subModel);
         });
     }
+    flatModel.required = flatModel.required ? Object.keys(flatModel.required) : undefined;
 }
 
 function getDiscriminatorObjectsForSchemas(paths, doResponseValidation) {
