@@ -154,12 +154,10 @@ function flattenModelDefinitions(definitions) {
 function mergeToFlatModel(flatModel, model) {
     //have to convert 'required' array to object for merging purposes
     if (model.required && Array.isArray(model.required)) {
-        var requiredAsObj = {};
-        model.required.reduce(function (reqsAsObj, reqdPropName, arrayIndex) {
+        model.required = model.required.reduce(function (reqsAsObj, reqdPropName, arrayIndex) {
             reqsAsObj[reqdPropName] = arrayIndex;
             return reqsAsObj;
-        }, requiredAsObj);
-        model.required = requiredAsObj;
+        }, {});
     }
     _.merge(flatModel, model);
     if (model.hasOwnProperty('allOf')) {
