@@ -137,12 +137,12 @@ exports.addFormat = function (format, validationFunction) {
 
 function flattenModelDefinitions(definitions) {
     Object.keys(definitions).forEach(function (defn) {
-        var flattenedDefn = {};
         if (definitions[defn].hasOwnProperty('allOf')) {
+            var flattenedDefn = {};
             for (var i = 0; i < definitions[defn].allOf.length; i++) {
                 //have to clone so that inherited definitions are not affected
                 definitions[defn].allOf[i] = _.cloneDeep(definitions[defn].allOf[i]);
-                flattenModel(definitions[defn].allOf[i], flattenedDefn);
+                mergeToFlatModel(flattenedDefn, definitions[defn].allOf[i]);
             }
             flattenedDefn.required = Object.keys(flattenedDefn.required);
             definitions[defn] = flattenedDefn;
@@ -151,20 +151,20 @@ function flattenModelDefinitions(definitions) {
     });
 }
 
-function flattenModel(item, props) {
+function mergeToFlatModel(flatModel, model) {
     //have to convert 'required' array to object for merging purposes
-    if (item.required && Array.isArray(item.required)) {
-        var requiredObj = {};
-        item.required.reduce(function (prevVal, currentVal, idx) {
-            prevVal[currentVal] = idx;
-            return prevVal;
-        }, requiredObj);
-        item.required = requiredObj;
+    if (model.required && Array.isArray(model.required)) {
+        var requiredAsObj = {};
+        model.required.reduce(function (reqsAsObj, reqdPropName, arrayIndex) {
+            reqsAsObj[reqdPropName] = arrayIndex;
+            return reqsAsObj;
+        }, requiredAsObj);
+        model.required = requiredAsObj;
     }
-    _.merge(props, item);
-    if (item.hasOwnProperty('allOf')) {
-        item.allOf.forEach(function (subItem) {
-            flattenModel(subItem, props);
+    _.merge(flatModel, model);
+    if (model.hasOwnProperty('allOf')) {
+        model.allOf.forEach(function (subModel) {
+            mergeToFlatModel(flatModel, subModel);
         });
     }
 }
