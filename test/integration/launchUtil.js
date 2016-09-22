@@ -7,6 +7,15 @@ var path = require('path'),
 
 var lastLaunch, output;
 
+var spawner, execer;
+if (process.platform === 'win32') {
+    spawner = child_process.exec;
+    execer = 'node ';
+} else {
+    spawner = child_process.execFile;
+    execer = '';
+}
+
 exports.launch = function (fixtureName, opts, done) {
 
     //opts is optional
@@ -20,14 +29,14 @@ exports.launch = function (fixtureName, opts, done) {
 
     var bosPath = path.resolve(__dirname, opts.exec);
     output = '';
-    lastLaunch = child_process.exec('node ' + bosPath,
+    lastLaunch = spawner(execer + bosPath,
         {
             'cwd': path.resolve(__dirname, 'fixtures/' + fixtureName),
             'env': opts.env
         },
         function (err, stdout, stderr) {
-            if (err) {
-                console.warn(err, stderr);
+            if (err && err.signal !== 'SIGINT') {
+                console.warn(JSON.stringify(err, 0, 2), '\n' + stderr);
             }
             output += stdout + stderr;
         }
@@ -51,7 +60,7 @@ exports.finish = function (done) {
         // there was an "error" on launch, just be done
         done();
     } else {
-        lastLaunch.on('exit', function (code, signal) {
+        lastLaunch.on('close', function (code, signal) {
             done();
         });
     }
