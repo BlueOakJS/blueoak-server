@@ -20,7 +20,7 @@ exports.launch = function (fixtureName, opts, done) {
 
     var bosPath = path.resolve(__dirname, opts.exec);
     output = '';
-    lastLaunch = child_process.exec('node ' + bosPath,
+    lastLaunch = child_process.exec(bosPath,
         {
             'cwd': path.resolve(__dirname, 'fixtures/' + fixtureName),
             'env': opts.env
