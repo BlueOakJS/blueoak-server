@@ -26,8 +26,8 @@ exports.launch = function (fixtureName, opts, done) {
             'env': opts.env
         },
         function (err, stdout, stderr) {
-            if (err && err.signal !== 'SIGKILL') {
-                console.warn(err, stderr);
+            if (err && err.signal !== 'SIGTERM') {
+                console.warn(JSON.stringify(err, 0, 2), '\n' + stderr);
             }
             output += stdout + stderr;
         }
@@ -44,14 +44,14 @@ exports.finish = function (done) {
         child_process.exec('taskkill /PID ' + lastLaunch.pid + ' /T /F');
     }
     else {
-        child_process.exec('kill -9 ' + lastLaunch.pid);
+        lastLaunch.kill('SIGTERM');
     }
 
     if (output) {
         // there was an "error" on launch, just be done
         done();
     } else {
-        lastLaunch.on('exit', function (code, signal) {
+        lastLaunch.on('close', function (code, signal) {
             done();
         });
     }
