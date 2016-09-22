@@ -44,7 +44,7 @@ exports.finish = function (done) {
         child_process.exec('taskkill /PID ' + lastLaunch.pid + ' /T /F');
     }
     else {
-        lastLaunch.kill('SIGKILL');
+        child_process.exec('kill -9 ' + lastLaunch.pid);
     }
 
     if (output) {
