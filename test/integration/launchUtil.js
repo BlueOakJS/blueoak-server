@@ -26,7 +26,7 @@ exports.launch = function (fixtureName, opts, done) {
             'env': opts.env
         },
         function (err, stdout, stderr) {
-            if (err && err.signal !== 'SIGTERM') {
+            if (err && err.signal !== 'SIGKILL') {
                 console.warn(err, stderr);
             }
             output += stdout + stderr;
@@ -44,7 +44,7 @@ exports.finish = function (done) {
         child_process.exec('taskkill /PID ' + lastLaunch.pid + ' /T /F');
     }
     else {
-        lastLaunch.kill('SIGTERM');
+        lastLaunch.kill('SIGKILL');
     }
 
     if (output) {
