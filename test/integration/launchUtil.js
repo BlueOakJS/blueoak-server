@@ -7,6 +7,15 @@ var path = require('path'),
 
 var lastLaunch, output;
 
+var spawner, execer;
+if (process.platform === 'win32') {
+    spawner = child_process.exec;
+    execer = 'node ';
+} else {
+    spawner = child_process.execFile;
+    execer = '';
+}
+
 exports.launch = function (fixtureName, opts, done) {
 
     //opts is optional
@@ -20,7 +29,7 @@ exports.launch = function (fixtureName, opts, done) {
 
     var bosPath = path.resolve(__dirname, opts.exec);
     output = '';
-    lastLaunch = child_process.execFile(bosPath,
+    lastLaunch = spawner(execer + bosPath,
         {
             'cwd': path.resolve(__dirname, 'fixtures/' + fixtureName),
             'env': opts.env
