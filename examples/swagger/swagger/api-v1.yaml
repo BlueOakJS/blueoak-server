@@ -8,6 +8,8 @@ produces:
   - application/json
 paths:
   $ref: 'public/paths.yaml'
+
+### ref-compiler: BEGIN
 definitions:
   Contact:
     $ref: 'public\definitions\Contact.yaml'
@@ -21,4 +23,6 @@ definitions:
     $ref: 'public\definitions\Person.yaml'
   SuperFunTime:
     $ref: 'public\definitions\SuperFunTime.yaml'
-
+parameters:
+  PathId:
+    $ref: 'public\parameters\PathId.yaml'

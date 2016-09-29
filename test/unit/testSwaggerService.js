@@ -6,6 +6,7 @@ var _ = require('lodash'),
     assert = require('assert'),
     path = require('path'),
     logger = require('../../testlib/mocks/logger'),
+    refCompiler = require('../../testlib/mocks/refCompiler'),
     swaggerService = require('../../services/swagger'),
     swaggerUtil = require('../../lib/swaggerUtil'),
     testUtil = require('../../testlib/util');
@@ -21,19 +22,19 @@ var swaggerValidateResponsesConfig = {
     }
 };
 
-function initSwaggerService(rootDir, swaggerConfig, callback) {
+function initSwaggerService(rootDir, swaggerConfig, refCompiler, callback) {
     global.__appDir = rootDir;
     if (typeof swaggerConfig === 'function') {
         callback = swaggerConfig;
         swaggerConfig = {};
     }
-    swaggerService.init(logger, testUtil.createConfigService(swaggerConfig), callback);
+    swaggerService.init(logger, testUtil.createConfigService(swaggerConfig), refCompiler, callback);
 }
 
 describe('Swagger spec building test', function () {
 
     before(function (callback) {
-        initSwaggerService(swaggerExampleDir, swaggerValidateResponsesConfig, callback);
+        initSwaggerService(swaggerExampleDir, swaggerValidateResponsesConfig, refCompiler, callback);
     });
 
     it('responses/requests with schema have x-bos-generated-disc-map property', function () {

@@ -15,6 +15,21 @@
 
   "cluster": {
     "maxWorkers": 1
+  },
+
+  "refCompiler": {
+    "petstore": {
+      "baseSpecFile": "petstore.json",
+      "refDirs": [
+        "v1-assets"
+      ]
+    },
+    "api-v1": {
+      "baseSpecFile": "api-v1.yaml",
+      "refDirs": [
+        "public"
+      ]
+    }
   }
 
 }

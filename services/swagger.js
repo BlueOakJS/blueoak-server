@@ -21,10 +21,10 @@ var httpMethods = ['get', 'put', 'post', 'delete', 'options', 'head', 'patch'];
 
 var responseModelValidationLevel;
 var polymorphicValidation;
+var refCompilation;
 
-exports.init = function (logger, config, callback) {
+exports.init = function (logger, config, refCompiler, callback) {
     var cfg = config.get('swagger');
-
     // default responseModelValidationLevel to level zero, i.e. off
     responseModelValidationLevel = /warn|error|fail/.test(cfg.validateResponseModels) ?
         cfg.validateResponseModels : 0;
@@ -37,6 +37,13 @@ exports.init = function (logger, config, callback) {
         cfg.polymorphicValidation : ((cfg.polymorphicValidation === false) ? 'off' : 'on');
     if (polymorphicValidation !== 'on') {
         logger.info('Polymorphic validation is disabled (%s)', polymorphicValidation);
+    }
+
+    refCompilation = /on|off/.test(cfg.refCompilation) ?
+        cfg.refCompilation : 'off';
+    if (refCompilation === 'on') {
+        logger.info('Ref compilation is enabled (%s), compiling references...', refCompilation);
+        refCompiler.compileSpecs();
     }
 
     var swaggerDir = null;
