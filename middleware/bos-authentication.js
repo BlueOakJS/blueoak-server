@@ -1,4 +1,5 @@
 var _ = require('lodash');
+var base64URL = require('base64url');
 
 var config;
 var log;
@@ -38,7 +39,20 @@ function init(app, config, logger, serviceLoader, swagger) {
 }
 
 function _applySecurityRequirement(app, method, route, securityReq, securityDefn, requiredPermissions, requiredScopes) {
-    //wire up path with user defined authentication method for this req
+    var scheme = securityDefn.type;
+    switch (scheme) {
+        case 'basic':
+            app[method].call(app, route, basicExtractor());
+            break;
+        case 'apiKey':
+            app[method].call(app, route, apiKeyExtractor(securityDefn)); //may also need a user provided 'verify' function here
+            break;
+        case 'oauth2':
+            break;
+        default:
+            return log.warn('unrecognized security scheme %s for route %s', scheme, route);
+    }
+    /*//wire up path with user defined authentication method for this req
     if (config.authenticationMethods[securityReq]) {
         var parts = config.authenticationMethods[securityReq].split('.');
         var service = loader.get(parts[0]);
@@ -74,7 +88,7 @@ function _applySecurityRequirement(app, method, route, securityReq, securityDefn
         }
     } else {
         return log.warn('No authentication method defined for security requirement %s', securityReq);
-    }
+    }*/
 }
 
 function wrapAuthorizationMethod(authorizationMethod, route, securityDefn, requiredPermissions) {
@@ -82,6 +96,52 @@ function wrapAuthorizationMethod(authorizationMethod, route, securityDefn, requi
         var runTimeRequiredPermissions = _expandRouteInstancePermissions(requiredPermissions, route, req.path);
         authorizationMethod.call(this, req, res, next, securityDefn, runTimeRequiredPermissions);
     };
+}
+
+function basicExtractor() {
+    return function (req, res, next) {
+        //header should be of the form "Basic " + user:password as a base64 encoded string
+        var authHeader = req.getHeader('Authorization');
+        var credentialsBase64 = authHeader.substring(authHeader.indexOf('Basic ') + 1);
+        var credentials = base64URL.decode(credentialsBase64).split(':');
+        req.user = {name: credentials[0], password: credentials[1], realm: 'Basic'};
+        next();
+    };
+}
+
+function apiKeyExtractor(securityDefn, verify) {
+    return function (req, res, next) {
+        if (!verifyMD5Header(req.body, req.getHeader('Content-MD5'))) {
+            log.error('content md5 header for uri %s coming from %s did not match request body', req.path, req.ip);
+            res.status(401).send('content md5 header did not match request body');
+        }
+        var apiId = 'where do we get this from?';
+        var digest;
+        if (securityDefn.in === 'query') {
+            digest = req.query[securityDefn.name];
+        } else if (securityDefn.in === 'header') {
+            digest = req.getHeader(securityDefn.name);
+        } else {
+            return log.warn('unknown location %s for apiKey. ' +
+                'looks like open api specs may have changed on us', securityDefn.in);
+        }
+        //this would have to be a user provided function that
+        //fetches the user (and thus the private key that we need to compute the hash) from some data source
+        //we don't need this if we decide that we will let the user figure out how to verify the digest
+        verify(apiId, function (user) {
+            //regenerate hash with apiKey
+            //if (hash === digest)
+            //  all good
+            // else you suck
+            req.user = user;
+            next();
+        });
+    };
+}
+
+function verifyMD5Header(body, md5) {
+    //calculate md5 of request body and verify that it equals the header
+    return true;
 }
 
 function _expandRouteInstancePermissions(perms, route, uri) {
