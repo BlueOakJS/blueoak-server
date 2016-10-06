@@ -5,6 +5,7 @@ var config;
 var log;
 var loader;
 var httpMethods = ['get', 'put', 'post', 'delete', 'options', 'head', 'patch'];
+var passportEnabled;
 
 module.exports = {
     init : init
@@ -12,6 +13,7 @@ module.exports = {
 
 function init(app, config, logger, serviceLoader, swagger) {
     config = config.get('authentication');
+    passportEnabled = config.get('passport').enabled;
     log = logger;
     loader = serviceLoader;
     _.forEach(swagger.getSimpleSpecs(), function (api, name) {
@@ -39,18 +41,23 @@ function init(app, config, logger, serviceLoader, swagger) {
 }
 
 function _applySecurityRequirement(app, method, route, securityReq, securityDefn, requiredPermissions, requiredScopes) {
-    var scheme = securityDefn.type;
-    switch (scheme) {
+    if (passportEnabled) {
+        var passportService = loader.get('bosPassport');
+        passportService.authenticate(securityReq);
+    } else {
+        var scheme = securityDefn.type;
+        switch (scheme) {
         case 'basic':
             app[method].call(app, route, basicExtractor());
             break;
-        case 'apiKey':
-            app[method].call(app, route, apiKeyExtractor(securityDefn)); //may also need a user provided 'verify' function here
+        case 'apiKey': //may also need a user provided 'verify' function here
+            app[method].call(app, route, apiKeyExtractor(securityDefn));
             break;
         case 'oauth2':
             break;
         default:
             return log.warn('unrecognized security scheme %s for route %s', scheme, route);
+        }
     }
     /*//wire up path with user defined authentication method for this req
     if (config.authenticationMethods[securityReq]) {
@@ -100,6 +107,7 @@ function wrapAuthorizationMethod(authorizationMethod, route, securityDefn, requi
 
 function basicExtractor() {
     return function (req, res, next) {
+        //if there is no auth header present, send back challenge 401 with www-authenticate header?
         //header should be of the form "Basic " + user:password as a base64 encoded string
         var authHeader = req.getHeader('Authorization');
         var credentialsBase64 = authHeader.substring(authHeader.indexOf('Basic ') + 1);
@@ -110,6 +118,7 @@ function basicExtractor() {
 }
 
 function apiKeyExtractor(securityDefn, verify) {
+    //if there is no apiKey present, send back challenge 401 with www-authenticate header?
     return function (req, res, next) {
         if (!verifyMD5Header(req.body, req.getHeader('Content-MD5'))) {
             log.error('content md5 header for uri %s coming from %s did not match request body', req.path, req.ip);
@@ -130,6 +139,8 @@ function apiKeyExtractor(securityDefn, verify) {
         //we don't need this if we decide that we will let the user figure out how to verify the digest
         verify(apiId, function (user) {
             //regenerate hash with apiKey
+            //hash will include symmetric apiKey, one or more of:
+            //request method, content-md5 header, request uri, timestamp, socket.remoteAddress, req.ip, ip whitelist?
             //if (hash === digest)
             //  all good
             // else you suck

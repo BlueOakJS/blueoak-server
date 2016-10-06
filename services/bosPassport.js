@@ -33,7 +33,7 @@ function registerSecurityStrategies() {
 }
 
 //securityReq -> strategyId should be a one to one mapping
-function authenticate(req, res, next, securityReq, securityDefn) {
+function authenticate(securityReq) {
     _.forEach(_.keys(cfg.options), function (opt) {
         cfg.options[opt] = prepareOption(cfg.options[opt]);
     });
