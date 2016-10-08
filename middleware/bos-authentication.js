@@ -1,9 +1,9 @@
 var _ = require('lodash');
 var base64URL = require('base64url');
 
-var config;
 var log;
 var loader;
+var oAuthService;
 var httpMethods = ['get', 'put', 'post', 'delete', 'options', 'head', 'patch'];
 var passportEnabled;
 
@@ -12,7 +12,6 @@ module.exports = {
 };
 
 function init(app, config, logger, serviceLoader, swagger) {
-    config = config.get('authentication');
     passportEnabled = config.get('passport').enabled;
     log = logger;
     loader = serviceLoader;
@@ -44,7 +43,7 @@ function _applySecurityRequirement(app, method, route, securityReq, securityDefn
     if (passportEnabled) {
         var passportService = loader.get('bosPassport');
         passportService.authenticate(securityReq);
-    } else {
+    } else { //need to check for an active session here as well, because if there is one we want to skip all of this
         var scheme = securityDefn.type;
         switch (scheme) {
         case 'basic':
@@ -54,14 +53,18 @@ function _applySecurityRequirement(app, method, route, securityReq, securityDefn
             app[method].call(app, route, apiKeyExtractor(securityDefn));
             break;
         case 'oauth2':
+            if (!oAuthService) {
+                oAuthService = loader.get('oauth2');
+            }
+            app[method].call(app, route, oauth2(route, securityDefn, requiredScopes));
             break;
         default:
             return log.warn('unrecognized security scheme %s for route %s', scheme, route);
         }
     }
     /*//wire up path with user defined authentication method for this req
-    if (config.authenticationMethods[securityReq]) {
-        var parts = config.authenticationMethods[securityReq].split('.');
+    if (cfg.authenticationMethods[securityReq]) {
+        var parts = cfg.authenticationMethods[securityReq].split('.');
         var service = loader.get(parts[0]);
         if (!service) {
             return log.warn('Could not find service module named "%s".', parts[0]);
@@ -75,8 +78,8 @@ function _applySecurityRequirement(app, method, route, securityReq, securityDefn
         app[method].call(app, route, _.partialRight(serviceMethod, securityReq,
             securityDefn, requiredScopes));
         //wire up path with user defined authorization method
-        if (config.authorizationMethods[securityReq]) {
-            parts = config.authorizationMethods[securityReq].split('.');
+        if (cfg.authorizationMethods[securityReq]) {
+            parts = cfg.authorizationMethods[securityReq].split('.');
             service = loader.get(parts[0]);
             if (!service) {
                 return log.warn('Could not find service module named "%s".', parts[0]);
@@ -109,10 +112,10 @@ function basicExtractor() {
     return function (req, res, next) {
         //if there is no auth header present, send back challenge 401 with www-authenticate header?
         //header should be of the form "Basic " + user:password as a base64 encoded string
-        var authHeader = req.getHeader('Authorization');
+        var authHeader = req.headers['Authorization'];
         var credentialsBase64 = authHeader.substring(authHeader.indexOf('Basic ') + 1);
         var credentials = base64URL.decode(credentialsBase64).split(':');
-        req.user = {name: credentials[0], password: credentials[1], realm: 'Basic'};
+        req.bos.user = {name: credentials[0], password: credentials[1], realm: 'Basic'};
         next();
     };
 }
@@ -120,7 +123,7 @@ function basicExtractor() {
 function apiKeyExtractor(securityDefn, verify) {
     //if there is no apiKey present, send back challenge 401 with www-authenticate header?
     return function (req, res, next) {
-        if (!verifyMD5Header(req.body, req.getHeader('Content-MD5'))) {
+        if (!verifyMD5Header(req.body, req.headers['Content-MD5'])) {
             log.error('content md5 header for uri %s coming from %s did not match request body', req.path, req.ip);
             res.status(401).send('content md5 header did not match request body');
         }
@@ -129,7 +132,7 @@ function apiKeyExtractor(securityDefn, verify) {
         if (securityDefn.in === 'query') {
             digest = req.query[securityDefn.name];
         } else if (securityDefn.in === 'header') {
-            digest = req.getHeader(securityDefn.name);
+            digest = req.headers[securityDefn.name];
         } else {
             return log.warn('unknown location %s for apiKey. ' +
                 'looks like open api specs may have changed on us', securityDefn.in);
@@ -144,9 +147,21 @@ function apiKeyExtractor(securityDefn, verify) {
             //if (hash === digest)
             //  all good
             // else you suck
-            req.user = user;
+            req.bosAuth.user = user;
             next();
         });
+    };
+}
+
+function oauth2(route, securityDefn, scopes) {
+    return function (req, res, next) {
+        var oAuthInstance = oAuthService.getOAuthInstance(route);
+        if (!oAuthInstance) {
+            oAuthInstance = new oAuthService.OAuth2(securityDefn.authorizationUrl,
+                securityDefn.flow, securityDefn.tokenUrl, securityDefn.scopes);
+            oAuthService.addOAuthInstance(route, oAuthInstance);
+        }
+        oAuthInstance.startOAuth(req, res);
     };
 }
 
