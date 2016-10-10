@@ -413,11 +413,6 @@ function registerRoute(app, auth, additionalMiddleware, method, path, data, allo
     });
 }
 
-//Check if a given route contains any formData parameters
-function containsFormData(routeData) {
-    return _.where(routeData.parameters, {in: 'formData'}).length > 0;
-}
-
 //Any parameter with a default that's not already defined will be set to the default value
 function setDefaultQueryParams(req, data, logger) {
     var parameters = _.toArray(data.parameters);
