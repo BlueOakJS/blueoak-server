@@ -9,6 +9,7 @@ var debug = require('debug')('swagger');
 var async = require('async');
 var parser = require('swagger-parser');
 var swaggerUtil = require('../lib/swaggerUtil');
+var refCompiler = require('../lib/refCompiler');
 var tv4 = require('tv4');
 var _ = require('lodash');
 
@@ -23,7 +24,7 @@ var responseModelValidationLevel;
 var polymorphicValidation;
 var refCompilation;
 
-exports.init = function (logger, config, refCompiler, callback) {
+exports.init = function (logger, config, callback) {
     var cfg = config.get('swagger');
     // default responseModelValidationLevel to level zero, i.e. off
     responseModelValidationLevel = /warn|error|fail/.test(cfg.validateResponseModels) ?
@@ -43,7 +44,7 @@ exports.init = function (logger, config, refCompiler, callback) {
         cfg.refCompilation : 'off';
     if (refCompilation === 'on') {
         logger.info('Ref compilation is enabled (%s), compiling references...', refCompilation);
-        refCompiler.compileSpecs();
+        refCompiler.compileSpecs(logger, config);
     }
 
     var swaggerDir = null;

@@ -4,7 +4,7 @@ var assert = require('assert'),
     parser = require('swagger-parser'),
     logger = require('../../testlib/mocks/logger'),
     testUtil = require('../../testlib/util'),
-    refCompilerService = require('../../services/refCompiler');
+    refCompiler = require('../../lib/refCompiler');
 
 var swaggerExampleDir = path.resolve(__dirname, '../../examples/swagger');
 
@@ -16,18 +16,21 @@ var config = {
                 'public'
             ]
         }
+    },
+    'swagger': {
+        'context': '/swagger'
     }
 };
 
-function initRefCompilerService(rootDir, logger, config) {
+function doRefCompilation(rootDir, logger, config) {
     global.__appDir = rootDir;
-    refCompilerService.init(logger, testUtil.createConfigService(config));
+    refCompiler.compileSpecs(logger, testUtil.createConfigService(config));
 }
 
 describe('Swagger spec building test', function () {
 
     before(function (callback) {
-        initRefCompilerService(swaggerExampleDir, logger, config);
+        doRefCompilation(swaggerExampleDir, logger, config);
         callback();
     });
     
