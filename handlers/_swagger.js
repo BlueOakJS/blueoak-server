@@ -68,6 +68,21 @@ exports.init = function (app, auth, config, logger, serviceLoader, swagger, call
             }
         }
 
+        if (containsUrlEncodedFormData(api)) {
+            var middlewareConfig = config.get('express').middleware;
+            var foundBodyParserInMiddlewareConfig = !(_.indexOf(middlewareConfig, 'body-parser') === -1 &&
+                _.indexOf(middlewareConfig, 'bodyParser') === -1);
+            if (!foundBodyParserInMiddlewareConfig) {
+                logger.warn('Body parser not found in middleware config.  ' +
+                    'Required when using MIME type application/www-form-urlencoded.');
+            }
+            var bodyParserConfig = _.extend({}, config.get('bodyParser'), config.get('body-parser'));
+            if (_.indexOf(_.keys(bodyParserConfig), 'urlencoded') === -1) {
+                logger.warn('Body parser not configured to look for url encoded data.  ' +
+                    'Required when using MIME type application/www-form-urlencoded.');
+            }
+        }
+
         var basePath = api.basePath || '';
         var handlerName = specName;
 
@@ -171,6 +186,51 @@ function containsMultipartFormData(api) {
 
     return foundMultipartData;
 }
+/**
+ * The current use of this function is to figure out whether body parser needs to be configured
+ * This is the case when there is an operation that consumes form data without a file
+ * If there is a file, then multer will be used to parse form data
+ * @param api
+ * @returns {boolean}
+ */
+function containsUrlEncodedFormData(api) {
+    if (_.indexOf(api.consumes, 'application/x-www-form-urlencoded') > -1) {
+        return true;
+    }
+
+    var foundFormData = false;
+    _.keys(api.paths).forEach(function(path) {
+        var pathData = api.paths[path];
+        _.keys(pathData).forEach(function(method) {
+            if (_.indexOf(pathData[method].consumes, 'application/x-www-form-urlencoded') > -1) {
+                foundFormData = true;
+            } else {
+                var params = pathData[method].parameters;
+                var foundFormDataInParams = false;
+                var foundFileFormDataInParams = false;
+                _.keys(params).forEach(function (param) {
+                    if (params[param].in === 'formData') {
+                        foundFormDataInParams = true;
+                        if (params[param].type === 'file') {
+                            foundFileFormDataInParams = true;
+                        }
+                    }
+                });
+                //if there is file form data, body parser may not need to be used
+                // because multer will put form data in the request body
+                if (foundFormDataInParams && !foundFileFormDataInParams) {
+                    foundFormData = true;
+                }
+            }
+        });
+        if (foundFormData) {
+            return foundFormData;
+        }
+
+    });
+
+    return foundFormData;
+}
 
 // Checks the multer config if the storage property is set to either the
 // memoryStorage enum or the name of a custom multerService implementing
@@ -234,8 +294,7 @@ function registerRoute(app, auth, additionalMiddleware, method, path, data, allo
     var authMiddleware = auth.getAuthMiddleware() || [];
     additionalMiddleware = authMiddleware.concat(additionalMiddleware);
 
-
-    if (containsFormData(data)) {
+    if (_.indexOf(data.consumes, 'multipart/form-data') > -1) {
         var fieldData = _.where(data.parameters, {in: 'formData', type: 'file'});
         fieldData = _.map(fieldData, function(item) {
             return {
