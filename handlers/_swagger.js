@@ -295,7 +295,9 @@ function registerRoute(app, auth, additionalMiddleware, method, path, data, allo
     additionalMiddleware = authMiddleware.concat(additionalMiddleware);
 
     if (_.indexOf(data.consumes, 'multipart/form-data') > -1) {
-        var fieldData = _.where(data.parameters, {in: 'formData', type: 'file'});
+        var fieldData = _.filter(data.parameters, function (param) {
+            return param.in === 'formData' && param.type === 'file';
+        });
         fieldData = _.map(fieldData, function(item) {
             return {
                 name: item.name,
