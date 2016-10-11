@@ -9,6 +9,9 @@ produces:
 paths:
   $ref: 'public/paths.yaml'
 
+securityDefinitions:
+  $ref: 'public/security-definitions.yaml'
+
 ### ref-compiler: BEGIN
 definitions:
   Contact:

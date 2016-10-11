@@ -27,10 +27,13 @@ function init(app, config, logger, serviceLoader, swagger) {
                 if (_.contains(httpMethods, method)) {
                     var operation = pathObj[method];
                     if (operation['security']) {
-                        _.keys(operation['security']).forEach(function (securityReq) {
-                            _applySecurityRequirement(app, method, routePath, securityReq,
-                                api.securityDefinitions[securityReq], /*operation['x-bos-permissions'][securityReq],*/
-                                operation['security'][securityReq]);
+                        operation['security'].forEach(function (securityReq) {
+                            _.forOwn(securityReq, function (scopes, securityDefn) {
+                                _applySecurityRequirement(app, method, routePath, securityDefn,
+                                    api.securityDefinitions[securityDefn],
+                                    /*operation['x-bos-permissions'][securityReq],*/
+                                    scopes);
+                            });
                         });
                     }
                 }
@@ -115,10 +118,13 @@ function basicExtractor() {
             //now that I think about this, think this should be handled by user defined code
             //because their is no way for us to know how to set the header fields (i.e. realm)
         //header should be of the form "Basic " + user:password as a base64 encoded string
-        var authHeader = req.headers['Authorization'];
-        var credentialsBase64 = authHeader.substring(authHeader.split('Basic ')[1]);
-        var credentials = base64URL.decode(credentialsBase64).split(':');
-        req.bos.authenticationData = {username: credentials[0], password: credentials[1], scheme: 'Basic'};
+        req.bosAuth = {};
+        var authHeader = req.headers['authorization'] ? req.headers['authorization'] : '';
+        if (authHeader !== '') {
+            var credentialsBase64 = authHeader.substring(authHeader.split('Basic ')[1]);
+            var credentials = base64URL.decode(credentialsBase64).split(':');
+            req.bosAuth.authenticationData = {username: credentials[0], password: credentials[1], scheme: 'Basic'};
+        }
         next();
     };
 }
@@ -129,7 +135,7 @@ function apiKeyExtractor(securityDefn) {
         //because their is no way for us to know how to set the header fields (i.e. realm)
     return function (req, res, next) {
         //should be form of username="Mufasa", realm="myhost@example.com"
-        var authorizationHeaders = req.headers['Authorization'].split(', ');
+        var authorizationHeaders = req.headers['authorization'].split(', ');
         var authenticationData = {scheme: 'apiKey'};
         authorizationHeaders.forEach(function (header) {
             //should be form of username="Mufasa"
@@ -144,7 +150,7 @@ function apiKeyExtractor(securityDefn) {
             return log.warn('unknown location %s for apiKey. ' +
                 'looks like open api specs may have changed on us', securityDefn.in);
         }
-        req.bos.authenticationData = authenticationData;
+        req.authenticationData = authenticationData;
         //this would have to be a user provided function that
         //fetches the user (and thus the private key that we need to compute the hash) from some data source
         //we don't need this if we decide that we will let the user figure out how to verify the digest

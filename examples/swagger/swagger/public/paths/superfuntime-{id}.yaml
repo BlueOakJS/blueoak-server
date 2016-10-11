@@ -5,6 +5,8 @@ get:
     - Fun Times
   parameters:
     - $ref: '../parameters/PathId.yaml'
+  security:
+    - apiKeyEx: []
   responses:
     200:
       schema:

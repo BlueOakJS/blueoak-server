@@ -17,7 +17,7 @@ function handleRedirect(req, res) {
         //log warning about possible xsrf attack
     } else {
         oauthService.getTokenData(req, res, function (tokenData) {
-            req.bos.authenticationData = tokenData;
+            req.authenticationData = tokenData;
             var originalState = oauthService.getRequestState(req.query.state);
             _.merge(req, originalState.req);
             _.merge(res, originalState.res);

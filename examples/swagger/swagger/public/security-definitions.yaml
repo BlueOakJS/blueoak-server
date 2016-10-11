@@ -1,0 +1,6 @@
+basicEx:
+  type: basic
+apiKeyEx:
+  type: apiKey
+  in: header
+  name: x-auth
