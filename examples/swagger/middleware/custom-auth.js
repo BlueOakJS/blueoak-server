@@ -1,13 +1,25 @@
 
 exports.init = function(app, logger) {
     app.use(function (req, res, next) {
-        if (!req.bosAuth) {
+        if (!req.bosAuthenticationData) {
             next();
-        } else if (!req.bosAuth.authenticationData) {
-            res.sendStatus(401);
-        } else {
-            //have some stuff here to perform app specific authentication
-            next();
+        }
+        switch (req.bosAuthenticationData.type) {
+
+        case 'basic':
+            if (!(req.bosAuthenticationData.username && req.bosAuthenticationData.password)) {
+                res.sendStatus(401);
+            } else {
+                next();
+            }
+            break;
+        case 'apiKey':
+            if (!(req.bosAuthenticationData.password)) {
+                res.sendStatus(401);
+            } else {
+                next();
+            }
+            break;
         }
     });
 };
