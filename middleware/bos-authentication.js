@@ -5,14 +5,14 @@ var log;
 var loader;
 var oAuthService;
 var httpMethods = ['get', 'put', 'post', 'delete', 'options', 'head', 'patch'];
-var passportEnabled;
+//map of security reqs to express middleware callbacks
+var securityReqMap = {};
 
 module.exports = {
     init : init
 };
 
 function init(app, config, logger, serviceLoader, swagger) {
-    passportEnabled = config.get('passport').enabled;
     log = logger;
     loader = serviceLoader;
     _.forEach(swagger.getSimpleSpecs(), function (api, name) {
@@ -27,10 +27,24 @@ function init(app, config, logger, serviceLoader, swagger) {
                 if (_.contains(httpMethods, method)) {
                     var operation = pathObj[method];
                     if (operation['security']) {
+                        //need to make this a logical 'OR'
+                        // so that only one security requirement must be satisfied on a route
                         operation['security'].forEach(function (securityReq) {
                             _.forOwn(securityReq, function (scopes, securityDefn) {
                                 _applySecurityRequirement(app, method, routePath, securityDefn,
                                     api.securityDefinitions[securityDefn],
+                                    /*operation['x-bos-permissions'][securityReq],*/
+                                    scopes);
+                            });
+                        });
+                    }
+                    if (operation['x-bos-security']) {
+                        //need to make this a logical 'OR'
+                        // so that only one security requirement must be satisfied on a route
+                        operation['x-bos-security'].forEach(function (securityReq) {
+                            _.forOwn(securityReq, function (scopes, securityDefn) {
+                                _applyCustomSecurityRequirement(app, method, routePath, securityDefn,
+                                    api['x-bos-securityDefinitions'][securityDefn],
                                     /*operation['x-bos-permissions'][securityReq],*/
                                     scopes);
                             });
@@ -42,28 +56,62 @@ function init(app, config, logger, serviceLoader, swagger) {
     });
 }
 
+function _applyCustomSecurityRequirement(app, method, route, securityReq,
+                                   securityDefn, /*requiredPermissions,*/ requiredScopes) {
+    //load security def middleware
+    if (securityDefn['x-bos-middleware']) {
+        loader.loadConsumerModules('middleware', [securityDefn['x-bos-middleware']]);
+        loader.initConsumers('middleware', [securityDefn['x-bos-middleware']], function (err) {
+            if (!err) {
+                var customAuthMiddleware = loader.getConsumer('middleware', securityDefn['x-bos-middleware']);
+                if (customAuthMiddleware.authenticate) {
+                    if (!securityReqMap[securityReq]) {
+                        securityReqMap[securityReq] =
+                            customAuthMiddleware.authenticate(securityReq, securityDefn, requiredScopes);
+                    }
+                    app[method].call(app, route, securityReqMap[securityReq]);
+                }
+                else {
+                    log.warn('custom auth middleware %s missing authenticate method');
+                }
+            }
+            else {
+                log.warn('Unable to find custom middleware %s for security defn %s',
+                    securityDefn['x-bos-middleware'], securityReq);
+            }
+        });
+    } else {
+        log.warn('No custom middleware defined for security defn %s', securityReq);
+    }
+}
+
 function _applySecurityRequirement(app, method, route, securityReq,
                                    securityDefn, /*requiredPermissions,*/ requiredScopes) {
-    if (passportEnabled) {
-        var passportService = loader.get('bosPassport');
-        passportService.authenticate(securityReq);
-    } else { //need to check for an active session here as well, because if there is one we want to skip all of this
-        var scheme = securityDefn.type;
-        switch (scheme) {
+    //allow use of custom middleware even if a custom security definition was not used
+    if (securityDefn['x-bos-middleware']) {
+        _applyCustomSecurityRequirement(app, method, route, securityReq,
+            securityDefn, requiredScopes);
+    } else {
+        switch (securityDefn.type) {
         case 'basic':
-            app[method].call(app, route, basicExtractor());
+            app[method].call(app, route, basicAuthentication(securityReq));
             break;
         case 'apiKey': //may also need a user provided 'verify' function here
-            app[method].call(app, route, apiKeyExtractor(securityDefn));
+            app[method].call(app, route, apiKeyAuthentication(securityReq, securityDefn));
             break;
         case 'oauth2':
-            if (!oAuthService) {
-                oAuthService = loader.get('oauth2');
-            }
-            app[method].call(app, route, oauth2(route, securityDefn, requiredScopes));
+            /*if (!oAuthService) {
+             oAuthService = loader.get('oauth2');
+             }
+             app[method].call(app, route, oauth2(route, securityDefn, requiredScopes));*/
+            log.warn('No out of the box oauth2 implementation exists in BOS. ' +
+                'You must define your own and reference it in the ' +
+                '"x-bos-middleware" property of the security definition %s', securityReq);
             break;
         default:
-            return log.warn('unrecognized security scheme %s for route %s', scheme, route);
+            return log.warn('unrecognized security type %s for security definition %s' +
+                'You can provide a custom security definition in "x-bos-securityDefinitions" of your base spec',
+                securityDefn.type, securityReq);
         }
     }
     /*//wire up path with user defined authentication method for this req
@@ -112,58 +160,66 @@ function _applySecurityRequirement(app, method, route, securityReq,
     };
 }*/
 
-function basicExtractor() {
+function basicAuthentication(securityReq) {
     return function (req, res, next) {
-        //if there is no auth header present, send back challenge 401 with www-authenticate header?
-            //now that I think about this, think this should be handled by user defined code
-            //because their is no way for us to know how to set the header fields (i.e. realm)
         //header should be of the form "Basic " + user:password as a base64 encoded string
-        req.bosAuth = {};
+        req.bosAuthenticationData = {type: 'Basic', securityReq: securityReq};
         var authHeader = req.headers['authorization'] ? req.headers['authorization'] : '';
         if (authHeader !== '') {
             var credentialsBase64 = authHeader.substring(authHeader.split('Basic ')[1]);
             var credentials = base64URL.decode(credentialsBase64).split(':');
-            req.bosAuth.authenticationData = {username: credentials[0], password: credentials[1], scheme: 'Basic'};
+            req.bosAuthenticationData.username = credentials[0];
+            req.bosAuthenticationData.password = credentials[1];
+        }
+        if (!(req.bosAuthenticationData.username && req.bosAuthenticationData.password)) {
+            res.headers['WWW-Authenticate'] = 'Basic realm="' + securityReq + '"';
+            //dont send 401 response yet, as user may want to provide additional info in the response
         }
         next();
     };
 }
 
-function apiKeyExtractor(securityDefn) {
-    //if there is no apiKey present, send back challenge 401 with www-authenticate header?
-        //now that I think about this, think this should be handled by user defined code
-        //because their is no way for us to know how to set the header fields (i.e. realm)
+function apiKeyAuthentication(securityReq, securityDefn) {
     return function (req, res, next) {
-        //should be form of username="Mufasa", realm="myhost@example.com"
-        var authorizationHeaders = req.headers['authorization'].split(', ');
-        var authenticationData = {scheme: 'apiKey'};
-        authorizationHeaders.forEach(function (header) {
-            //should be form of username="Mufasa"
-            var keyValPair = header.split('=');
-            authenticationData[keyValPair[0]] = keyValPair[1].substring(1, keyValPair[1].length - 1);
-        });
+        req.bosAuthenticationData = {type: 'apiKey', securityReq: securityReq};
+        if (req.headers['authorization']) {
+            //should be form of username="Mufasa", realm="myhost@example.com"
+            //treating this like the digest scheme defined in the rfc
+            var authorizationHeaders = req.headers['authorization'].split(', ');
+            authorizationHeaders.forEach(function (header) {
+                //should be form of username="Mufasa"
+                var keyValPair = header.split('=');
+                req.bosAuthenticationData[keyValPair[0]] = keyValPair[1].substring(1, keyValPair[1].length - 1);
+            });
+        }
         if (securityDefn.in === 'query') {
-            authenticationData.password = req.query[securityDefn.name];
-        } else if (securityDefn.in === 'header') {
-            authenticationData.password = req.headers[securityDefn.name];
-        } else {
-            return log.warn('unknown location %s for apiKey. ' +
+            req.bosAuthenticationData.password = req.query[securityDefn.name];
+        }
+        else if (securityDefn.in === 'header') {
+            req.bosAuthenticationData.password = req.headers[securityDefn.name];
+        }
+        else {
+            log.warn('unknown location %s for apiKey. ' +
                 'looks like open api specs may have changed on us', securityDefn.in);
         }
-        req.authenticationData = authenticationData;
+        if (!(req.bosAuthenticationData.password)) {
+            res.headers['WWW-Authenticate'] = 'Digest realm="' + securityReq + '"';
+            //dont send 401 response yet, as user may want to provide additional info in the response
+        }
+        next();
         //this would have to be a user provided function that
         //fetches the user (and thus the private key that we need to compute the hash) from some data source
         //we don't need this if we decide that we will let the user figure out how to verify the digest
         /*verify(apiId, function (user) {
-            //regenerate hash with apiKey
-            //hash will include symmetric apiKey, one or more of:
-            //request method, content-md5 header, request uri, timestamp, socket.remoteAddress, req.ip, ip whitelist?
-            //if (hash === digest)
-            //  all good
-            // else you suck
-            req.bosAuth.user = user;
-            next();
-        });*/
+         //regenerate hash with apiKey
+         //hash will include symmetric apiKey, one or more of:
+         //request method, content-md5 header, request uri, timestamp, socket.remoteAddress, req.ip, ip whitelist?
+         //if (hash === digest)
+         //  all good
+         // else you suck
+         req.bosAuth.user = user;
+         next();
+         });*/
     };
 }
 
@@ -175,7 +231,7 @@ function oauth2(route, securityDefn, scopes) {
                 securityDefn.flow, securityDefn.tokenUrl, securityDefn.scopes);
             oAuthService.addOAuthInstance(route, oAuthInstance);
         }
-        oAuthInstance.startOAuth(req, res);
+        oAuthInstance.startOAuth(req, res, next);
     };
 }
 
