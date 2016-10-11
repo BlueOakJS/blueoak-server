@@ -8,6 +8,8 @@ produces:
   - application/json
 paths:
   $ref: 'public/paths.yaml'
+securityDefinitions:
+  $ref: 'public/security-definitions.yaml'
 definitions:
   Contact:
     $ref: 'public\definitions\Contact.yaml'
