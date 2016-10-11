@@ -365,7 +365,7 @@ function setDefaultQueryParams(req, data, logger) {
     for (var i = 0; i < parameters.length; i++) {
         var parm = parameters[i];
         if (parm.in === 'query') {
-            if (parm.default && typeof(req.query[parm.name]) === 'undefined') {
+            if (parm.default != undefined && typeof(req.query[parm.name]) === 'undefined') {
                 req.query[parm.name] = swaggerUtil.cast(parm, parm.default);
             }
         }
@@ -378,7 +378,7 @@ function setDefaultHeaders(req, data, logger) {
     for (var i = 0; i < parameters.length; i++) {
         var parm = parameters[i];
         if (parm.in === 'header') {
-            if (parm.default && typeof(req.query[parm.name]) === 'undefined') {
+            if (parm.default != undefined && typeof(req.query[parm.name]) === 'undefined') {
                 req.headers[parm.name] = swaggerUtil.cast(parm, parm.default);
             }
         }
