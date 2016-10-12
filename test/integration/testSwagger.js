@@ -223,6 +223,29 @@ describe('SERVER5 - request model validation', function () {
     });
 });
 
+describe('SERVER5 + default values set on request', function () {
+    this.timeout(5000);
+    before(function (done) {
+        util.launch('server5', done);
+    });
+
+    after(function (done) {
+        util.finish(done);
+    });
+    it('GET /api/pets6 - should contain false default values', function (done) {
+        request({
+            method: 'GET',
+            url: 'http://localhost:' + (process.env.PORT || 5000) + '/api/pets6',
+            json: true
+        }, function (err, resp, body) {
+            assert.equal(null, err);
+            assert.equal(body.isFurry, false);
+            assert.equal(body.isVaccinated, false);
+            done();
+        });
+    });
+});
+
 
 describe('SERVER5 + response model validation - using the "error" option', function () {
     this.timeout(5000);

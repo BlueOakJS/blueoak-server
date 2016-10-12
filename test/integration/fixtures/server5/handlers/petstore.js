@@ -27,6 +27,14 @@ exports.pets4 = function (req, res, next) {
     });
 };
 
+exports.pets6 = function (req, res, next) {
+    res.json({
+        name: 'Mr. Bigglesworth',
+        isFurry: req.query.isFurry,
+        isVaccinated: req.headers['isVaccinated']
+    });
+};
+
 exports.pets22 = function (req, res, next) {
     res.status(201).send(req.body);
 };
