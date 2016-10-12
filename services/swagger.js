@@ -9,7 +9,7 @@ var debug = require('debug')('swagger');
 var async = require('async');
 var parser = require('swagger-parser');
 var swaggerUtil = require('../lib/swaggerUtil');
-var refCompiler = require('../lib/refCompiler');
+var refCompiler = require('../lib/swaggerRefCompiler');
 var tv4 = require('tv4');
 var _ = require('lodash');
 

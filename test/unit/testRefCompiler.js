@@ -4,7 +4,7 @@ var assert = require('assert'),
     parser = require('swagger-parser'),
     logger = require('../../testlib/mocks/logger'),
     testUtil = require('../../testlib/util'),
-    refCompiler = require('../../lib/refCompiler');
+    refCompiler = require('../../lib/swaggerRefCompiler');
 
 var swaggerExampleDir = path.resolve(__dirname, '../../examples/swagger');
 
