@@ -133,6 +133,46 @@
           }
         }
       }
+    },
+    "/pets6": {
+      "get": {
+        "description": "Returns a user based on a single ID, if the user does not have access to the pet",
+        "operationId": "pets6",
+        "parameters": [
+          {
+            "name": "isFurry",
+            "in": "query",
+            "type": "boolean",
+            "default": false
+          },
+          {
+            "name": "isVaccinated",
+            "in": "header",
+            "type": "boolean",
+            "default": false
+          }
+        ],
+        "produces": [
+          "application/json",
+          "application/xml",
+          "text/xml",
+          "text/html"
+        ],
+        "responses": {
+          "200": {
+            "description": "pet response",
+            "schema": {
+              "$ref": "#/definitions/pet"
+            }
+          },
+          "default": {
+            "description": "unexpected error",
+            "schema": {
+              "$ref": "#/definitions/errorModel"
+            }
+          }
+        }
+      }
     }
   },
   "definitions": {
@@ -151,6 +191,12 @@
         },
         "tag": {
           "type": "string"
+        },
+        "isFurry": {
+          "type": "boolean"
+        },
+        "isVaccinated": {
+          "type": "boolean"
         }
       }
     },
