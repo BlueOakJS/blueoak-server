@@ -70,8 +70,8 @@ exports.init = function (app, auth, config, logger, serviceLoader, swagger, call
 
         if (containsUrlEncodedFormData(api)) {
             var middlewareConfig = config.get('express').middleware;
-            var foundBodyParserInMiddlewareConfig = !(_.indexOf(middlewareConfig, 'body-parser') < 0 &&
-                _.indexOf(middlewareConfig, 'bodyParser') < 0);
+            var foundBodyParserInMiddlewareConfig = (_.indexOf(middlewareConfig, 'body-parser') >= 0 ||
+                _.indexOf(middlewareConfig, 'bodyParser') >= 0);
             if (!foundBodyParserInMiddlewareConfig) {
                 logger.warn('Body parser not found in middleware config.  ' +
                     'Required when using MIME type application/www-form-urlencoded.');
