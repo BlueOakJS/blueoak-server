@@ -70,14 +70,14 @@ exports.init = function (app, auth, config, logger, serviceLoader, swagger, call
 
         if (containsUrlEncodedFormData(api)) {
             var middlewareConfig = config.get('express').middleware;
-            var foundBodyParserInMiddlewareConfig = !(_.indexOf(middlewareConfig, 'body-parser') === -1 &&
-                _.indexOf(middlewareConfig, 'bodyParser') === -1);
+            var foundBodyParserInMiddlewareConfig = !(_.indexOf(middlewareConfig, 'body-parser') < 0 &&
+                _.indexOf(middlewareConfig, 'bodyParser') < 0);
             if (!foundBodyParserInMiddlewareConfig) {
                 logger.warn('Body parser not found in middleware config.  ' +
                     'Required when using MIME type application/www-form-urlencoded.');
             }
             var bodyParserConfig = _.extend({}, config.get('bodyParser'), config.get('body-parser'));
-            if (_.indexOf(_.keys(bodyParserConfig), 'urlencoded') === -1) {
+            if (_.indexOf(_.keys(bodyParserConfig), 'urlencoded') < 0) {
                 logger.warn('Body parser not configured to look for url encoded data.  ' +
                     'Required when using MIME type application/www-form-urlencoded.');
             }
