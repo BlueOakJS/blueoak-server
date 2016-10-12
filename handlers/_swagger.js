@@ -500,7 +500,6 @@ function validateRequestParameters(req, data, swaggerDoc, logger, callback) {
         } else if (parm.in === 'formData') {
             // fyi, the swagger parser will fail if the user didn't set 'consumes' to
             // multipart/form-data or application/x-www-form-urlencoded
-
             if (parm.required && parm.type === 'file') {
                 if (!req.files[parm.name]) {
                     logger.warn('Missing form parameter "%s" for operation "%s"', parm.name, data.operationId);
@@ -508,25 +507,25 @@ function validateRequestParameters(req, data, swaggerDoc, logger, callback) {
                     error.name = 'ValidationError';
                     return callback(error);
                 }
-            } else if (parm.required) { //something other than file
-                if (!req.body[parm.name]) { //multer puts the non-file parameters in the request body
+            }
+            else if (!req.body[parm.name]) { //multer puts the non-file parameters in the request body
+                if (parm.required) { //something other than file
                     logger.warn('Missing form parameter "%s" for operation "%s"', parm.name, data.operationId);
                     error = new VError('Missing %s form parameter', parm.name);
                     error.name = 'ValidationError';
                     return callback(error);
-                } else {
-                    //go through the param-parsing code which is able to take text and validate
-                    //it as any type, such as number, or array
-                    result = swaggerUtil.validateParameterType(parm, req.body[parm.name]);
-                    if (!result.valid) {
-                        error = new VError('Error validating form parameter %s', parm.name);
-                        error.name = 'ValidationError';
-                        error.subErrors = result.errors;
-                        return callback(error);
-                    }
+                }
+            } else {
+                //go through the param-parsing code which is able to take text and validate
+                //it as any type, such as number, or array
+                result = swaggerUtil.validateParameterType(parm, req.body[parm.name]);
+                if (!result.valid) {
+                    error = new VError('Error validating form parameter %s', parm.name);
+                    error.name = 'ValidationError';
+                    error.subErrors = result.errors;
+                    return callback(error);
                 }
             }
-
         } else if (parm.in === 'body') {
             result = swaggerUtil.validateJSONType(parm.schema, req.body);
             var polymorphicValidationErrors = [];
