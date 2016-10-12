@@ -52,6 +52,79 @@
             }
           }
         }
+      },
+      "put": {
+        "description": "upload a pet",
+        "operationId": "pets2Upload",
+        "consumes": ["multipart/form-data"],
+        "parameters": [
+          {
+            "in": "formData",
+            "type": "file",
+            "name": "pet"
+          },
+          {
+            "in": "formData",
+            "type": "number",
+            "name": "petId"
+          }
+        ],
+        "produces": [
+          "application/json",
+          "application/xml",
+          "text/xml",
+          "text/html"
+        ],
+        "responses": {
+          "200": {
+            "description": "pet response",
+            "schema": {
+              "$ref": "#/definitions/pet"
+            }
+          },
+          "default": {
+            "description": "unexpected error",
+            "schema": {
+              "$ref": "#/definitions/errorModel"
+            }
+          }
+        }
+      },
+      "post": {
+        "description": "save a pet",
+        "operationId": "pets2Post",
+        "parameters": [
+          {
+            "in": "formData",
+            "type": "string",
+            "name": "petName"
+          },
+          {
+            "in": "formData",
+            "type": "number",
+            "name": "petId"
+          }
+        ],
+        "produces": [
+          "application/json",
+          "application/xml",
+          "text/xml",
+          "text/html"
+        ],
+        "responses": {
+          "200": {
+            "description": "pet response",
+            "schema": {
+              "$ref": "#/definitions/pet"
+            }
+          },
+          "default": {
+            "description": "unexpected error",
+            "schema": {
+              "$ref": "#/definitions/errorModel"
+            }
+          }
+        }
       }
     }
   },

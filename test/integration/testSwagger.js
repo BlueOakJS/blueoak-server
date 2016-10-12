@@ -4,7 +4,9 @@
  */
 var request = require('request'),
     assert = require('assert'),
-    util = require('./launchUtil');
+    util = require('./launchUtil'),
+    fs = require('fs'),
+    path = require('path');
 
 describe('SERVER5 - test simple REST calls from swagger spec', function () {
     this.timeout(5000);
@@ -103,6 +105,41 @@ describe('SERVER8 - test swagger spec with blueoak project structure', function 
             assert.equal(null, err);
             var json = JSON.parse(body);
             assert.equal('pets2', json.name);
+            done();
+        });
+    });
+
+    it('PUT /api/pets2', function (done) {
+        var formData = {
+            pet: fs.createReadStream(path.join(__dirname, '/fixtures/server8/server/pet.txt')),
+            petId: '1'
+        };
+        request({
+            url: 'http://localhost:' + (process.env.PORT || 5000) + '/api/pets2',
+            method: 'PUT',
+            formData: formData
+        }, function (err, resp, body) {
+            assert.equal(null, err);
+            var json = JSON.parse(body);
+            assert(json.file);
+            assert.equal(json.petId, 1);
+            done();
+        });
+    });
+
+    it('POST /api/pets2', function (done) {
+        request({
+            url: 'http://localhost:' + (process.env.PORT || 5000) + '/api/pets2',
+            method: 'POST',
+            form: {
+                petId: 1,
+                petName: 'Mr. Bigglesworth'
+            }
+        }, function (err, resp, body) {
+            assert.equal(null, err);
+            var json = JSON.parse(body);
+            assert(json.petId === 1);
+            assert.equal(json.name, 'Mr. Bigglesworth');
             done();
         });
     });

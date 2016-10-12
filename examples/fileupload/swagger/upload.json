@@ -37,7 +37,9 @@
         ],
         "consumes": ["multipart/form-data"],
         "responses": {
-          "default": {}
+          "default": {
+            "description": "fail"
+          }
         },
         "produces": ["application/json"]
       }
