@@ -27,8 +27,6 @@ function init(app, config, logger, serviceLoader, swagger) {
                 if (_.contains(httpMethods, method)) {
                     var operation = pathObj[method];
                     if (operation['security']) {
-                        //need to make this a logical 'OR'
-                        // so that only one security requirement must be satisfied on a route
                         operation['security'].forEach(function (securityReq) {
                             _.forOwn(securityReq, function (scopes, securityDefn) {
                                 _applySecurityRequirement(app, method, routePath, securityDefn,
@@ -39,8 +37,6 @@ function init(app, config, logger, serviceLoader, swagger) {
                         });
                     }
                     if (operation['x-bos-security']) {
-                        //need to make this a logical 'OR'
-                        // so that only one security requirement must be satisfied on a route
                         operation['x-bos-security'].forEach(function (securityReq) {
                             _.forOwn(securityReq, function (scopes, securityDefn) {
                                 _applyCustomSecurityRequirement(app, method, routePath, securityDefn,
@@ -162,17 +158,21 @@ function _applySecurityRequirement(app, method, route, securityReq,
 
 function basicAuthentication(securityReq) {
     return function (req, res, next) {
+        if (req.bosAuthenticationData && !res.getHeader('WWW-Authenticate')) { //already authenticated
+            return next();
+        }
         //header should be of the form "Basic " + user:password as a base64 encoded string
         req.bosAuthenticationData = {type: 'Basic', securityReq: securityReq};
         var authHeader = req.headers['authorization'] ? req.headers['authorization'] : '';
         if (authHeader !== '') {
-            var credentialsBase64 = authHeader.substring(authHeader.split('Basic ')[1]);
-            var credentials = base64URL.decode(credentialsBase64).split(':');
+            var credentialsBase64 = authHeader.split('Basic ')[1];
+            var credentialsDecoded = base64URL.decode(credentialsBase64);
+            var credentials = credentialsDecoded.split(':');
             req.bosAuthenticationData.username = credentials[0];
             req.bosAuthenticationData.password = credentials[1];
         }
         if (!(req.bosAuthenticationData.username && req.bosAuthenticationData.password)) {
-            res.headers['WWW-Authenticate'] = 'Basic realm="' + securityReq + '"';
+            res.setHeader('WWW-Authenticate', 'Basic realm="' + securityReq + '"');
             //dont send 401 response yet, as user may want to provide additional info in the response
         }
         next();
@@ -181,16 +181,22 @@ function basicAuthentication(securityReq) {
 
 function apiKeyAuthentication(securityReq, securityDefn) {
     return function (req, res, next) {
+        if (req.bosAuthenticationData && !res.getHeader('WWW-Authenticate')) { //already authenticated
+            return next();
+        }
         req.bosAuthenticationData = {type: 'apiKey', securityReq: securityReq};
         if (req.headers['authorization']) {
-            //should be form of username="Mufasa", realm="myhost@example.com"
-            //treating this like the digest scheme defined in the rfc
-            var authorizationHeaders = req.headers['authorization'].split(', ');
-            authorizationHeaders.forEach(function (header) {
-                //should be form of username="Mufasa"
-                var keyValPair = header.split('=');
-                req.bosAuthenticationData[keyValPair[0]] = keyValPair[1].substring(1, keyValPair[1].length - 1);
-            });
+            var digestHeader = req.headers['authorization'].split('Digest ')[1];
+            if (digestHeader) {
+                //should be form of username="Mufasa", realm="myhost@example.com"
+                //treating this like the digest scheme defined in the rfc
+                var authorizationHeaderFields = digestHeader.split(', ');
+                authorizationHeaderFields.forEach(function (header) {
+                    //should be form of username="Mufasa"
+                    var keyValPair = header.split('=');
+                    req.bosAuthenticationData[keyValPair[0]] = keyValPair[1].substring(1, keyValPair[1].length - 1);
+                });
+            }
         }
         if (securityDefn.in === 'query') {
             req.bosAuthenticationData.password = req.query[securityDefn.name];
@@ -203,7 +209,7 @@ function apiKeyAuthentication(securityReq, securityDefn) {
                 'looks like open api specs may have changed on us', securityDefn.in);
         }
         if (!(req.bosAuthenticationData.password)) {
-            res.headers['WWW-Authenticate'] = 'Digest realm="' + securityReq + '"';
+            res.setHeader('WWW-Authenticate', 'Digest realm="' + securityReq + '"');
             //dont send 401 response yet, as user may want to provide additional info in the response
         }
         next();

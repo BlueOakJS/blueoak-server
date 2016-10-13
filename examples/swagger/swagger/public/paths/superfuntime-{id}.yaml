@@ -1,12 +1,13 @@
 get:
   summary: Get super fun time
   operationId: getFunTimeById
+  x-middleware: addHmac
   tags:
     - Fun Times
   parameters:
     - $ref: '../parameters/PathId.yaml'
-  security:
-    - apiKeyEx: []
+  x-bos-security:
+    - hmac
   responses:
     200:
       schema:

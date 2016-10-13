@@ -12,6 +12,9 @@ paths:
 securityDefinitions:
   $ref: 'public/security-definitions.yaml'
 
+x-bos-securityDefinitions:
+  $ref: 'public/x-bos-security-definitions.yaml'
+
 ### ref-compiler: BEGIN
 definitions:
   Contact:

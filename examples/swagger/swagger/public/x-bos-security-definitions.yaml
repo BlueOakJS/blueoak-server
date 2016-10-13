@@ -1,0 +1,5 @@
+hmac:
+  verify: hmacService.getApiUser
+  routeOptions:
+    session: false
+  module: passport-hmac-strategy

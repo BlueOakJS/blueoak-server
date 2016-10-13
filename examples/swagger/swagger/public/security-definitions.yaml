@@ -3,4 +3,4 @@ basicEx:
 apiKeyEx:
   type: apiKey
   in: header
-  name: x-auth
+  name: authorization
