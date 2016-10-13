@@ -1,5 +1,6 @@
 var _ = require('lodash');
 var base64URL = require('base64url');
+var path = require('path');
 
 var log;
 var loader;
@@ -56,7 +57,7 @@ function _applyCustomSecurityRequirement(app, method, route, securityReq,
                                    securityDefn, /*requiredPermissions,*/ requiredScopes) {
     //load security def middleware
     if (securityDefn['x-bos-middleware']) {
-        loader.loadConsumerModules('middleware', [securityDefn['x-bos-middleware']]);
+        loader.loadConsumerModules('middleware', [path.join(global.__appDir, 'middleware', securityDefn['x-bos-middleware'])]);
         loader.initConsumers('middleware', [securityDefn['x-bos-middleware']], function (err) {
             if (!err) {
                 var customAuthMiddleware = loader.getConsumer('middleware', securityDefn['x-bos-middleware']);
