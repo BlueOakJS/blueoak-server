@@ -3,12 +3,12 @@ var assert = require('assert'),
     fs = require('fs'),
     parser = require('swagger-parser'),
     logger = require('../../testlib/mocks/logger'),
-    testUtil = require('../../testlib/util'),
     refCompiler = require('../../lib/swaggerRefCompiler');
 
 var swaggerExampleDir = path.resolve(__dirname, '../../examples/swagger');
 
 var config = {
+    'context': '/swagger',
     'refCompiler': {
         'api-v1': {
             'baseSpecFile': 'api-v1.yaml',
@@ -16,15 +16,12 @@ var config = {
                 'public'
             ]
         }
-    },
-    'swagger': {
-        'context': '/swagger'
     }
 };
 
 function doRefCompilation(rootDir, logger, config) {
     global.__appDir = rootDir;
-    refCompiler.compileSpecs(logger, testUtil.createConfigService(config));
+    refCompiler.compileSpecs(logger, config);
 }
 
 describe('Swagger spec building test', function () {

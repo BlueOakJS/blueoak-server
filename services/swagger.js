@@ -40,11 +40,10 @@ exports.init = function (logger, config, callback) {
         logger.info('Polymorphic validation is disabled (%s)', polymorphicValidation);
     }
 
-    refCompilation = /on|off/.test(cfg.refCompilation) ?
-        cfg.refCompilation : 'off';
-    if (refCompilation === 'on') {
+    refCompilation = typeof cfg.refCompiler === 'object';
+    if (refCompilation) {
         logger.info('Ref compilation is enabled (%s), compiling references...', refCompilation);
-        refCompiler.compileSpecs(logger, config);
+        refCompiler.compileSpecs(logger, cfg);
     }
 
     var swaggerDir = null;
