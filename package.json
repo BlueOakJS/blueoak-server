@@ -53,6 +53,8 @@
     "node-cache": "^3.0.0",
     "node-statsd": "^0.1.1",
     "on-headers": "^1.0.0",
+    "passport": "^0.3.2",
+    "passport-hmac-strategy": "^1.2.0",
     "prompt": "^0.2.14",
     "raw-body": "^2.0.2",
     "redis": "^2.4.2",
@@ -72,7 +74,8 @@
     "eslint": "^3.3.1",
     "istanbul": "^0.4.1",
     "mocha": "^3.0.2",
-    "mocha-jenkins-reporter": "^0.1.8"
+    "mocha-jenkins-reporter": "^0.1.8",
+    "sjcl": "^1.0.6"
   },
   "files": [
     "bin",

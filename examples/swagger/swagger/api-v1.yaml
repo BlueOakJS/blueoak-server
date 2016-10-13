@@ -10,6 +10,8 @@ paths:
   $ref: 'public/paths.yaml'
 securityDefinitions:
   $ref: 'public/security-definitions.yaml'
+x-bos-securityDefinitions:
+  $ref: 'public/x-bos-security-definitions.yaml'
 definitions:
   Contact:
     $ref: 'public\definitions\Contact.yaml'

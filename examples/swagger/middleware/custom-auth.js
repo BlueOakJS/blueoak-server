@@ -2,22 +2,22 @@
 exports.init = function(app, logger) {
     app.use(function (req, res, next) {
         if (!req.bosAuthenticationData) {
-            next();
+            return next();
         }
         switch (req.bosAuthenticationData.type) {
 
-        case 'basic':
+        case 'Basic':
             if (!(req.bosAuthenticationData.username && req.bosAuthenticationData.password)) {
                 res.sendStatus(401);
             } else {
-                next();
+                return next();
             }
             break;
         case 'apiKey':
             if (!(req.bosAuthenticationData.password)) {
                 res.sendStatus(401);
             } else {
-                next();
+                return next();
             }
             break;
         }
