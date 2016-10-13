@@ -7,7 +7,7 @@ get:
   parameters:
     - $ref: '../parameters/PathId.yaml'
   x-bos-security:
-    - hmac
+    - hmac: []
   responses:
     200:
       schema:

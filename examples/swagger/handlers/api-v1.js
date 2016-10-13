@@ -38,5 +38,6 @@ exports.addHmac = function (req, res, next) {
     var out = (new sjcl.misc.hmac(key, sjcl.hash.sha256)).mac(stringToSign);
     var hmac = sjcl.codec.base64.fromBits(out);
     req.headers.Authorization = 'SFI ' + apiId + ':' + hmac + ':' + dateString;
+    next();
 };
 

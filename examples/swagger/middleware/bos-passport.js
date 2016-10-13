@@ -1,7 +1,7 @@
 var _ = require('lodash'),
     passport = require('passport'),
-    subRequire = require('../lib/subRequire');
-var strategyMap;
+    subRequire = require('../../../lib/subRequire');
+var strategyMap= {};
 var cfg;
 var loader;
 
@@ -34,7 +34,7 @@ function authenticate(strategyId, strategy) {
     });
     strategy.verify = prepareOption(strategy.verify);
     passport.use(strategyId, new strategyMap[strategy.module](strategy.options, strategy.verify));
-    passport.authenticate(strategyId, strategy.routeOptions);
+    return passport.authenticate(strategyId, strategy.routeOptions);
 }
 
 //fetch the option from the config, or if option is a service method, point to or call the method with supplied args
