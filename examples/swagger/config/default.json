@@ -2,7 +2,7 @@
 {
   "express": {
     "port": "3000",
-    "middleware": ["cors", "body-parser", "bos-authentication", "custom-auth"],
+    "middleware": ["cors", "body-parser", "addHmac", "bos-authentication", "custom-auth"],
     "middleware$": ["errors"]
   },
   
