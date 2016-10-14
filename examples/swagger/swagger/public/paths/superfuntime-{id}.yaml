@@ -1,7 +1,6 @@
 get:
   summary: Get super fun time
   operationId: getFunTimeById
-  x-middleware: addHmac
   tags:
     - Fun Times
   parameters:

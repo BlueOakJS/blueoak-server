@@ -4,6 +4,7 @@ hmac:
     method:
       name: getApiUser
       execute: false
+      args: []
   routeOptions:
     session: false
   module: passport-hmac-strategy
