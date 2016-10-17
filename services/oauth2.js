@@ -1,75 +1,111 @@
-var _ = require('lodash'),
-    request = require('request'),
-    jwt = require('jsonwebtoken');
+var request = require('request');
 
 var cfg;
 var clientId;
 var clientSecret;
-var redirectUri;
-//map of route to oauth2 instance in order to maintain state between requests during oauth process
+var redirectURI;
+var implicitRedirectUri;
+//map of security req to oauth2 instance
 var routeOAuthMap = {};
-var requestStateMap = {};
 
 module.exports = {
     init : init,
-    OAuth2: OAuth2
+    OAuth2: OAuth2,
+    accessCodeRedirect: accessCodeRedirect,
+    addOAuthInstance: addOAuthInstance,
+    getOAuthInstance: getOAuthInstance
 };
-//look for token, if is there and hasn't expired then boom. If it has expired then refresh token
-//look for authorization code, if not there redirect to authorization url with required scopes
-//get auth code, send request to token url with auth code to get back token
 
-function init(config) {
-    cfg = config.get('oauth');
-    clientId = cfg.clientId;
-    clientSecret = cfg.clientSecret;
-    redirectUri = cfg.redirectUri;
+function addOAuthInstance (securityReq, oauthInstance) {
+    routeOAuthMap[securityReq] = oauthInstance;
 }
 
-function OAuth2(authorizationUrl, flow, tokenUrl, scopes) {
+function getOAuthInstance (securityReq) {
+    return routeOAuthMap[securityReq];
+}
+
+function init(config, logger) {
+    cfg = config.get('oauth');
+    if (cfg) {
+        clientId = cfg.clientId;
+        clientSecret = cfg.clientSecret;
+        redirectURI = cfg.redirectURI;
+        implicitRedirectUri = cfg.implicitRedirectUri;
+        if (config.get('express').middleware.indexOf('session') < 0) {
+            logger.warn('oauth requires that session be enabled.');
+        }
+    }
+}
+
+function OAuth2(authorizationUrl, flow, tokenUrl) {
     this.authorizationUrl = authorizationUrl;
     this.flow = flow;
     this.tokenUrl = tokenUrl;
-    this.scopes = scopes;
+    this.stateIds = {};
 }
 
-function redirectToAuthorizationUrl (req, res, stateId) {
-    var queryString = '?response_type=code&requestclientId=';
+function accessCodeRedirect(req, res) {
+    var securityReq = req.query.state.split('-')[0];
+    var oauth = getOAuthInstance(securityReq);
+    if (!req.query.code) {
+        //should have auth code at this point
+    } else if (!oauth.isValidState(req.query.state)) {//check for XSRF
+        //log warning about possible xsrf attack
+    } else {
+        oauth.getTokenData(req, res, function (tokenData) {
+            req.session.bosAuthenticationData = tokenData;
+            req.sessionOptions.httpOnly = false; //needs to be set for CORS
+            //this should make it so that an auth code will only get used once
+            oauth.deleteRequestState(req.query.state);
+            res.sendStatus(200);
+        });
+    }
+}
+
+OAuth2.prototype.redirectToAuthorizationUrl = function (req, res, scopes, stateId) {
+    var queryString = '?response_type=code&client_id=';
     queryString += clientId;
-    queryString += '&redirect_uri=' + redirectUri;
-    queryString += '&scope=' + this.scopes.join(' ');
+    queryString += '&redirect_uri=' + redirectURI;
+    queryString += '&scope=' + scopes.join(' ');
     queryString += '&state=' + stateId;
-    res.statusCode = 302;
-    res.headers['location'] = this.authorizationUrl + queryString;
+    res.status(302);
+    res.setHeader('location', this.authorizationUrl + queryString);
     res.send();
-}
+};
 
-function addRequestState (stateId, req, res, next) {
-    requestStateMap[stateId] = {req: req, res: res, next: next};
-}
+OAuth2.prototype.redirectToAuthorizationUrlImplicit = function (req, res, scopes, stateId) {
+    var queryString = '?response_type=token&client_id=';
+    queryString += clientId;
+    queryString += '&redirect_uri=' + implicitRedirectUri;
+    queryString += '&scope=' + scopes.join(' ');
+    queryString += '&state=' + stateId;
+    res.status(302);
+    res.setHeader('location', this.authorizationUrl + queryString);
+    res.send();
+};
 
-OAuth2.prototype.startOAuth = function (req, res, next) {
+OAuth2.prototype.startOAuth = function (securityReq, scopes, req, res) {
+    var stateId = securityReq + '-' + Math.random();
     if (this.flow === 'accessCode') {
-        redirectToAuthorizationUrl(req, res);
+        this.addRequestState(stateId, req, res);
+        this.redirectToAuthorizationUrl(req, res, scopes, stateId);
+    } else if (this.flow === 'implicit') { //user defined redirect should validate the state parameter
+        this.redirectToAuthorizationUrlImplicit(req, res, scopes, stateId);
     } else {
         //unsupported flow
     }
-    addRequestState(Math.random(), req, res, next);
 };
 
-OAuth2.prototype.addOAuthInstance = function (route, oauthInstance) {
-    routeOAuthMap[route] = oauthInstance;
+OAuth2.prototype.addRequestState = function (stateId) {
+    this.stateIds[stateId] = true;
 };
 
-OAuth2.prototype.getOAuthInstance = function (route) {
-    return routeOAuthMap[route];
-};
-
-OAuth2.prototype.getRequestState = function (stateId) {
-    return requestStateMap[stateId];
+OAuth2.prototype.isValidState = function (stateId) {
+    return this.stateIds[stateId];
 };
 
 OAuth2.prototype.deleteRequestState = function (stateId) {
-    requestStateMap[stateId] = undefined;
+    this.stateIds[stateId] = undefined;
 };
 
 OAuth2.prototype.getTokenData = function (req, res, callback) {
@@ -77,7 +113,7 @@ OAuth2.prototype.getTokenData = function (req, res, callback) {
     form.code = req.query.code;
     form.clientId = clientId;
     form.clientSecret = clientSecret;
-    form.redirectUri = redirectUri;
+    form.redirectURI = redirectURI;
     request.post({url: this.tokenUrl, form: form}, function (err, resp, body) {
         /*check response status*/
         //we will let user defined middleware take it from here.
@@ -88,6 +124,5 @@ OAuth2.prototype.getTokenData = function (req, res, callback) {
     });
 };
 
-function authenticate() {
 
-}
+

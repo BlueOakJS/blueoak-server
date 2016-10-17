@@ -52,10 +52,11 @@ function prepareOption(opt) {
         if (opt.service) {
             var service = loader.get(opt.service);
             var method = service[opt.method.name];
+            var args = opt.method.args ? opt.method.args : [];
             if (opt.method.execute) {
-                return method.apply(service, opt.method.args);
+                return method.apply(service, args);
             } else {
-                return _.partial.apply(_, [method].concat(opt.method.args));
+                return _.partial.apply(_, [method].concat(args));
             }
         }
     }

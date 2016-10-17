@@ -4,3 +4,14 @@ apiKeyEx:
   type: apiKey
   in: header
   name: authorization
+oauthEx:
+  type: oauth2
+  flow: accessCode
+  authorizationUrl: http://localhost:3000/auth-code
+  tokenUrl: http://localhost:3000/access-token
+  scopes: {}
+oauthImplicitEx:
+  type: oauth2
+  flow: implicit
+  authorizationUrl: http://localhost:3000/access-token
+  scopes: {}

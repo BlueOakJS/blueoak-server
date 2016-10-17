@@ -79,7 +79,10 @@ function _applyCustomSecurityRequirement(app, method, route, securityReq,
             }
         });
     } else {
-        log.warn('No custom middleware defined for security defn %s', securityReq);
+        log.info('No custom middleware defined for security defn %s. ' +
+            'Attempting to use built in middleware...', securityReq);
+        _applySecurityRequirement(app, method, route, securityReq,
+            securityDefn, requiredScopes);
     }
 }
 
@@ -98,13 +101,13 @@ function _applySecurityRequirement(app, method, route, securityReq,
             app[method].call(app, route, apiKeyAuthentication(securityReq, securityDefn));
             break;
         case 'oauth2':
-            /*if (!oAuthService) {
-             oAuthService = loader.get('oauth2');
-             }
-             app[method].call(app, route, oauth2(route, securityDefn, requiredScopes));*/
-            log.warn('No out of the box oauth2 implementation exists in BOS. ' +
+            if (!oAuthService) {
+                oAuthService = loader.get('oauth2');
+            }
+            app[method].call(app, route, oauth2(securityReq, securityDefn, requiredScopes));
+            /*log.warn('No out of the box oauth2 implementation exists in BOS. ' +
                 'You must define your own and reference it in the ' +
-                '"x-bos-middleware" property of the security definition %s', securityReq);
+                '"x-bos-middleware" property of the security definition %s', securityReq);*/
             break;
         default:
             return log.warn('unrecognized security type %s for security definition %s' +
@@ -165,7 +168,7 @@ function basicAuthentication(securityReq) {
         }
         //header should be of the form "Basic " + user:password as a base64 encoded string
         req.bosAuthenticationData = {type: 'Basic', securityReq: securityReq};
-        var authHeader = req.headers['authorization'] ? req.headers['authorization'] : '';
+        var authHeader = req.get('authorization') ? req.get('authorization') : '';
         if (authHeader !== '') {
             var credentialsBase64 = authHeader.split('Basic ')[1];
             var credentialsDecoded = base64URL.decode(credentialsBase64);
@@ -187,8 +190,8 @@ function apiKeyAuthentication(securityReq, securityDefn) {
             return next();
         }
         req.bosAuthenticationData = {type: 'apiKey', securityReq: securityReq};
-        if (req.headers['authorization']) {
-            var digestHeader = req.headers['authorization'].split('Digest ')[1];
+        if (req.get('authorization')) {
+            var digestHeader = req.get('authorization').split('Digest ')[1];
             if (digestHeader) {
                 //should be form of username="Mufasa", realm="myhost@example.com"
                 //treating this like the digest scheme defined in the rfc
@@ -204,7 +207,7 @@ function apiKeyAuthentication(securityReq, securityDefn) {
             req.bosAuthenticationData.password = req.query[securityDefn.name];
         }
         else if (securityDefn.in === 'header') {
-            req.bosAuthenticationData.password = req.headers[securityDefn.name];
+            req.bosAuthenticationData.password = req.get(securityDefn.name);
         }
         else {
             log.warn('unknown location %s for apiKey. ' +
@@ -231,15 +234,32 @@ function apiKeyAuthentication(securityReq, securityDefn) {
     };
 }
 
-function oauth2(route, securityDefn, scopes) {
+function oauth2(securityReq, securityDefn, scopes) {
     return function (req, res, next) {
-        var oAuthInstance = oAuthService.getOAuthInstance(route);
+        if (securityDefn.flow === 'accessCode') {
+            if (!req.session) {
+                log.error('oauth requires that session be enabled');
+                return next();
+            }
+            if (req.session.bosAuthenticationData) { //already authenticated
+                return next();
+            }
+        } else if (req.get('authorization')) { //implicit
+            req.bosAuthenticationData.password =
+                req.get('authorization').split('Bearer ')[1]; //we assume bearer token type which is the most common
+            if (req.bosAuthenticationData.password) { //already authenticated
+                //user defined code will be responsible for validating this token
+                //which they absolutely should do because it did not come directly from oauth provider
+                return next();
+            }
+        }
+        var oAuthInstance = oAuthService.getOAuthInstance(securityReq);
         if (!oAuthInstance) {
             oAuthInstance = new oAuthService.OAuth2(securityDefn.authorizationUrl,
-                securityDefn.flow, securityDefn.tokenUrl, securityDefn.scopes);
-            oAuthService.addOAuthInstance(route, oAuthInstance);
+                securityDefn.flow, securityDefn.tokenUrl);
+            oAuthService.addOAuthInstance(securityReq, oAuthInstance);
         }
-        oAuthInstance.startOAuth(req, res, next);
+        oAuthInstance.startOAuth(securityReq, scopes, req, res);
     };
 }
 
