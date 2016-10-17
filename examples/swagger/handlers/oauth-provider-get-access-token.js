@@ -11,7 +11,10 @@ var redirectWithAccessToken = function (req, res) {
     User defined code must handle this redirect with some client side javascript to extract the
     token from the uri fragment.
      */
-    res.sendStatus(200);
+    res.statusCode = 302;
+    res.setHeader('location', req.query.redirect_uri + '#state=' + req.query.state +
+        '&token_type=bearer&access_token=access_token');
+    res.send();
 };
 
 exports.init = function (app) {

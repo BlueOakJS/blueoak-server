@@ -163,9 +163,6 @@ function _applySecurityRequirement(app, method, route, securityReq,
 
 function basicAuthentication(securityReq) {
     return function (req, res, next) {
-        if (req.bosAuthenticationData && !res.getHeader('WWW-Authenticate')) { //already authenticated
-            return next();
-        }
         //header should be of the form "Basic " + user:password as a base64 encoded string
         req.bosAuthenticationData = {type: 'Basic', securityReq: securityReq};
         var authHeader = req.get('authorization') ? req.get('authorization') : '';
@@ -176,19 +173,12 @@ function basicAuthentication(securityReq) {
             req.bosAuthenticationData.username = credentials[0];
             req.bosAuthenticationData.password = credentials[1];
         }
-        if (!(req.bosAuthenticationData.username && req.bosAuthenticationData.password)) {
-            res.setHeader('WWW-Authenticate', 'Basic realm="' + securityReq + '"');
-            //dont send 401 response yet, as user may want to provide additional info in the response
-        }
         next();
     };
 }
 
 function apiKeyAuthentication(securityReq, securityDefn) {
     return function (req, res, next) {
-        if (req.bosAuthenticationData && !res.getHeader('WWW-Authenticate')) { //already authenticated
-            return next();
-        }
         req.bosAuthenticationData = {type: 'apiKey', securityReq: securityReq};
         if (req.get('authorization')) {
             var digestHeader = req.get('authorization').split('Digest ')[1];
@@ -213,10 +203,6 @@ function apiKeyAuthentication(securityReq, securityDefn) {
             log.warn('unknown location %s for apiKey. ' +
                 'looks like open api specs may have changed on us', securityDefn.in);
         }
-        if (!(req.bosAuthenticationData.password)) {
-            res.setHeader('WWW-Authenticate', 'Digest realm="' + securityReq + '"');
-            //dont send 401 response yet, as user may want to provide additional info in the response
-        }
         next();
         //this would have to be a user provided function that
         //fetches the user (and thus the private key that we need to compute the hash) from some data source
@@ -236,6 +222,7 @@ function apiKeyAuthentication(securityReq, securityDefn) {
 
 function oauth2(securityReq, securityDefn, scopes) {
     return function (req, res, next) {
+        req.bosAuthenticationData = {type: 'oauth2', securityReq: securityReq};
         if (securityDefn.flow === 'accessCode') {
             if (!req.session) {
                 log.error('oauth requires that session be enabled');
