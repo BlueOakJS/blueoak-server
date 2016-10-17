@@ -20,6 +20,13 @@ exports.init = function(app, logger) {
                 return next();
             }
             break;
+        case 'oauth2':
+            if (!(req.bosAuthenticationData.password)) {
+                res.sendStatus(401);
+            } else {
+                return next();
+            }
+            break;
         }
     });
 };

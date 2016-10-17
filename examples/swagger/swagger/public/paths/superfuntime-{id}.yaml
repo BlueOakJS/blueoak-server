@@ -6,7 +6,7 @@ get:
   parameters:
     - $ref: '../parameters/PathId.yaml'
   security:
-    - oauthEx: []
+    - oauthImplicitEx: []
   #x-bos-security:
     #- hmac: []
   responses:
