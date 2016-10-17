@@ -5,8 +5,10 @@ get:
     - Fun Times
   parameters:
     - $ref: '../parameters/PathId.yaml'
-  x-bos-security:
-    - hmac: []
+  security:
+    - oauthEx: []
+  #x-bos-security:
+    #- hmac: []
   responses:
     200:
       schema:

@@ -2,8 +2,8 @@
 {
   "express": {
     "port": "3000",
-    "middleware": ["cors", "body-parser", "addHmac", "bos-authentication", "custom-auth"],
-    "middleware$": ["errors"]
+    "middleware": ["cors", "body-parser", "session", "addHmac", "bos-authentication", "custom-auth"],
+    "middleware$": []
   },
   "cors": {
     "origin": "*"
@@ -15,6 +15,17 @@
 
   "cluster": {
     "maxWorkers": 1
+  },
+
+  "session": {
+    "keys": ["sessionKey"]
+  },
+
+  "oauth": {
+    "clientId": "826839015121-rs7t7ick1ib0uvui9iihbb82gcqg64r9.apps.googleusercontent.com",
+    "clientSecret": "secret",
+    "redirectURI": "/oauth-redirect"
   }
+
 
 }
