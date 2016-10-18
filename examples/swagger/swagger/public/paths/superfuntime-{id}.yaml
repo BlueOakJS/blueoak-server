@@ -5,8 +5,14 @@ get:
     - Fun Times
   parameters:
     - $ref: '../parameters/PathId.yaml'
-  security:
-    - oauthImplicitEx: []
+  #security:
+    #- oauthImplicitEx: []
+  #security:
+    #- oauthEx: []
+  #security:
+    #- basicEx: []
+  #security:
+    #- apiKeyEx: []
   #x-bos-security:
     #- hmac: []
   responses:
