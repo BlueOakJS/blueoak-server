@@ -21,10 +21,20 @@ exports.init = function(app, logger) {
             }
             break;
         case 'oauth2':
-            if (!(req.bosAuthenticationData.password)) {
-                res.sendStatus(401);
+            if (req.bosAuthenticationData.securityDefn.flow === 'implicit') {
+                if (!(req.bosAuthenticationData.password)) {
+                    res.sendStatus(401);
+                }
+                else {
+                    return next();
+                }
             } else {
-                return next();
+                if (!(req.session.bosAuthenticationData)) {
+                    res.sendStatus(401);
+                }
+                else {
+                    return next();
+                }
             }
             break;
         }

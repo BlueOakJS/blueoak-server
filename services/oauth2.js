@@ -4,9 +4,8 @@ var cfg;
 var clientId;
 var clientSecret;
 var redirectURI;
-var implicitRedirectUri;
 //map of security req to oauth2 instance
-var routeOAuthMap = {};
+var secRecOAuthMap = {};
 
 module.exports = {
     init : init,
@@ -17,11 +16,11 @@ module.exports = {
 };
 
 function addOAuthInstance (securityReq, oauthInstance) {
-    routeOAuthMap[securityReq] = oauthInstance;
+    secRecOAuthMap[securityReq] = oauthInstance;
 }
 
 function getOAuthInstance (securityReq) {
-    return routeOAuthMap[securityReq];
+    return secRecOAuthMap[securityReq];
 }
 
 function init(config, logger) {
@@ -30,7 +29,6 @@ function init(config, logger) {
         clientId = cfg.clientId;
         clientSecret = cfg.clientSecret;
         redirectURI = cfg.redirectURI;
-        implicitRedirectUri = cfg.implicitRedirectUri;
         if (config.get('express').middleware.indexOf('session') < 0) {
             logger.warn('oauth requires that session be enabled.');
         }
@@ -53,8 +51,10 @@ function accessCodeRedirect(req, res) {
         //log warning about possible xsrf attack
     } else {
         oauth.getTokenData(req, res, function (tokenData) {
-            req.session.bosAuthenticationData = tokenData;
-            req.sessionOptions.httpOnly = false; //needs to be set for CORS
+            req.session.bosAuthenticationData = {type: 'oauth2', securityReq: securityReq,
+                securityDefn: {authorizationUrl: oauth.authorizationUrl, tokenUrl: oauth.tokenUrl, flow: 'accessCode'}};
+            req.session.bosAuthenticationData.tokenData = tokenData;
+            //req.sessionOptions.httpOnly = false; //needs to be set for CORS
             //this should make it so that an auth code will only get used once
             oauth.deleteRequestState(req.query.state);
             res.sendStatus(200);
@@ -74,14 +74,15 @@ OAuth2.prototype.redirectToAuthorizationUrl = function (req, res, scopes, stateI
 };
 
 OAuth2.prototype.redirectToAuthorizationUrlImplicit = function (req, res, scopes, stateId) {
-    var queryString = '?response_type=token&client_id=';
+    /*var queryString = '?response_type=token&client_id=';
     queryString += clientId;
     queryString += '&redirect_uri=' + implicitRedirectUri;
     queryString += '&scope=' + scopes.join(' ');
     queryString += '&state=' + stateId;
     res.status(302);
     res.setHeader('location', this.authorizationUrl + queryString);
-    res.send();
+    res.send();*/
+    res.sendStatus(401);
 };
 
 OAuth2.prototype.startOAuth = function (securityReq, scopes, req, res) {
