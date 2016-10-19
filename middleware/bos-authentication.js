@@ -168,6 +168,7 @@ function basicAuthentication(securityReq) {
         var authHeader = req.get('authorization') ? req.get('authorization') : '';
         if (authHeader !== '') {
             var credentialsBase64 = authHeader.split('Basic ')[1];
+            //look into decodeuricomponent
             var credentialsDecoded = base64URL.decode(credentialsBase64);
             var credentials = credentialsDecoded.split(':');
             req.bosAuthenticationData.username = credentials[0];
@@ -179,7 +180,7 @@ function basicAuthentication(securityReq) {
 
 function apiKeyAuthentication(securityReq, securityDefn) {
     return function (req, res, next) {
-        req.bosAuthenticationData = {type: 'apiKey', securityReq: securityReq};
+        req.bosAuthenticationData = {type: 'apiKey', securityReq: securityReq, securityDefn: securityDefn};
         if (req.get('authorization')) {
             var digestHeader = req.get('authorization').split('Digest ')[1];
             if (digestHeader) {
@@ -222,7 +223,6 @@ function apiKeyAuthentication(securityReq, securityDefn) {
 
 function oauth2(securityReq, securityDefn, scopes) {
     return function (req, res, next) {
-        req.bosAuthenticationData = {type: 'oauth2', securityReq: securityReq};
         if (securityDefn.flow === 'accessCode') {
             if (!req.session) {
                 log.error('oauth requires that session be enabled');
@@ -232,6 +232,7 @@ function oauth2(securityReq, securityDefn, scopes) {
                 return next();
             }
         } else if (req.get('authorization')) { //implicit
+            req.bosAuthenticationData = {type: 'oauth2', securityReq: securityReq, securityDefn: securityDefn};
             req.bosAuthenticationData.password =
                 req.get('authorization').split('Bearer ')[1]; //we assume bearer token type which is the most common
             if (req.bosAuthenticationData.password) { //already authenticated
