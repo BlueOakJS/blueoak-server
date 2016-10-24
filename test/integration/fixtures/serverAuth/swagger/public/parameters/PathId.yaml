@@ -1,0 +1,6 @@
+name: id
+in: path
+required: true
+type: string
+description: |
+  The ID of the resource to which the call applies.

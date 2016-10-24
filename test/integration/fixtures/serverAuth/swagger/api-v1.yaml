@@ -1,0 +1,28 @@
+swagger: '2.0'
+info:
+  version: 2.0.0-rc.1
+  title: Test API
+    
+basePath: /api/v1
+produces:
+  - application/json
+paths:
+  $ref: 'public/paths.yaml'
+securityDefinitions:
+  $ref: 'public/security-definitions.yaml'
+x-bos-securityDefinitions:
+  $ref: 'public/x-bos-security-definitions.yaml'
+definitions:
+  Contact:
+    $ref: 'public\definitions\Contact.yaml'
+  CuriousPerson:
+    $ref: 'public\definitions\CuriousPerson.yaml'
+  EnthusiasticPerson:
+    $ref: 'public\definitions\EnthusiasticPerson.yaml'
+  OtherPerson:
+    $ref: 'public\definitions\OtherPerson.yaml'
+  Person:
+    $ref: 'public\definitions\Person.yaml'
+  SuperFunTime:
+    $ref: 'public\definitions\SuperFunTime.yaml'
+

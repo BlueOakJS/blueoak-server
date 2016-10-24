@@ -1,0 +1,8 @@
+type: object
+properties:
+    curiousPeople:
+      type: array
+      items:
+        $ref: 'CuriousPerson.yaml'
+
+

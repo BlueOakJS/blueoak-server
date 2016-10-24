@@ -1,0 +1,14 @@
+allOf:
+  - $ref: 'CuriousPerson.yaml'
+  - type: object
+    required:
+      - kind
+      - notes
+    properties:
+      kind:
+        type: string
+        enum:
+          - OtherPerson
+      notes:
+        type: string
+

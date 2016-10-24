@@ -51,8 +51,6 @@ function accessCodeRedirect(req, res) {
         //log warning about possible xsrf attack
     } else {
         oauth.getTokenData(req, res, function (tokenData) {
-            req.session.bosAuthenticationData = {type: 'oauth2', securityReq: securityReq,
-                securityDefn: {authorizationUrl: oauth.authorizationUrl, tokenUrl: oauth.tokenUrl, flow: 'accessCode'}};
             req.session.bosAuthenticationData.tokenData = tokenData;
             //req.sessionOptions.httpOnly = false; //needs to be set for CORS
             //this should make it so that an auth code will only get used once
