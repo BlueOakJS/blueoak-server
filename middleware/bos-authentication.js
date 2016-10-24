@@ -163,25 +163,36 @@ function _applySecurityRequirement(app, method, route, securityReq,
 
 function basicAuthentication(securityReq) {
     return function (req, res, next) {
-        //header should be of the form "Basic " + user:password as a base64 encoded string
-        req.bosAuthenticationData = {type: 'Basic', securityReq: securityReq};
+        if (!req.bosAuthenticationData) {
+            req.bosAuthenticationData = [];
+        }
+        var authenticationData = {type: 'basic', securityReq: securityReq};
+        req.bosAuthenticationData.push(authenticationData);
         var authHeader = req.get('authorization') ? req.get('authorization') : '';
-        if (authHeader !== '') {
+        if (authHeader !== '') { //header should be of the form "Basic " + user:password as a base64 encoded string
             var credentialsBase64 = authHeader.split('Basic ')[1];
             //look into decodeuricomponent
             var credentialsDecoded = base64URL.decode(credentialsBase64);
             var credentials = credentialsDecoded.split(':');
-            req.bosAuthenticationData.username = credentials[0];
-            req.bosAuthenticationData.password = credentials[1];
+            authenticationData.username = credentials[0];
+            authenticationData.password = credentials[1];
         }
+        /*if (!(req.bosAuthenticationData.username && req.bosAuthenticationData.password)) {
+            res.setHeader('WWW-Authenticate', 'Basic realm="' + securityReq + '"');
+            return res.status(401).send();
+        }*/
         next();
     };
 }
 
 function apiKeyAuthentication(securityReq, securityDefn) {
     return function (req, res, next) {
-        req.bosAuthenticationData = {type: 'apiKey', securityReq: securityReq, securityDefn: securityDefn};
-        if (req.get('authorization')) {
+        if (!req.bosAuthenticationData) {
+            req.bosAuthenticationData = [];
+        }
+        var authenticationData = {type: securityDefn.type, securityReq: securityReq, securityDefn: securityDefn};
+        req.bosAuthenticationData.push(authenticationData);
+        /*if (req.get('authorization')) {
             var digestHeader = req.get('authorization').split('Digest ')[1];
             if (digestHeader) {
                 //should be form of username="Mufasa", realm="myhost@example.com"
@@ -190,20 +201,25 @@ function apiKeyAuthentication(securityReq, securityDefn) {
                 authorizationHeaderFields.forEach(function (header) {
                     //should be form of username="Mufasa"
                     var keyValPair = header.split('=');
-                    req.bosAuthenticationData[keyValPair[0]] = keyValPair[1].substring(1, keyValPair[1].length - 1);
+                    authenticationData[keyValPair[0]] = keyValPair[1].substring(1, keyValPair[1].length - 1);
                 });
+                return next();
             }
-        }
+        }*/
         if (securityDefn.in === 'query') {
-            req.bosAuthenticationData.password = req.query[securityDefn.name];
+            authenticationData.password = req.query[securityDefn.name];
         }
         else if (securityDefn.in === 'header') {
-            req.bosAuthenticationData.password = req.get(securityDefn.name);
+            authenticationData.password = req.get(securityDefn.name);
         }
         else {
             log.warn('unknown location %s for apiKey. ' +
                 'looks like open api specs may have changed on us', securityDefn.in);
         }
+        /*if (!(req.bosAuthenticationData.password)) {
+            res.setHeader('WWW-Authenticate', 'Digest realm="' + securityReq + '"');
+            return res.status(401).send();
+        }*/
         next();
         //this would have to be a user provided function that
         //fetches the user (and thus the private key that we need to compute the hash) from some data source
@@ -223,19 +239,31 @@ function apiKeyAuthentication(securityReq, securityDefn) {
 
 function oauth2(securityReq, securityDefn, scopes) {
     return function (req, res, next) {
+        if (!req.bosAuthenticationData) {
+            req.bosAuthenticationData = [];
+        }
         if (securityDefn.flow === 'accessCode') {
             if (!req.session) {
-                log.error('oauth requires that session be enabled');
-                return next();
+                log.error('oauth2 accessCode flow requires that session be enabled');
+                return res.sendStatus(401);
             }
-            if (req.session.bosAuthenticationData) { //already authenticated
+            else if (req.session.bosAuthenticationData) { //already authenticated
+                req.bosAuthenticationData.push(req.session.bosAuthenticationData);
                 return next();
+            } else {
+                req.session.bosAuthenticationData = {
+                    type: securityDefn.type,
+                    securityReq: securityReq,
+                    securityDefn: securityDefn
+                };
+                req.bosAuthenticationData.push(req.session.bosAuthenticationData);
             }
         } else if (req.get('authorization')) { //implicit
-            req.bosAuthenticationData = {type: 'oauth2', securityReq: securityReq, securityDefn: securityDefn};
-            req.bosAuthenticationData.password =
+            var authenticationData = {type: securityDefn.type, securityReq: securityReq, securityDefn: securityDefn};
+            req.bosAuthenticationData.push(authenticationData);
+            authenticationData.password =
                 req.get('authorization').split('Bearer ')[1]; //we assume bearer token type which is the most common
-            if (req.bosAuthenticationData.password) { //already authenticated
+            if (authenticationData.password) { //already authenticated
                 //user defined code will be responsible for validating this token
                 //which they absolutely should do because it did not come directly from oauth provider
                 return next();
