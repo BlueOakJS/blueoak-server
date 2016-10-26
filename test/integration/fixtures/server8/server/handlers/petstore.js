@@ -14,6 +14,14 @@ exports.pets2 = function(req, res, next) {
     });
 };
 
+exports.pets2Upload = function(req, res, next) {
+    res.json({petId: Number(req.body.petId), file: req.files.pet[0]});
+};
+
+exports.pets2Post = function(req, res, next) {
+    res.json({petId: Number(req.body.petId), name: req.body.petName});
+};
+
 exports.pets3 = function(req, res, next) {
     res.json({
         name: 'pets3'

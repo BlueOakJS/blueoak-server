@@ -13,7 +13,12 @@
   },
 
   "bodyParser": {
-    "json": {}
+    "json": {},
+    "urlencoded": {}
+  },
+
+  "multer": {
+    "storage": "multerMemoryStorage"
   },
 
   "logger": {

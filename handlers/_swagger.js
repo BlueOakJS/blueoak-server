@@ -68,6 +68,21 @@ exports.init = function (app, auth, config, logger, serviceLoader, swagger, call
             }
         }
 
+        if (containsUrlEncodedFormData(api)) {
+            var middlewareConfig = config.get('express').middleware;
+            var foundBodyParserInMiddlewareConfig = (_.indexOf(middlewareConfig, 'body-parser') >= 0 ||
+                _.indexOf(middlewareConfig, 'bodyParser') >= 0);
+            if (!foundBodyParserInMiddlewareConfig) {
+                logger.warn('Body parser not found in middleware config.  ' +
+                    'Required when using MIME type application/www-form-urlencoded.');
+            }
+            var bodyParserConfig = _.extend({}, config.get('bodyParser'), config.get('body-parser'));
+            if (_.indexOf(_.keys(bodyParserConfig), 'urlencoded') < 0) {
+                logger.warn('Body parser not configured to look for url encoded data.  ' +
+                    'Required when using MIME type application/www-form-urlencoded.');
+            }
+        }
+
         var basePath = api.basePath || '';
         var handlerName = specName;
 
@@ -171,6 +186,51 @@ function containsMultipartFormData(api) {
 
     return foundMultipartData;
 }
+/**
+ * The current use of this function is to figure out whether body parser needs to be configured
+ * This is the case when there is an operation that consumes form data without a file
+ * If there is a file, then multer will be used to parse form data
+ * @param api
+ * @returns {boolean}
+ */
+function containsUrlEncodedFormData(api) {
+    if (_.indexOf(api.consumes, 'application/x-www-form-urlencoded') > -1) {
+        return true;
+    }
+
+    var foundFormData = false;
+    _.keys(api.paths).forEach(function(path) {
+        var pathData = api.paths[path];
+        _.keys(pathData).forEach(function(method) {
+            if (_.indexOf(pathData[method].consumes, 'application/x-www-form-urlencoded') > -1) {
+                foundFormData = true;
+            } else {
+                var params = pathData[method].parameters;
+                var foundFormDataInParams = false;
+                var foundFileFormDataInParams = false;
+                _.keys(params).forEach(function (param) {
+                    if (params[param].in === 'formData') {
+                        foundFormDataInParams = true;
+                        if (params[param].type === 'file') {
+                            foundFileFormDataInParams = true;
+                        }
+                    }
+                });
+                //if there is file form data, body parser may not need to be used
+                // because multer will put form data in the request body
+                if (foundFormDataInParams && !foundFileFormDataInParams) {
+                    foundFormData = true;
+                }
+            }
+        });
+        if (foundFormData) {
+            return foundFormData;
+        }
+
+    });
+
+    return foundFormData;
+}
 
 // Checks the multer config if the storage property is set to either the
 // memoryStorage enum or the name of a custom multerService implementing
@@ -234,9 +294,10 @@ function registerRoute(app, auth, additionalMiddleware, method, path, data, allo
     var authMiddleware = auth.getAuthMiddleware() || [];
     additionalMiddleware = authMiddleware.concat(additionalMiddleware);
 
-
-    if (containsFormData(data)) {
-        var fieldData = _.where(data.parameters, {in: 'formData', type: 'file'});
+    if (_.indexOf(data.consumes, 'multipart/form-data') > -1) {
+        var fieldData = _.filter(data.parameters, function (param) {
+            return param.in === 'formData' && param.type === 'file';
+        });
         fieldData = _.map(fieldData, function(item) {
             return {
                 name: item.name,
@@ -354,18 +415,13 @@ function registerRoute(app, auth, additionalMiddleware, method, path, data, allo
     });
 }
 
-//Check if a given route contains any formData parameters
-function containsFormData(routeData) {
-    return _.where(routeData.parameters, {in: 'formData'}).length > 0;
-}
-
 //Any parameter with a default that's not already defined will be set to the default value
 function setDefaultQueryParams(req, data, logger) {
     var parameters = _.toArray(data.parameters);
     for (var i = 0; i < parameters.length; i++) {
         var parm = parameters[i];
         if (parm.in === 'query') {
-            if (parm.default && typeof(req.query[parm.name]) === 'undefined') {
+            if (parm.default !== undefined && typeof(req.query[parm.name]) === 'undefined') {
                 req.query[parm.name] = swaggerUtil.cast(parm, parm.default);
             }
         }
@@ -378,7 +434,7 @@ function setDefaultHeaders(req, data, logger) {
     for (var i = 0; i < parameters.length; i++) {
         var parm = parameters[i];
         if (parm.in === 'header') {
-            if (parm.default && typeof(req.query[parm.name]) === 'undefined') {
+            if (parm.default !== undefined && typeof(req.query[parm.name]) === 'undefined') {
                 req.headers[parm.name] = swaggerUtil.cast(parm, parm.default);
             }
         }
@@ -444,7 +500,6 @@ function validateRequestParameters(req, data, swaggerDoc, logger, callback) {
         } else if (parm.in === 'formData') {
             // fyi, the swagger parser will fail if the user didn't set 'consumes' to
             // multipart/form-data or application/x-www-form-urlencoded
-
             if (parm.required && parm.type === 'file') {
                 if (!req.files[parm.name]) {
                     logger.warn('Missing form parameter "%s" for operation "%s"', parm.name, data.operationId);
@@ -452,25 +507,25 @@ function validateRequestParameters(req, data, swaggerDoc, logger, callback) {
                     error.name = 'ValidationError';
                     return callback(error);
                 }
-            } else if (parm.required) { //something other than file
-                if (!req.body[parm.name]) { //multer puts the non-file parameters in the request body
+            }
+            else if (!req.body[parm.name]) { //multer puts the non-file parameters in the request body
+                if (parm.required) { //something other than file
                     logger.warn('Missing form parameter "%s" for operation "%s"', parm.name, data.operationId);
                     error = new VError('Missing %s form parameter', parm.name);
                     error.name = 'ValidationError';
                     return callback(error);
-                } else {
-                    //go through the param-parsing code which is able to take text and validate
-                    //it as any type, such as number, or array
-                    result = swaggerUtil.validateParameterType(parm, req.body[parm.name]);
-                    if (!result.valid) {
-                        error = new VError('Error validating form parameter %s', parm.name);
-                        error.name = 'ValidationError';
-                        error.subErrors = result.errors;
-                        return callback(error);
-                    }
+                }
+            } else {
+                //go through the param-parsing code which is able to take text and validate
+                //it as any type, such as number, or array
+                result = swaggerUtil.validateParameterType(parm, req.body[parm.name]);
+                if (!result.valid) {
+                    error = new VError('Error validating form parameter %s', parm.name);
+                    error.name = 'ValidationError';
+                    error.subErrors = result.errors;
+                    return callback(error);
                 }
             }
-
         } else if (parm.in === 'body') {
             result = swaggerUtil.validateJSONType(parm.schema, req.body);
             var polymorphicValidationErrors = [];

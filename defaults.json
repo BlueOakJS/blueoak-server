@@ -53,6 +53,7 @@
     "serve": true,
     "useLocalhost": true,
     "polymorphicValidation": "on",
+    "refCompiler": "off",
     "validateResponseModels": false
   },
   "node": {
