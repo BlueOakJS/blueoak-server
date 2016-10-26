@@ -4,6 +4,7 @@ var cfg;
 var clientId;
 var clientSecret;
 var redirectURI;
+var implicitRedirectUri;
 //map of security req to oauth2 instance
 var secRecOAuthMap = {};
 
@@ -29,6 +30,7 @@ function init(config, logger) {
         clientId = cfg.clientId;
         clientSecret = cfg.clientSecret;
         redirectURI = cfg.redirectURI;
+        implicitRedirectUri = cfg.implicitRedirectUri;
         if (config.get('express').middleware.indexOf('session') < 0) {
             logger.warn('oauth requires that session be enabled.');
         }
@@ -72,15 +74,16 @@ OAuth2.prototype.redirectToAuthorizationUrl = function (req, res, scopes, stateI
 };
 
 OAuth2.prototype.redirectToAuthorizationUrlImplicit = function (req, res, scopes, stateId) {
-    /*var queryString = '?response_type=token&client_id=';
+    var queryString = '?response_type=token&client_id=';
     queryString += clientId;
     queryString += '&redirect_uri=' + implicitRedirectUri;
     queryString += '&scope=' + scopes.join(' ');
     queryString += '&state=' + stateId;
-    res.status(302);
-    res.setHeader('location', this.authorizationUrl + queryString);
-    res.send();*/
-    res.sendStatus(401);
+    //normally we would send back a redirect here, but since we anticipate this being used on a mobile platform
+    //we will send a 401 with the oauth provider url in the authenticate header, client will handle sending the request
+    res.status(401);
+    res.setHeader('www-authenticate', 'OAuth2 ' + this.authorizationUrl + queryString);
+    res.send();
 };
 
 OAuth2.prototype.startOAuth = function (securityReq, scopes, req, res) {
