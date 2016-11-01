@@ -5,6 +5,7 @@
     "middleware": ["cors", "body-parser"],
     "middleware$": ["errors"]
   },
+  
   "cors": {
     "origin": "*"
   },
