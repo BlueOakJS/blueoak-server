@@ -1,5 +1,5 @@
 {
     "ext": ".js,.json,.yaml,.xsl",
-    "ignore": ["*/node_modules/"],
+    "ignore": ["*/node_modules/", "swagger/petstore.json", "swagger/api-v1.yaml"],
     "watch": [".", "../../"]
 }

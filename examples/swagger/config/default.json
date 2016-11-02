@@ -5,6 +5,7 @@
     "middleware": ["cors", "body-parser", "session", "addHmac", "bos-authentication", "custom-auth"],
     "middleware$": []
   },
+  
   "cors": {
     "origin": "*"
   },
