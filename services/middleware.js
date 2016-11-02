@@ -18,6 +18,16 @@ exports.init = function(config, serviceLoader, callback) {
     serviceLoader.inject('app', app);
 
     var cfg = config.get('express');
+    //this should catch middleware that exists in node modules instead of a /middleware directory
+    _.forEach(cfg.middleware, function (middleware) {
+        if (!serviceLoader.getConsumer('middleware', middleware)) {
+            try {
+                serviceLoader.loadConsumerModules('middleware', [middleware]);
+            } catch (err) {
+                return callback(err);
+            }
+        }
+    });
 
     //middleware
     serviceLoader.initConsumers('middleware', cfg.middleware || [], function initMiddlewareCallback(err) {
