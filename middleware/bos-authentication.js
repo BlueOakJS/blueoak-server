@@ -1,19 +1,18 @@
 var _ = require('lodash');
 var base64URL = require('base64url');
-var path = require('path');
 
 var log;
 var loader;
 var oAuthService;
 var httpMethods = ['get', 'put', 'post', 'delete', 'options', 'head', 'patch'];
-//map of security reqs to express middleware callbacks
-var securityReqMap = {};
+//map of middleware ids to 'true' meaning that they have been initialized
+var middlewareInitMap = {};
 
 module.exports = {
     init : init
 };
 
-function init(app, config, logger, serviceLoader, swagger) {
+function init(app, logger, serviceLoader, swagger) {
     log = logger;
     loader = serviceLoader;
     _.forEach(swagger.getSimpleSpecs(), function (api, name) {
@@ -57,32 +56,41 @@ function _applyCustomSecurityRequirement(app, method, route, securityReq,
                                    securityDefn, /*requiredPermissions,*/ requiredScopes) {
     //load security def middleware
     if (securityDefn['x-bos-middleware']) {
-        loader.loadConsumerModules('middleware',
-            [path.join(global.__appDir, 'middleware', securityDefn['x-bos-middleware'])]);
-        loader.initConsumers('middleware', [securityDefn['x-bos-middleware']], function (err) {
-            if (!err) {
-                var customAuthMiddleware = loader.getConsumer('middleware', securityDefn['x-bos-middleware']);
-                if (customAuthMiddleware.authenticate) {
-                    if (!securityReqMap[securityReq]) {
-                        securityReqMap[securityReq] =
-                            customAuthMiddleware.authenticate(securityReq, securityDefn, requiredScopes);
-                    }
-                    app[method].call(app, route, securityReqMap[securityReq]);
+        var customAuthMiddleware = loader.getConsumer('middleware', securityDefn['x-bos-middleware']);
+        if (!customAuthMiddleware) {
+            loader.loadConsumerModules('middleware',
+                [securityDefn['x-bos-middleware']]);
+            customAuthMiddleware = loader.getConsumer('middleware', securityDefn['x-bos-middleware']);
+        }
+        if (!middlewareInitMap[securityDefn['x-bos-middleware']]) {
+            loader.initConsumers('middleware', [securityDefn['x-bos-middleware']], function (err) {
+                if (!err) {
+                    wireAuthenticateToRoute(app, method, route, securityReq,
+                        securityDefn, requiredScopes, customAuthMiddleware);
                 }
                 else {
-                    log.warn('custom auth middleware %s missing authenticate method');
+                    log.warn('Unable to initialize custom middleware %s for security defn %s',
+                        securityDefn['x-bos-middleware'], securityReq);
                 }
-            }
-            else {
-                log.warn('Unable to find custom middleware %s for security defn %s',
-                    securityDefn['x-bos-middleware'], securityReq);
-            }
-        });
+            });
+        } else {
+            wireAuthenticateToRoute(app, method, route, securityReq,
+                securityDefn, requiredScopes, customAuthMiddleware);
+        }
     } else {
         log.info('No custom middleware defined for security defn %s. ' +
             'Attempting to use built in middleware...', securityReq);
         _applySecurityRequirement(app, method, route, securityReq,
             securityDefn, requiredScopes);
+    }
+}
+
+function wireAuthenticateToRoute(app, method, route, securityReq, securityDefn, requiredScopes, customAuthMiddleware) {
+    if (customAuthMiddleware.authenticate) {
+        app[method].call(app, route, customAuthMiddleware.authenticate(securityReq, securityDefn, requiredScopes));
+    }
+    else {
+        log.warn('custom auth middleware %s missing authenticate method');
     }
 }
 
@@ -171,7 +179,6 @@ function basicAuthentication(securityReq) {
         var authHeader = req.get('authorization') ? req.get('authorization') : '';
         if (authHeader !== '') { //header should be of the form "Basic " + user:password as a base64 encoded string
             var credentialsBase64 = authHeader.split('Basic ')[1];
-            //look into decodeuricomponent
             var credentialsDecoded = base64URL.decode(credentialsBase64);
             var credentials = credentialsDecoded.split(':');
             authenticationData.username = credentials[0];

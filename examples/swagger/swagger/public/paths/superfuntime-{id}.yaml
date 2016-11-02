@@ -9,9 +9,9 @@ get:
     #- oauthImplicitEx: []
   #security:
     #- oauthEx: []
-  security:
-    - basicEx: []
-    - apiKeyEx: []
+  #security:
+    #- basicEx: []
+    #- apiKeyEx: []
   #security:
     #- apiKeyEx: []
   #x-bos-security:
