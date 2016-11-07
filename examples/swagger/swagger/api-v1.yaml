@@ -12,17 +12,21 @@ securityDefinitions:
   $ref: 'public/security-definitions.yaml'
 x-bos-securityDefinitions:
   $ref: 'public/x-bos-security-definitions.yaml'
+
+### ref-compiler: BEGIN
 definitions:
   Contact:
-    $ref: 'public\definitions\Contact.yaml'
+    $ref: 'public/definitions/Contact.yaml'
   CuriousPerson:
-    $ref: 'public\definitions\CuriousPerson.yaml'
+    $ref: 'public/definitions/CuriousPerson.yaml'
   EnthusiasticPerson:
-    $ref: 'public\definitions\EnthusiasticPerson.yaml'
+    $ref: 'public/definitions/EnthusiasticPerson.yaml'
   OtherPerson:
-    $ref: 'public\definitions\OtherPerson.yaml'
+    $ref: 'public/definitions/OtherPerson.yaml'
   Person:
-    $ref: 'public\definitions\Person.yaml'
+    $ref: 'public/definitions/Person.yaml'
   SuperFunTime:
-    $ref: 'public\definitions\SuperFunTime.yaml'
-
+    $ref: 'public/definitions/SuperFunTime.yaml'
+parameters:
+  PathId:
+    $ref: 'public/parameters/PathId.yaml'

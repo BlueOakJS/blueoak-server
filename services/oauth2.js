@@ -31,9 +31,9 @@ function init(config, logger) {
         clientSecret = cfg.clientSecret;
         redirectURI = cfg.redirectURI;
         implicitRedirectUri = cfg.implicitRedirectUri;
-        if (config.get('express').middleware.indexOf('session') < 0) {
+        /*if (config.get('express').middleware.indexOf('session') < 0) {
             logger.warn('oauth requires that session be enabled.');
-        }
+        }*/
     }
 }
 
