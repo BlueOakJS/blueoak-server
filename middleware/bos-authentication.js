@@ -3,7 +3,6 @@ var base64URL = require('base64url');
 
 var log;
 var loader;
-var oAuthService;
 var httpMethods = ['get', 'put', 'post', 'delete', 'options', 'head', 'patch'];
 //map of middleware ids to 'true' meaning that they have been initialized
 var middlewareInitMap = {};
@@ -109,13 +108,13 @@ function _applySecurityRequirement(app, method, route, securityReq,
             app[method].call(app, route, apiKeyAuthentication(securityReq, securityDefn));
             break;
         case 'oauth2':
-            if (!oAuthService) {
+            /*if (!oAuthService) {
                 oAuthService = loader.get('oauth2');
             }
-            app[method].call(app, route, oauth2(securityReq, securityDefn, requiredScopes));
-            /*log.warn('No out of the box oauth2 implementation exists in BOS. ' +
+            app[method].call(app, route, oauth2(securityReq, securityDefn, requiredScopes));*/
+            log.warn('No out of the box oauth2 implementation exists in BOS. ' +
                 'You must define your own and reference it in the ' +
-                '"x-bos-middleware" property of the security definition %s', securityReq);*/
+                '"x-bos-middleware" property of the security definition %s', securityReq);
             break;
         default:
             return log.warn('unrecognized security type %s for security definition %s' +
@@ -244,7 +243,7 @@ function apiKeyAuthentication(securityReq, securityDefn) {
     };
 }
 
-function oauth2(securityReq, securityDefn, scopes) {
+/*function oauth2(securityReq, securityDefn, scopes) {
     return function (req, res, next) {
         if (!req.bosAuthenticationData) {
             req.bosAuthenticationData = [];
@@ -284,7 +283,7 @@ function oauth2(securityReq, securityDefn, scopes) {
         }
         oAuthInstance.startOAuth(securityReq, scopes, req, res);
     };
-}
+}*/
 
 /*function _expandRouteInstancePermissions(perms, route, uri) {
      relate the route path parameters to the url instance values

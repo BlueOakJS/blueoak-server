@@ -73,8 +73,7 @@
     "eslint": "^3.3.1",
     "istanbul": "^0.4.1",
     "mocha": "^3.0.2",
-    "mocha-jenkins-reporter": "^0.1.8",
-    "sjcl": "^1.0.6"
+    "mocha-jenkins-reporter": "^0.1.8"
   },
   "files": [
     "bin",
