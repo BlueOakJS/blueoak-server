@@ -44,6 +44,23 @@
     "clientId": "826839015121-rs7t7ick1ib0uvui9iihbb82gcqg64r9.apps.googleusercontent.com",
     "clientSecret": "secret",
     "redirectURI": "/oauth-redirect"
+  },
+
+  "swagger": {
+    "refCompiler": {
+      "petstore": {
+        "baseSpecFile": "petstore.json",
+        "refDirs": [
+          "v1-assets"
+        ]
+      },
+      "api-v1": {
+        "baseSpecFile": "api-v1.yaml",
+        "refDirs": [
+          "public"
+        ]
+      }
+    }
   }
 
 
