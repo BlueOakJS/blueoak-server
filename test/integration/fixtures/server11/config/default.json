@@ -1,7 +1,7 @@
 {
   "express": {
     "port": "5000",
-    "middleware": ["session", "bodyParser"]
+    "middleware": ["session", "bodyParser", "dummy-middleware"]
   },
 
   "cluster": {
