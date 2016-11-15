@@ -560,6 +560,10 @@ function validateResponseModels(res, body, data, swaggerDoc, logger) {
         return;
     }
 
+    if (res.statusCode === 204) { //nothing to validate
+        return;
+    }
+
     var schemaPath = 'responses.%s.schema',
         mapPath = 'responses.%s.x-bos-generated-disc-map',
         codeSchema = util.format(schemaPath, res.statusCode),
