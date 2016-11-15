@@ -66,7 +66,7 @@ describe('SERVER10 - handler with invalid name should fail on startup', function
     });
 });
 
-describe.only('SERVER11 - middleware should get loaded from node modules', function () {
+describe('SERVER11 - middleware should get loaded from node modules', function () {
     this.timeout(5000);
 
     after(function (done) {
