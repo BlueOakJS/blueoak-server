@@ -51,6 +51,24 @@
             }
           }
         }
+      },
+      "post": {
+        "description": "Adds a new pet",
+        "operationId": "petsPostNoContent",
+        "responses": {
+          "204": {
+            "description": "pet added"
+          },
+          "422": {
+            "description": "Request Validation Error"
+          },
+          "default": {
+            "description": "unexpected error",
+            "schema": {
+              "$ref": "#/definitions/errorModel"
+            }
+          }
+        }
       }
     },
     "/pets3": {
