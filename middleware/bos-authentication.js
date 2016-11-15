@@ -17,34 +17,28 @@ function init(app, logger, serviceLoader, swagger) {
     _.forEach(swagger.getSimpleSpecs(), function (api, name) {
         var basePath = api.basePath || '';
         /* apply security requirements to each route path*/
-        _.keys(api.paths).forEach(function (path) {
+        _.forEach(_.keys(api.paths), function (path) {
             var pathObj = api.paths[path];
             var routePath = basePath + _convertPathToExpress(path);
 
-            //loop for http method keys, like get an post
-            _.keys(pathObj).forEach(function (method) {
+            //loop for http method keys, like get and post
+            _.forEach(_.keys(pathObj), function (method) {
                 if (_.contains(httpMethods, method)) {
                     var operation = pathObj[method];
-                    if (operation['security']) {
-                        operation['security'].forEach(function (securityReq) {
-                            _.forOwn(securityReq, function (scopes, securityDefn) {
-                                _applySecurityRequirement(app, method, routePath, securityDefn,
-                                    api.securityDefinitions[securityDefn],
-                                    /*operation['x-bos-permissions'][securityReq],*/
-                                    scopes);
-                            });
+                    _.forEach(operation['security'], function (securityReq) {
+                        _.forOwn(securityReq, function (scopes, securityDefn) {
+                            _applySecurityRequirement(app, method, routePath, securityDefn,
+                                api.securityDefinitions[securityDefn],
+                                scopes);
                         });
-                    }
-                    if (operation['x-bos-security']) {
-                        operation['x-bos-security'].forEach(function (securityReq) {
-                            _.forOwn(securityReq, function (scopes, securityDefn) {
-                                _applyCustomSecurityRequirement(app, method, routePath, securityDefn,
-                                    api['x-bos-securityDefinitions'][securityDefn],
-                                    /*operation['x-bos-permissions'][securityReq],*/
-                                    scopes);
-                            });
+                    });
+                    _.forEach(operation['x-bos-security'], function (securityReq) {
+                        _.forOwn(securityReq, function (scopes, securityDefn) {
+                            _applyCustomSecurityRequirement(app, method, routePath, securityDefn,
+                                api['x-bos-securityDefinitions'][securityDefn],
+                                scopes);
                         });
-                    }
+                    });
                 }
             });
         });
@@ -52,7 +46,7 @@ function init(app, logger, serviceLoader, swagger) {
 }
 
 function _applyCustomSecurityRequirement(app, method, route, securityReq,
-                                   securityDefn, /*requiredPermissions,*/ requiredScopes) {
+                                   securityDefn, requiredScopes) {
     //load security def middleware
     if (securityDefn['x-bos-middleware']) {
         var customAuthMiddleware = loader.getConsumer('middleware', securityDefn['x-bos-middleware']);
@@ -94,7 +88,7 @@ function wireAuthenticateToRoute(app, method, route, securityReq, securityDefn, 
 }
 
 function _applySecurityRequirement(app, method, route, securityReq,
-                                   securityDefn, /*requiredPermissions,*/ requiredScopes) {
+                                   securityDefn, requiredScopes) {
     //allow use of custom middleware even if a custom security definition was not used
     if (securityDefn['x-bos-middleware']) {
         _applyCustomSecurityRequirement(app, method, route, securityReq,
@@ -122,51 +116,7 @@ function _applySecurityRequirement(app, method, route, securityReq,
                 securityDefn.type, securityReq);
         }
     }
-    /*//wire up path with user defined authentication method for this req
-    if (cfg.authenticationMethods[securityReq]) {
-        var parts = cfg.authenticationMethods[securityReq].split('.');
-        var service = loader.get(parts[0]);
-        if (!service) {
-            return log.warn('Could not find service module named "%s".', parts[0]);
-        }
-        var serviceMethod = service[parts[1]];
-        if (!_.isFunction(serviceMethod)) {
-            return log.warn('Authentication function %s on module %s is missing or invalid.',
-                parts[1], parts[0]);
-        }
-        //scopes included here for security type oauth2 where authentication/authorization happens in one go
-        app[method].call(app, route, _.partialRight(serviceMethod, securityReq,
-            securityDefn, requiredScopes));
-        //wire up path with user defined authorization method
-        if (cfg.authorizationMethods[securityReq]) {
-            parts = cfg.authorizationMethods[securityReq].split('.');
-            service = loader.get(parts[0]);
-            if (!service) {
-                return log.warn('Could not find service module named "%s".', parts[0]);
-            }
-            serviceMethod = service[parts[1]];
-            if (!_.isFunction(serviceMethod)) {
-                return log.warn('Authorization function %s on module %s is missing or invalid.',
-                    parts[1], parts[0]);
-            }
-            var wrappedAuthorizationMethod = wrapAuthorizationMethod(serviceMethod, route,
-                securityDefn, requiredPermissions);
-            app[method].call(app, route, _.partialRight(wrappedAuthorizationMethod, route,
-                securityDefn, requiredPermissions));
-        } else {
-            return log.warn('No authorization method found for security requirement %s', securityReq);
-        }
-    } else {
-        return log.warn('No authentication method defined for security requirement %s', securityReq);
-    }*/
 }
-
-/*function wrapAuthorizationMethod(authorizationMethod, route, securityDefn, requiredPermissions) {
-    return function (req, res, next) {
-        var runTimeRequiredPermissions = _expandRouteInstancePermissions(requiredPermissions, route, req.path);
-        authorizationMethod.call(this, req, res, next, securityDefn, runTimeRequiredPermissions);
-    };
-}*/
 
 function basicAuthentication(securityReq) {
     return function (req, res, next) {
@@ -183,10 +133,6 @@ function basicAuthentication(securityReq) {
             authenticationData.username = credentials[0];
             authenticationData.password = credentials[1];
         }
-        /*if (!(req.bosAuthenticationData.username && req.bosAuthenticationData.password)) {
-            res.setHeader('WWW-Authenticate', 'Basic realm="' + securityReq + '"');
-            return res.status(401).send();
-        }*/
         next();
     };
 }
@@ -198,20 +144,6 @@ function apiKeyAuthentication(securityReq, securityDefn) {
         }
         var authenticationData = {type: securityDefn.type, securityReq: securityReq, securityDefn: securityDefn};
         req.bosAuthenticationData.push(authenticationData);
-        /*if (req.get('authorization')) {
-            var digestHeader = req.get('authorization').split('Digest ')[1];
-            if (digestHeader) {
-                //should be form of username="Mufasa", realm="myhost@example.com"
-                //treating this like the digest scheme defined in the rfc
-                var authorizationHeaderFields = digestHeader.split(', ');
-                authorizationHeaderFields.forEach(function (header) {
-                    //should be form of username="Mufasa"
-                    var keyValPair = header.split('=');
-                    authenticationData[keyValPair[0]] = keyValPair[1].substring(1, keyValPair[1].length - 1);
-                });
-                return next();
-            }
-        }*/
         if (securityDefn.in === 'query') {
             authenticationData.password = req.query[securityDefn.name];
         }
@@ -222,24 +154,7 @@ function apiKeyAuthentication(securityReq, securityDefn) {
             log.warn('unknown location %s for apiKey. ' +
                 'looks like open api specs may have changed on us', securityDefn.in);
         }
-        /*if (!(req.bosAuthenticationData.password)) {
-            res.setHeader('WWW-Authenticate', 'Digest realm="' + securityReq + '"');
-            return res.status(401).send();
-        }*/
         next();
-        //this would have to be a user provided function that
-        //fetches the user (and thus the private key that we need to compute the hash) from some data source
-        //we don't need this if we decide that we will let the user figure out how to verify the digest
-        /*verify(apiId, function (user) {
-         //regenerate hash with apiKey
-         //hash will include symmetric apiKey, one or more of:
-         //request method, content-md5 header, request uri, timestamp, socket.remoteAddress, req.ip, ip whitelist?
-         //if (hash === digest)
-         //  all good
-         // else you suck
-         req.bosAuth.user = user;
-         next();
-         });*/
     };
 }
 
@@ -283,39 +198,6 @@ function apiKeyAuthentication(securityReq, securityDefn) {
         }
         oAuthInstance.startOAuth(securityReq, scopes, req, res);
     };
-}*/
-
-/*function _expandRouteInstancePermissions(perms, route, uri) {
-     relate the route path parameters to the url instance values
-     perms: ["api:read:{policyid}", "api:read:{claimid}"]
-     route: /api/v1/policies/:policyid/claims/:claimid
-     [ api,v1,policies,:policyid,claims,:claimid ]
-     uri:   /api/v1/policies/SFIH1234534/claims/37103
-     [ api,v1,policies,SFIH1234534,claims,37103 ]
-
-    if (!_.isString(route) ||  !_.isString(uri)) {
-        return perms;
-    }
-    var routeParts = route.split('/');
-    var uriParts = uri.split('/');
-
-    // [ [ ':policyid', 'SFIH1234534' ], [ ':claimid', '37103' ] ]
-    var pathIds = _.zip(routeParts, uriParts)
-        .filter(function (b) {
-            return _.startsWith(b[0], ':');
-        }).map(function (path) {
-            // trim the :
-            path[0] = path[0].substr(1);
-            return path;
-        });
-
-    return _.map(perms, function (perm) {
-        var ePerm = perm;
-        _.forEach(pathIds, function (item) {
-            ePerm = ePerm.replace('{' + item[0] + '}', item[1]);
-        });
-        return ePerm;
-    });
 }*/
 
 //swagger paths use {blah} while express uses :blah
