@@ -38,3 +38,7 @@ exports.pets6 = function (req, res, next) {
 exports.pets22 = function (req, res, next) {
     res.status(201).send(req.body);
 };
+
+exports.petsPostNoContent = function (req, res) {
+    res.sendStatus(204);
+};

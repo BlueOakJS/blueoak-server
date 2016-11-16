@@ -308,6 +308,14 @@ describe('SERVER5 + response model validation - using the "error" option', funct
         });
     });
 
+    it('POST /api/pets1 - no validation error for no content body', function (done) {
+        request.post('http://localhost:' + (process.env.PORT || 5000) + '/api/pets1', function (err, resp, body) {
+            assert.equal(null, err);
+            assert.equal(body, '');
+            done();
+        });
+    });
+
     it('GET /api/pets2 - validation error', function (done) {
         request('http://localhost:' + (process.env.PORT || 5000) + '/api/pets2', function (err, resp, body) {
             assert.equal(null, err);

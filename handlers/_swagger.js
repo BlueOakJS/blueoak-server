@@ -560,19 +560,25 @@ function validateResponseModels(res, body, data, swaggerDoc, logger) {
         return;
     }
 
-    var schemaPath = 'responses.%s.schema',
+    var schemaPath = 'responses.%s',
         mapPath = 'responses.%s.x-bos-generated-disc-map',
-        codeSchema = util.format(schemaPath, res.statusCode),
-        defaultSchema = util.format(schemaPath, 'default'),
+        responseModel = util.format(schemaPath, res.statusCode),
+        defaultResponseModel = util.format(schemaPath, 'default'),
         mapSchema = util.format(mapPath, res.statusCode),
         defaultMapSchema = util.format(mapPath, 'default');
     var modelSchema;
     var responseModelMap;
-    if (_.has(data, codeSchema)) {
-        modelSchema = _.get(data, codeSchema);
+    if (_.has(data, responseModel)) {
+        modelSchema = _.get(data, responseModel + '.schema');
+        if (!modelSchema && !_.isEmpty(body)) {
+            return _createValidationError('No response schema defined for %s %s with status code %s');
+        }
         responseModelMap = _.get(data, mapSchema);
-    } else if (_.has(data, defaultSchema)) {
-        modelSchema = _.get(data, defaultSchema);
+    } else if (_.has(data, defaultResponseModel)) {
+        modelSchema = _.get(data, defaultResponseModel + '.schema');
+        if (!modelSchema && !_.isEmpty(body)) {
+            return _createValidationError('No response schema defined for %s %s with status code %s');
+        }
         responseModelMap = _.get(data, defaultMapSchema);
     } else {
         return _createValidationError('No response schema defined for %s %s with status code %s');
