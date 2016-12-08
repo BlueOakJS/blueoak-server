@@ -1,6 +1,6 @@
 {
   "name": "blueoak-server",
-  "version": "2.5.1",
+  "version": "2.6.0",
   "description": "BlueOak Server",
   "repository": {
     "type": "git",
@@ -27,6 +27,7 @@
     "api"
   ],
   "scripts": {
+    "preversion": "npm test",
     "test": "npm run test-style && npm run test-unit && npm run test-integration",
     "test-unit": "JUNIT_REPORT_PATH=tests-report.xml mocha --check-leaks --reporter mocha-jenkins-reporter --globals services,__appDir test/unit",
     "test-integration": "mocha test/integration",
