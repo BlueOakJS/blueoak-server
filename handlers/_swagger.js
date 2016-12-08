@@ -570,14 +570,22 @@ function validateResponseModels(res, body, data, swaggerDoc, logger) {
     var responseModelMap;
     if (_.has(data, responseModel)) {
         modelSchema = _.get(data, responseModel + '.schema');
-        if (!modelSchema && !_.isEmpty(body)) {
-            return _createValidationError('No response schema defined for %s %s with status code %s');
+        if (!modelSchema) {
+            if (_.isEmpty(body)) { //no model, no response body, so nothing to validate
+                return;
+            } else {
+                return _createValidationError('No response schema defined for %s %s with status code %s');
+            }
         }
         responseModelMap = _.get(data, mapSchema);
     } else if (_.has(data, defaultResponseModel)) {
         modelSchema = _.get(data, defaultResponseModel + '.schema');
-        if (!modelSchema && !_.isEmpty(body)) {
-            return _createValidationError('No response schema defined for %s %s with status code %s');
+        if (!modelSchema) {
+            if (_.isEmpty(body)) {
+                return;
+            } else {
+                return _createValidationError('No response schema defined for %s %s with status code %s');
+            }
         }
         responseModelMap = _.get(data, defaultMapSchema);
     } else {

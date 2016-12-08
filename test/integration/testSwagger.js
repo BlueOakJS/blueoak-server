@@ -312,6 +312,7 @@ describe('SERVER5 + response model validation - using the "error" option', funct
         request.post('http://localhost:' + (process.env.PORT || 5000) + '/api/pets1', function (err, resp, body) {
             assert.equal(null, err);
             assert.equal(body, '');
+            assert.equal(resp.statusCode, 204);
             done();
         });
     });

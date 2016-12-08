@@ -40,5 +40,5 @@ exports.pets22 = function (req, res, next) {
 };
 
 exports.petsPostNoContent = function (req, res) {
-    res.sendStatus(204);
+    res.status(204).send();
 };
