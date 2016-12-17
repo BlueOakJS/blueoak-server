@@ -444,26 +444,25 @@ function setDefaultHeaders(req, data, logger) {
 
 function validateRequestParameters(req, data, swaggerDoc, logger, callback) {
 
+    var parm, result, error;
     var parameters = _.toArray(data.parameters);
     for (var i = 0; i < parameters.length; i++) {
-        var parm = parameters[i];
-        var error, result;
+        parm = parameters[i];
+        result = error = null;
 
         if (parm.in === 'query') {
 
             if (parm.required && typeof(req.query[parm.name]) === 'undefined') {
                 logger.warn('Missing query parameter "%s" for operation "%s"', parm.name, data.operationId);
-                error = new VError('Missing %s query parameter', parm.name);
-                error.name = 'ValidationError';
+                error = _createRequestValidationError(util.format('Missing %s query parameter', parm.name), parm);
                 return callback(error);
 
             } else if (typeof req.query[parm.name] !== 'undefined') {
                 result = swaggerUtil.validateParameterType(parm, req.query[parm.name]);
 
                 if (!result.valid) {
-                    error = new VError('Error validating query parameter %s', parm.name);
-                    error.name = 'ValidationError';
-                    error.subErrors = result.errors;
+                    error = _createRequestValidationError(
+                            util.format('Error validating query parameter %s', parm.name), parm, result.errors);
                     return callback(error);
                 }
             }
@@ -472,17 +471,15 @@ function validateRequestParameters(req, data, swaggerDoc, logger, callback) {
 
             if (parm.required && typeof(req.get(parm.name)) === 'undefined') {
                 logger.warn('Missing header "%s" for operation "%s"', parm.name, data.operationId);
-                error = new VError('Missing %s header', parm.name);
-                error.name = 'ValidationError';
+                error = _createRequestValidationError(util.format('Missing %s header', parm.name), parm);
                 return callback(error);
 
             } else if (typeof req.get(parm.name) !== 'undefined') {
                 result = swaggerUtil.validateParameterType(parm, req.get(parm.name));
 
                 if (!result.valid) {
-                    error = new VError('Error validating %s header', parm.name);
-                    error.name = 'ValidationError';
-                    error.subErrors = result.errors;
+                    error = _createRequestValidationError(util.format('Error validating %s header', parm.name),
+                            parm, result.errors);
                     return callback(error);
                 }
             }
@@ -491,9 +488,8 @@ function validateRequestParameters(req, data, swaggerDoc, logger, callback) {
 
             result = swaggerUtil.validateParameterType(parm, req.params[parm.name]);
             if (!result.valid) {
-                error = new VError('Error validating %s path parameter', parm.name);
-                error.name = 'ValidationError';
-                error.subErrors = result.errors;
+                error = _createRequestValidationError(util.format('Error validating %s path parameter', parm.name),
+                        parm, result.errors);
                 return callback(error);
             }
 
@@ -503,16 +499,14 @@ function validateRequestParameters(req, data, swaggerDoc, logger, callback) {
             if (parm.required && parm.type === 'file') {
                 if (!req.files[parm.name]) {
                     logger.warn('Missing form parameter "%s" for operation "%s"', parm.name, data.operationId);
-                    error = new VError('Missing %s form parameter', parm.name);
-                    error.name = 'ValidationError';
+                    error = _createRequestValidationError(util.format('Missing %s form parameter', parm.name), parm);
                     return callback(error);
                 }
             }
             else if (!req.body[parm.name]) { //multer puts the non-file parameters in the request body
                 if (parm.required) { //something other than file
                     logger.warn('Missing form parameter "%s" for operation "%s"', parm.name, data.operationId);
-                    error = new VError('Missing %s form parameter', parm.name);
-                    error.name = 'ValidationError';
+                    error = _createRequestValidationError(util.format('Missing %s form parameter', parm.name), parm);
                     return callback(error);
                 }
             } else {
@@ -520,9 +514,8 @@ function validateRequestParameters(req, data, swaggerDoc, logger, callback) {
                 //it as any type, such as number, or array
                 result = swaggerUtil.validateParameterType(parm, req.body[parm.name]);
                 if (!result.valid) {
-                    error = new VError('Error validating form parameter %s', parm.name);
-                    error.name = 'ValidationError';
-                    error.subErrors = result.errors;
+                    error = _createRequestValidationError(util.format('Error validating form parameter %s', parm.name),
+                            parm, result.errors);
                     return callback(error);
                 }
             }
@@ -543,14 +536,38 @@ function validateRequestParameters(req, data, swaggerDoc, logger, callback) {
                 }
             }
             if (!result.valid || polymorphicValidationErrors.length > 0) {
-                error = new VError('Error validating request body');
-                error.name = 'ValidationError';
-                error.subErrors = result.errors.concat(polymorphicValidationErrors);
+                result.errors = result.errors || [];
+                error = _createRequestValidationError('Error validating request body', parm, 
+                        result.errors.concat(polymorphicValidationErrors));
                 return callback(error);
             }
         }
     }
     return callback();
+}
+/**
+ * @param  {string} message the message to use for this error;
+ *                          N.B.: the text of this message is quasi-API, changing it could break API users
+ * @param  {Object} parameterConfig the configuration for the parameter that failed validation
+ * @param  {string} parameterConfig.in where parameter that failed validation is located, one of:
+ *                                     header, path, query, form, body
+ * @param  {string} parameterConfig.name the name of the parameter that failed validation
+ * @param  {Object[]} subErrors the array of validation errors from the swaggerUtil validation function
+ * 
+ * @returns  {Object} a VError representing the validation errors detected for the request
+ */
+function _createRequestValidationError(message, parameterConfig, subErrors) {
+    var error = new VError(message);
+    error.name = 'ValidationError';
+    error.source = { type: parameterConfig.in};
+    if (parameterConfig.in !== 'body') {
+        error.source.name = parameterConfig.name;
+    }
+    error.subErrors = subErrors;
+    _.forEach(error.subErrors, function (subError) {
+        subError.source = error.source;
+    });
+    return error;
 }
 
 function validateResponseModels(res, body, data, swaggerDoc, logger) {
@@ -574,7 +591,7 @@ function validateResponseModels(res, body, data, swaggerDoc, logger) {
             if (_.isEmpty(body)) { //no model, no response body, so nothing to validate
                 return;
             } else {
-                return _createValidationError('No response schema defined for %s %s with status code %s');
+                return _createResponseValidationError('No response schema defined for %s %s with status code %s', res);
             }
         }
         responseModelMap = _.get(data, mapSchema);
@@ -584,12 +601,12 @@ function validateResponseModels(res, body, data, swaggerDoc, logger) {
             if (_.isEmpty(body)) {
                 return;
             } else {
-                return _createValidationError('No response schema defined for %s %s with status code %s');
+                return _createResponseValidationError('No response schema defined for %s %s with status code %s', res);
             }
         }
         responseModelMap = _.get(data, defaultMapSchema);
     } else {
-        return _createValidationError('No response schema defined for %s %s with status code %s');
+        return _createResponseValidationError('No response schema defined for %s %s with status code %s', res);
     }
     var result = swaggerUtil.validateJSONType(modelSchema, body);
     var polymorphicValidationErrors = [];
@@ -597,34 +614,42 @@ function validateResponseModels(res, body, data, swaggerDoc, logger) {
         polymorphicValidationErrors = swaggerUtil.validateIndividualObjects(swaggerDoc, responseModelMap, body);
     }
     if (!result.valid || polymorphicValidationErrors.length > 0) {
-        return _createValidationError('Error validating response body for %s %s with status code %s',
+        return _createResponseValidationError('Error validating response body for %s %s with status code %s', res,
             result.errors.concat(polymorphicValidationErrors));
     }
     return;
 
-    function _createValidationError(message, subErrors) {
-        var error = new VError(message, res.req.method, res.req.path, res.statusCode);
-        error.name = 'ValidationError';
-        error.subErrors = subErrors;
+}
+/**
+ * @param  {string} messageFormat a format string describing the message that accepts the following parameters:
+ *                                  res.req.method, res.req.path, res.statusCode
+ * @param  {Object} res the express.js response object
+ * @param  {Object[]} subErrors the array of validation errors from the swaggerUtil validation function
+ * 
+ * @returns  {Object} a VError representing the validation errors detected for the response
+ */
+function _createResponseValidationError(messageFormat, res, subErrors) {
+    var error = new VError(messageFormat, res.req.method, res.req.path, res.statusCode);
+    error.name = 'ValidationError';
+    error.subErrors = subErrors;
 
-        var explainer = {
-            message: error.message,
-            status: 522,
-            type: error.name
-        };
-        if (error.subErrors) {
-            explainer.validation_errors = [];
-            error.subErrors.forEach(function (subError) {
-                explainer.validation_errors.push({
-                    message: subError.message,
-                    field: (subError.params.key) ? subError.dataPath + '/' + subError.params.key : subError.dataPath,
-                    schemaPath: subError.schemaPath,
-                    model: subError.model
-                });
+    var explainer = {
+        message: error.message,
+        status: 522,
+        type: error.name
+    };
+    if (error.subErrors) {
+        explainer.validation_errors = [];
+        error.subErrors.forEach(function (subError) {
+            explainer.validation_errors.push({
+                message: subError.message,
+                field: (subError.params.key) ? subError.dataPath + '/' + subError.params.key : subError.dataPath,
+                schemaPath: subError.schemaPath,
+                model: subError.model
             });
-        }
-        return explainer;
+        });
     }
+    return explainer;
 }
 
 function wrapCall(obj, funcName, toCall) {
