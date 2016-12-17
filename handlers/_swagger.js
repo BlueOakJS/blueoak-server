@@ -16,6 +16,7 @@ var _upload; //will get set to a configured multer instance if multipart form da
 var httpMethods;
 var responseModelValidationLevel;
 var polymorphicValidation;
+var rejectRequestAfterFirstValidationError;
 
 exports.init = function (app, auth, config, logger, serviceLoader, swagger, callback) {
     var cfg = config.get('swagger');
@@ -23,9 +24,9 @@ exports.init = function (app, auth, config, logger, serviceLoader, swagger, call
     responseModelValidationLevel = swagger.getResponseModelValidationLevel();
     polymorphicValidation = swagger.isPolymorphicValidationEnabled();
     httpMethods = swagger.getValidHttpMethods();
+    rejectRequestAfterFirstValidationError = cfg.rejectRequestAfterFirstValidationError; 
 
-    //default to true
-    var useBasePath = cfg.useBasePath || cfg.useBasePath === undefined;
+    var useBasePath = cfg.useBasePath || (cfg.useBasePath === undefined); //default to true
     var serveSpec = cfg.serve;
     var useLocalhost = cfg.useLocalhost;
     var context = cfg.context;
@@ -443,88 +444,121 @@ function setDefaultHeaders(req, data, logger) {
 
 
 function validateRequestParameters(req, data, swaggerDoc, logger, callback) {
-
-    var parm, result, error;
+    var validationError, validationErrors = [];
     var parameters = _.toArray(data.parameters);
     for (var i = 0; i < parameters.length; i++) {
-        parm = parameters[i];
-        result = error = null;
-
-        if (parm.in === 'query') {
-
-            if (parm.required && typeof(req.query[parm.name]) === 'undefined') {
-                logger.warn('Missing query parameter "%s" for operation "%s"', parm.name, data.operationId);
-                error = _createRequestValidationError(util.format('Missing %s query parameter', parm.name), parm);
-                return callback(error);
-
-            } else if (typeof req.query[parm.name] !== 'undefined') {
-                result = swaggerUtil.validateParameterType(parm, req.query[parm.name]);
-
+        validationError = _validateParameter(parameters[i]);
+        if (rejectRequestAfterFirstValidationError) {
+            return callback(validationError);
+        } else if (validationError) {
+            validationErrors.push(validationError);
+        }
+    }
+    
+    if (validationErrors.length > 1) {
+        var superValidationError = _createRequestValidationError('Multiple validation errors for this request',
+                                   { in: 'request' }, []);
+        // if there was more than one validation error, join them all together
+        return callback(validationErrors.reduce(function (superError, thisError) {
+            if (thisError.subErrors) {
+                thisError.subErrors.forEach(function (subError) {
+                    superError.subErrors.push(subError);
+                });
+            } else {
+                // when there were no sub errors, we'll create a representative sub error
+                // this happens when a required header, path or query parameter was not found at all
+                superError.subErrors.push({
+                    code: 10404, // tv4 user errors are supposed to be > 10000
+                    message: thisError.message,
+                    dataPath: '',
+                    schemaPath: '',
+                    source: thisError.source
+                });
+            }
+            return superError;
+        }, superValidationError));
+    } else if (validationErrors.length === 1) {
+        return callback(validationErrors[0]);
+    }
+    return callback();
+    
+    /**
+     * @param  {Object} parameter the swagger-defined parameter to validate
+     * 
+     * @returns {Object} the validation error for the parameter, or null if there's no problem
+     */
+    function _validateParameter(parameter) {
+        var result, error;
+        switch (parameter.in) {
+        case 'query':
+            if (parameter.required && typeof(req.query[parameter.name]) === 'undefined') {
+                logger.warn('Missing query parameter "%s" for operation "%s"', parameter.name, data.operationId);
+                error = _createRequestValidationError(util.format('Missing %s query parameter', parameter.name),
+                        parameter);
+            } else if (typeof req.query[parameter.name] !== 'undefined') {
+                result = swaggerUtil.validateParameterType(parameter, req.query[parameter.name]);
                 if (!result.valid) {
-                    error = _createRequestValidationError(
-                            util.format('Error validating query parameter %s', parm.name), parm, result.errors);
-                    return callback(error);
+                    error = _createRequestValidationError(util.format('Error validating query parameter %s',
+                            parameter.name), parameter, result.errors);
                 }
             }
+            break;
 
-        } else if (parm.in === 'header') {
-
-            if (parm.required && typeof(req.get(parm.name)) === 'undefined') {
-                logger.warn('Missing header "%s" for operation "%s"', parm.name, data.operationId);
-                error = _createRequestValidationError(util.format('Missing %s header', parm.name), parm);
-                return callback(error);
-
-            } else if (typeof req.get(parm.name) !== 'undefined') {
-                result = swaggerUtil.validateParameterType(parm, req.get(parm.name));
-
+        case 'header':
+            if (parameter.required && typeof(req.get(parameter.name)) === 'undefined') {
+                logger.warn('Missing header "%s" for operation "%s"', parameter.name, data.operationId);
+                error = _createRequestValidationError(util.format('Missing %s header', parameter.name), parameter);
+            } else if (typeof req.get(parameter.name) !== 'undefined') {
+                result = swaggerUtil.validateParameterType(parameter, req.get(parameter.name));
                 if (!result.valid) {
-                    error = _createRequestValidationError(util.format('Error validating %s header', parm.name),
-                            parm, result.errors);
-                    return callback(error);
+                    error = _createRequestValidationError(util.format('Error validating %s header', parameter.name),
+                            parameter, result.errors);
                 }
             }
+            break;
 
-        } else if (parm.in === 'path') {
-
-            result = swaggerUtil.validateParameterType(parm, req.params[parm.name]);
+        case 'path':
+            result = swaggerUtil.validateParameterType(parameter, req.params[parameter.name]);
             if (!result.valid) {
-                error = _createRequestValidationError(util.format('Error validating %s path parameter', parm.name),
-                        parm, result.errors);
-                return callback(error);
+                error = _createRequestValidationError(util.format('Error validating %s path parameter', parameter.name),
+                        parameter, result.errors);
             }
+            break;
 
-        } else if (parm.in === 'formData') {
-            // fyi, the swagger parser will fail if the user didn't set 'consumes' to
+        case 'formData':
+            // fyi: the swagger parser will fail if the user didn't set 'consumes' to
             // multipart/form-data or application/x-www-form-urlencoded
-            if (parm.required && parm.type === 'file') {
-                if (!req.files[parm.name]) {
-                    logger.warn('Missing form parameter "%s" for operation "%s"', parm.name, data.operationId);
-                    error = _createRequestValidationError(util.format('Missing %s form parameter', parm.name), parm);
-                    return callback(error);
+            if (parameter.required && parameter.type === 'file') {
+                if (!req.files[parameter.name]) {
+                    logger.warn('Missing form parameter "%s" for operation "%s"', parameter.name, data.operationId);
+                    error = _createRequestValidationError(util.format('Missing %s form parameter', parameter.name),
+                            parameter);
                 }
             }
-            else if (!req.body[parm.name]) { //multer puts the non-file parameters in the request body
-                if (parm.required) { //something other than file
-                    logger.warn('Missing form parameter "%s" for operation "%s"', parm.name, data.operationId);
-                    error = _createRequestValidationError(util.format('Missing %s form parameter', parm.name), parm);
-                    return callback(error);
+            else if (!req.body[parameter.name]) { //multer puts the non-file parameters in the request body
+                if (parameter.required) { //something other than file
+                    logger.warn('Missing form parameter "%s" for operation "%s"', parameter.name, data.operationId);
+                    error = _createRequestValidationError(util.format('Missing %s form parameter', parameter.name),
+                            parameter);
                 }
             } else {
                 //go through the param-parsing code which is able to take text and validate
                 //it as any type, such as number, or array
-                result = swaggerUtil.validateParameterType(parm, req.body[parm.name]);
+                result = swaggerUtil.validateParameterType(parameter, req.body[parameter.name]);
                 if (!result.valid) {
-                    error = _createRequestValidationError(util.format('Error validating form parameter %s', parm.name),
-                            parm, result.errors);
-                    return callback(error);
+                    error = _createRequestValidationError(
+                            util.format('Error validating form parameter %s', parameter.name),
+                            parameter, result.errors);
                 }
             }
-        } else if (parm.in === 'body') {
-            result = swaggerUtil.validateJSONType(parm.schema, req.body);
+            break;
+
+        case 'body':
+            result = swaggerUtil.validateJSONType(parameter.schema, req.body);
             var polymorphicValidationErrors = [];
             if (polymorphicValidation !== 'off') {
                 polymorphicValidationErrors = swaggerUtil.validateIndividualObjects(swaggerDoc,
-                    parm['x-bos-generated-disc-map'], req.body);
+                    parameter['x-bos-generated-disc-map'], req.body);
                 if (polymorphicValidationErrors.length > 0 && polymorphicValidation === 'warn') {
                     var warning = {
                         errors: polymorphicValidationErrors,
@@ -537,21 +571,23 @@ function validateRequestParameters(req, data, swaggerDoc, logger, callback) {
             }
             if (!result.valid || polymorphicValidationErrors.length > 0) {
                 result.errors = result.errors || [];
-                error = _createRequestValidationError('Error validating request body', parm, 
+                error = _createRequestValidationError('Error validating request body', parameter, 
                         result.errors.concat(polymorphicValidationErrors));
-                return callback(error);
             }
+            break;
         }
+
+        return error;
     }
-    return callback();
 }
 /**
  * @param  {string} message the message to use for this error;
  *                          N.B.: the text of this message is quasi-API, changing it could break API users
  * @param  {Object} parameterConfig the configuration for the parameter that failed validation
  * @param  {string} parameterConfig.in where parameter that failed validation is located, one of:
- *                                     header, path, query, form, body
- * @param  {string} parameterConfig.name the name of the parameter that failed validation
+ *                                     header, path, query, form, body, request (for the request as a whole)
+ * @param  {string} [parameterConfig.name] the name of the parameter that failed validation
+ *                                         (only used when parameterConfig.in is header, path, query, or form)
  * @param  {Object[]} subErrors the array of validation errors from the swaggerUtil validation function
  * 
  * @returns  {Object} a VError representing the validation errors detected for the request
@@ -559,8 +595,8 @@ function validateRequestParameters(req, data, swaggerDoc, logger, callback) {
 function _createRequestValidationError(message, parameterConfig, subErrors) {
     var error = new VError(message);
     error.name = 'ValidationError';
-    error.source = { type: parameterConfig.in};
-    if (parameterConfig.in !== 'body') {
+    error.source = { type: parameterConfig.in };
+    if (/^(header|path|query|form)$/.test(parameterConfig.in)) {
         error.source.name = parameterConfig.name;
     }
     error.subErrors = subErrors;
