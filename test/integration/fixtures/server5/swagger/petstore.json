@@ -73,7 +73,7 @@
     },
     "/pets3": {
       "get": {
-        "x-middleware": "pets3",
+        "x-bos-middleware": "pets3",
         "description": "Returns a user based on a single ID, if the user does not have access to the pet",
         "operationId": "pets1",
         "produces": [
@@ -100,7 +100,7 @@
     },
     "/pets4": {
       "get": {
-        "x-middleware": ["pets4"],
+        "x-bos-middleware": ["pets4"],
         "description": "Returns a user based on a single ID, if the user does not have access to the pet",
         "operationId": "pets1",
         "produces": [
@@ -127,7 +127,7 @@
     },
     "/pets5": {
       "get": {
-        "x-middleware": ["foo.pets5"],
+        "x-bos-middleware": ["foo.pets5"],
         "description": "Returns a user based on a single ID, if the user does not have access to the pet",
         "operationId": "pets1",
         "produces": [
