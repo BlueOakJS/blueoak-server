@@ -21,10 +21,7 @@ exports.init = function(app, config, logger, callback) {
         if (!keys) {
             logger.error('Cookie sessions require a key to be set.');
         } else {
-
-            app.use(session({
-                keys: keys
-            }));
+            app.use(session(cfg));
             logger.debug('Enabled cookie session.');
         }
     } else {
