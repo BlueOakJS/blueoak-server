@@ -37,7 +37,7 @@ exports.init = function(app, logger) {
             }
         });
         if (!res.headersSent) {
-            next();
+            return next();
         }
     });
 };

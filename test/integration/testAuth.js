@@ -15,6 +15,7 @@ describe('test basic auth', function () {
     it('should fail without credentials', function (done) {
         request('http://localhost:' + (process.env.PORT || 5000) + '/api/v1/superfuntime/2',
             function (err, resp, body) {
+                assert.ifError(err);
                 assert.equal(resp.statusCode, 401);
                 assert.ok(resp.headers['www-authenticate'].indexOf('Basic') >= 0);
                 done();
@@ -29,6 +30,7 @@ describe('test basic auth', function () {
                 }
             },
             function (err, resp, body) {
+                assert.ifError(err);
                 assert.equal(resp.statusCode, 200);
                 done();
             });
@@ -56,6 +58,7 @@ describe('test apiKey auth', function () {
                 json: true
             },
             function (err, resp, body) {
+                assert.ifError(err);
                 assert.equal(resp.statusCode, 401);
                 done();
             });
@@ -75,6 +78,7 @@ describe('test apiKey auth', function () {
                 }
             },
             function (err, resp, body) {
+                assert.ifError(err);
                 assert.equal(resp.statusCode, 204);
                 done();
             });
@@ -94,6 +98,7 @@ describe('test basic and apiKey auth together on same operation', function () {
     it('should fail without any credentials', function (done) {
         request.delete('http://localhost:' + (process.env.PORT || 5000) + '/api/v1/superfuntime/2',
             function (err, resp, body) {
+                assert.ifError(err);
                 assert.equal(resp.statusCode, 401);
                 done();
             });
@@ -107,6 +112,7 @@ describe('test basic and apiKey auth together on same operation', function () {
                 }
             },
             function (err, resp, body) {
+                assert.ifError(err);
                 assert.equal(resp.statusCode, 401);
                 done();
             });
@@ -120,6 +126,7 @@ describe('test basic and apiKey auth together on same operation', function () {
                 }
             },
             function (err, resp, body) {
+                assert.ifError(err);
                 assert.equal(resp.statusCode, 401);
                 done();
             });
@@ -136,6 +143,7 @@ describe('test basic and apiKey auth together on same operation', function () {
                 }
             },
             function (err, resp, body) {
+                assert.ifError(err);
                 assert.equal(resp.statusCode, 204);
                 done();
             });
