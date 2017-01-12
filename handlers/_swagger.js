@@ -95,8 +95,8 @@ exports.init = function (app, auth, config, logger, serviceLoader, swagger, call
                 routePath = basePath + routePath;
             }
 
-            if (data['x-handler']) {
-                handlerName = data['x-handler'];
+            if (data['x-handler'] || data['x-bos-handler']) {
+                handlerName = data['x-handler'] || data['x-bos-handler'];
             }
 
             //loop for http method keys, like get an post
@@ -121,7 +121,7 @@ exports.init = function (app, auth, config, logger, serviceLoader, swagger, call
 
                     //Look for custom middleware functions defined on the handler path
                     var additionalMiddleware = [];
-                    var middlewareList = methodData['x-middleware'];
+                    var middlewareList = methodData['x-middleware'] || methodData['x-bos-middleware'];
                     if (middlewareList) {
                         if (!_.isArray(middlewareList)) {
                             middlewareList = [middlewareList]; //turn into an array

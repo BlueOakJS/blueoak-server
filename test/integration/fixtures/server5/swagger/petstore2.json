@@ -28,7 +28,7 @@
   ],
   "paths": {
     "/pets2": {
-      "x-handler": "petstore",
+      "x-bos-handler": "petstore",
       "get": {
         "description": "Returns a user based on a single ID, if the user does not have access to the pet",
         "operationId": "pets2",
