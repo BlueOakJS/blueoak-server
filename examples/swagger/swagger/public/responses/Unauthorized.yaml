@@ -1,0 +1,8 @@
+headers:
+  www-authenticate:
+    type: string
+    description: HTTP-spec required info
+schema:
+  $ref: '../definitions/ApiError.yaml'
+description: |
+  Valid authorization must be included with this request.

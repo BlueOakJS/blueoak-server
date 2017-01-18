@@ -1,23 +1,26 @@
 get:
   summary: Get super fun time
-  operationId: getFunTimeById
+  operationId: getSuperFunTimeById
   tags:
     - Fun Times
   parameters:
     - $ref: '../parameters/PathId.yaml'
-  #security:
-    #- oauthImplicitEx: []
-  #security:
-    #- oauthEx: []
-  #security:
-    #- basicEx: []
-    #- apiKeyEx: []
-  #security:
-    #- apiKeyEx: []
-  #x-bos-security:
-    #- hmac: []
+  # replaces the global security requirements with these specific ones
+  security:
+    - Basic: []
+    - Bearer: []
+  x-bos-security-options:
+    Bearer:
+      requiredPermissions:
+        - api:get:fun
+        - fun:read:{id}
   responses:
     200:
       schema:
         $ref: '../definitions/SuperFunTime.yaml'
       description: I want a super fun time
+    401:
+      $ref: '../responses/Unauthorized.yaml'
+    404:
+      $ref: '../responses/NotFound.yaml'
+

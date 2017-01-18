@@ -1,0 +1,18 @@
+get:
+  summary: Get fun time
+  operationId: getFunTimeById
+  tags:
+    - Fun Times
+  parameters:
+    - $ref: '../parameters/PathId.yaml'
+  # uses the global security requirements
+  responses:
+    200:
+      schema:
+        $ref: '../definitions/CuriousPerson.yaml'
+      description: I want a fun time
+    401:
+      $ref: '../responses/Unauthorized.yaml'
+    404:
+      $ref: '../responses/NotFound.yaml'
+

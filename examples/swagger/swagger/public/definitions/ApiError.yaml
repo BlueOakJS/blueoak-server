@@ -1,0 +1,12 @@
+required:
+  - message
+  - name
+properties:
+  code:
+    type: integer
+  message:
+    type: string
+    description: A UI-presentable decription of the message
+  name:
+    type: string
+    description: A programmner-friendly string for this error

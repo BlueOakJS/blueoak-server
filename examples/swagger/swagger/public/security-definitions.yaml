@@ -1,17 +1,43 @@
-basicEx:
+Basic:
   type: basic
-apiKeyEx:
+  # the `x-bos-validator` must be provided so that the security middleware can call your validation function
+  # (that's the case whatever the type)
+  x-bos-validator:
+    # for HTTP Basic Auth the username and password will be added to 
+    service: securityValidators # name of the BOS service to use
+    function: basic             # name of the function to call on that service
+    # v-- (optional) a config object that will be passed on to the validator
+    options:
+      # the contents of it can be whatever makes sense to the validatorand
+      # they can be overridden in your spec at the method-path using an x-bos-security-validator-options[$scheme_name] object
+      # e.g.: a method with an x-bos-security-validator-options['Basic'] object would override this definition
+      groups:                   
+        - root
+        - wheel
+        - users      
+Bearer:
   type: apiKey
   in: header
-  name: x-key
-oauthEx:
+  name: Authorization
+  x-bos-validator:
+    service: securityValidators
+    function: apiKey
+OAuthAccessCode:
   type: oauth2
   flow: accessCode
   authorizationUrl: http://localhost:3000/auth-code
   tokenUrl: http://localhost:3000/access-token
-  scopes: {}
-oauthImplicitEx:
+  scopes:
+    foo:bar: See the security example in the [Swagger Editor](http://editor.swagger.io/#/)
+  x-bos-validator:
+    service: securityValidators
+    function: oauthAccessCode
+OAuthImplicit:
   type: oauth2
   flow: implicit
   authorizationUrl: http://localhost:3000/access-token
-  scopes: {}
+  scopes:
+    fiz:baz: Also see the scopes documentation in the [Swagger Spec](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/2.0.md#scopes-object)
+  x-bos-validator:
+    service: securityValidators
+    function: oauthImplicit

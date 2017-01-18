@@ -1,0 +1,19 @@
+get:
+  summary: Get no fun time
+  operationId: getNoFunTimeById
+  tags:
+    - Fun Times
+  # remove all security requirements
+  security: []
+  parameters:
+    - $ref: '../parameters/PathId.yaml'
+  responses:
+    200:
+      schema:
+        $ref: '../definitions/ApiError.yaml'
+      description: I want a no fun time
+    401:
+      $ref: '../responses/Unauthorized.yaml'
+    404:
+      $ref: '../responses/NotFound.yaml'
+

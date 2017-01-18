@@ -12,8 +12,9 @@ paths:
 securityDefinitions:
   $ref: 'public/security-definitions.yaml'
 
-x-bos-securityDefinitions:
-  $ref: 'public/x-bos-security-definitions.yaml'
+security:
+  - OAuthAccessCode
+  - OAuthImplicit
 
 ### ref-compiler: BEGIN
 definitions:

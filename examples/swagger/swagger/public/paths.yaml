@@ -1,3 +1,8 @@
 /superfuntime/{id}:
   $ref: 'paths/superfuntime-{id}.yaml'
 
+/funtime/{id}:
+  $ref: 'paths/funtime-{id}.yaml'
+  
+/nofuntime/{id}:
+  $ref: 'paths/nofuntime-{id}.yaml'
