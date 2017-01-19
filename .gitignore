@@ -3,6 +3,7 @@ typings/
 coverage/
 tests-report.xml
 !test/unit/**/node_modules
+!test/integration/**/node_modules
 .idea
 .vscode/
 *.swp
