@@ -13,8 +13,10 @@ securityDefinitions:
   $ref: 'public/security-definitions.yaml'
 
 security:
-  - OAuthAccessCode
-  - OAuthImplicit
+  - OAuthAccessCode:
+    - foo:bar
+  - OAuthImplicit:
+    - fiz:baz
 
 ### ref-compiler: BEGIN
 definitions:

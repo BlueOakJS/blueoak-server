@@ -9,8 +9,9 @@ Basic:
     # v-- (optional) a config object that will be passed on to the validator
     options:
       # the contents of it can be whatever makes sense to the validatorand
-      # they can be overridden in your spec at the method-path using an x-bos-security-validator-options[$scheme_name] object
-      # e.g.: a method with an x-bos-security-validator-options['Basic'] object would override this definition
+      # they can be overridden in your spec at the method-path level using
+      # an x-bos-security-validator-options[$scheme_name] object
+      # e.g.: a method with an x-bos-security-validator-options['Basic'] object would merge with this definition
       groups:                   
         - root
         - wheel
@@ -22,6 +23,10 @@ Bearer:
   x-bos-validator:
     service: securityValidators
     function: apiKey
+
+# OAuth "detection" is not currently built-in to BlueOak Server
+# When there is no match for basic or api_key auth for a method, and an oauth configuration(s) is available,
+# the validation function for each OAuth scheme will be called in the given order.
 OAuthAccessCode:
   type: oauth2
   flow: accessCode

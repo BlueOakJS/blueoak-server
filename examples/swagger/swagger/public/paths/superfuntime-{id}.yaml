@@ -9,7 +9,7 @@ get:
   security:
     - Basic: []
     - Bearer: []
-  x-bos-security-options:
+  x-bos-security-validator-options:
     Bearer:
       requiredPermissions:
         - api:get:fun
