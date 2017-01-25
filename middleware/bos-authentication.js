@@ -1,11 +1,28 @@
-var _ = require('lodash');
-var base64URL = require('base64url');
+/*
+ * Copyright (c) 2016-2017 PointSource, LLC.
+ * MIT Licensed
+ */
+var _ = require('lodash'),
+    basicAuth = require('basic-auth'),
+    util = require('util'),
+    VError = require('verror');
 
 var log;
 var loader;
+
 var httpMethods = ['get', 'put', 'post', 'delete', 'options', 'head', 'patch'];
-//map of middleware ids to 'true' meaning that they have been initialized
-var customSecurityMiddlewareInitMap = {};
+var swaggerSecuritySchemeKeys = [
+    'type',
+    'name',
+    'in',
+    'flow',
+    'authorizationUrl',
+    'tokenUrl',
+    'scopes'
+];
+
+var securityDefinitions = {},
+    securityValidatorOptions = {};
 
 module.exports = {
     init: init
@@ -14,151 +31,205 @@ module.exports = {
 function init(app, logger, serviceLoader, swagger) {
     log = logger;
     loader = serviceLoader;
-    _.forEach(swagger.getSimpleSpecs(), function (api, name) {
+    _.forOwn(swagger.getSimpleSpecs(), function (api, apiName) {
+        initializeSecurityDefinitions(api, apiName);
+        
         var basePath = api.basePath || '';
+        var globalSecurityRequirements = api.security || [];
+        
         // apply security requirements to each route path
-        _.forEach(_.keys(api.paths), function (path) {
-            var pathObj = api.paths[path];
+        _.forOwn(api.paths, function (pathDefinition, path) {
             var routePath = basePath + convertSwaggerPathToExpressPath(path);
 
             // and each HTTP method on that path
-            _.forEach(_.keys(pathObj), function (method) {
-                if (_.contains(httpMethods, method)) {
-                    var operation = pathObj[method];
-                    _.forEach(operation['security'], function (securityRequirement) {
-                        _.forOwn(securityRequirement, function (scopes, securityDefinition) {
-                            applySecurityRequirement(app, method, routePath, securityDefinition,
-                                api.securityDefinitions[securityDefinition], scopes);
-                        });
-                    });
-                    _.forEach(operation['x-bos-security'], function (customSecurityRequirement) {
-                        _.forOwn(customSecurityRequirement, function (scopes, customSecurityDefinition) {
-                            applyCustomSecurityRequirement(app, method, routePath, customSecurityDefinition,
-                                api['x-bos-securityDefinitions'][customSecurityDefinition], scopes);
-                        });
-                    });
+            httpMethods.forEach(function (method) {
+                if (pathDefinition[method]) {
+                    var methodSecurityRequirements = pathDefinition[method].security || globalSecurityRequirements,
+                        methodValidatorOptions = getMergedValidatorOptions(
+                            pathDefinition[method]['x-bos-security-validator-options']);
+                    applySecurityRequirements(app, method, routePath,
+                                               methodSecurityRequirements, methodValidatorOptions);
                 }
             });
         });
     });
 }
 
-function applyCustomSecurityRequirement(app, method, route, securityRequirement, securityDefinition, requiredScopes) {
-    //load security def middleware
-    if (securityDefinition['x-bos-middleware']) {
-        var customAuthMiddleware = loader.getConsumer('middleware', securityDefinition['x-bos-middleware']);
-        if (!customAuthMiddleware) {
-            loader.loadConsumerModules('middleware',
-                [securityDefinition['x-bos-middleware']]);
-            customAuthMiddleware = loader.getConsumer('middleware', securityDefinition['x-bos-middleware']);
-        }
-        if (!customSecurityMiddlewareInitMap[securityDefinition['x-bos-middleware']]) {
-            loader.initConsumers('middleware', [securityDefinition['x-bos-middleware']], function (err) {
-                if (!err) {
-                    wireAuthenticateToRoute(app, method, route, securityRequirement,
-                        securityDefinition, requiredScopes, customAuthMiddleware);
-                }
-                else {
-                    log.warn('Unable to initialize custom middleware %s for security defn %s',
-                        securityDefinition['x-bos-middleware'], securityRequirement);
-                }
-            });
+function initializeSecurityDefinitions(api, apiName) {
+    _.forOwn(api.securityDefinitions, function (scheme, schemeName) {
+        var validationFn;
+        if (securityDefinitions[schemeName]) {
+            // we've already initialized it
+            log.info('Skipping initialization for reused security scheme %s from API %s for API %s',
+                schemeName, scheme.api, apiName);
+            return;
+        } else if (!(_.has(scheme, 'x-bos-validator.service') && _.has(scheme, 'x-bos-validator.function'))) {
+            // no validation function has been specified
+            log.warn('No validation service/function has been specified for security scheme %s.', schemeName);
         } else {
-            wireAuthenticateToRoute(app, method, route, securityRequirement,
-                securityDefinition, requiredScopes, customAuthMiddleware);
+            var serviceName = _.get(scheme, 'x-bos-validator.service'),
+                functionName = _.get(scheme, 'x-bos-validator.function');
+            var service = loader.getConsumer('services', serviceName);
+            if (!service) {
+                log.warn('Validator service %s not found for security scheme %s',
+                    serviceName, schemeName);
+            } else if (!_.isFunction(service[functionName])) {
+                log.warn('Validator function %s for security scheme %s is not a function',
+                    serviceName, schemeName);
+            } else {
+                validationFn = service[functionName];
+            }
         }
-    } else {
-        log.info('No custom middleware defined for security defn %s. ' +
-            'Attempting to use built in middleware...', securityRequirement);
-        applySecurityRequirement(app, method, route, securityRequirement,
-            securityDefinition, requiredScopes);
-    }
+        
+        securityDefinitions[schemeName] = {
+            api: apiName,
+            config: _.pick(scheme, swaggerSecuritySchemeKeys),
+            options: _.get(scheme, 'x-bos-validator.options'),
+            validator: validationFn
+        };
+        securityValidatorOptions[schemeName] = securityDefinitions[schemeName].options;
+        
+        if (!validationFn) {
+            log.warn('No security validation will be performed for API methods using scheme %s.\n' +
+                'Add valid "x-bos-validator.service" (BOS service name with the validator function) ' +
+                'and "x-bos-validator.function" (the function name) fields to your %s spec to enable.)',
+                schemeName, apiName);
+        }
+    });
 }
 
-function wireAuthenticateToRoute(app, method, route,
-                                 securityRequirement, securityDefinition, requiredScopes, customAuthMiddleware) {
-    if (customAuthMiddleware.authenticate) {
-        app[method].call(app, route,
-                         customAuthMiddleware.authenticate(securityRequirement, securityDefinition, requiredScopes));
-    }
-    else {
-        log.warn('Custom auth middleware %s missing authenticate method');
-    }
+function getMergedValidatorOptions(pathOverride) {
+    return _.mergeWith({}, securityValidatorOptions, pathOverride, function (globalValue, pathValue) {
+        if (_.isArray(globalValue)) {
+            // if there is an array value, we want to override it, not merge it
+            return pathValue;
+        }
+    });
 }
 
-function applySecurityRequirement(app, method, route, securityRequirement, securityDefinition, requiredScopes) {
-    // allow use of custom middleware even if a custom security definition was not used
-    if (securityDefinition['x-bos-middleware']) {
-        applyCustomSecurityRequirement(app, method, route, securityRequirement,
-            securityDefinition, requiredScopes);
-    } else {
-        switch (securityDefinition.type) {
+function applySecurityRequirements(app, method, routePath, methodSecurityRequirements, methodValidatorOptions) {
+    if (methodSecurityRequirements.length === 0) {
+        return;
+    }
+
+    // add the defined method security requirements
+    var securityChecks = _.map(methodSecurityRequirements, function (methodRequirement) {
+        var schemeName = _.keys(methodRequirement)[0],
+            checker;
+        switch (securityDefinitions[schemeName].type) {
         case 'basic':
-            app[method].call(app, route, basicAuthentication(securityRequirement));
+            checker = basicSecurity(schemeName, methodRequirement, methodValidatorOptions[schemeName]);
             break;
         case 'apiKey':
-            // may also need a user provided 'verify' function here
-            app[method].call(app, route, apiKeyAuthentication(securityRequirement, securityDefinition));
+            checker = apiKeySecurity(schemeName, methodRequirement, methodValidatorOptions[schemeName]);
             break;
         case 'oauth2':
-            log.warn('No out-of-the-box oauth2 implementation exists in BlueOak Server.\n' +
-                'You must define your own and reference it in the ' +
-                '"x-bos-middleware" property of the security definition "%s".\n' +
-                'The bos-passport module may also be used to leverage the passport OAuth services.',
-                securityRequirement);
+            checker = oauth2Security(schemeName, methodRequirement, methodValidatorOptions[schemeName]);
             break;
         default:
-            return log.warn('Unrecognized security type "%s" for security definition "%s".\n' +
-                'You can provide a custom security definition in "x-bos-securityDefinitions".',
-                securityDefinition.type, securityRequirement);
+            log.warn('Skipping unrecognized security type "%s" for security definition "%s".\n' +
+                securityDefinitions[schemeName].type, schemeName);
+            checker = function () { };
+            break;
         }
-    }
+        checker.scheme = schemeName;
+        return checker;
+    }, []);
+    
+    // add one more to prevent this route being accessed if none of them rejects it directly or authorizes it explicitly
+    app[method].call(app, routePath, authorizedRequest(securityChecks));
 }
 
-function basicAuthentication(securityReq) {
+function authorizedRequest(securityChecks) {
     return function (req, res, next) {
-        if (!req.bosAuthenticationData) {
-            req.bosAuthenticationData = [];
-        }
-        var authenticationData = {
-            type: 'basic',
-            securityReq: securityReq
+        req.bosSecurity = {
+            authorized: false
         };
-        req.bosAuthenticationData.push(authenticationData);
-        var authHeader = req.get('authorization') ? req.get('authorization') : '';
-        if (authHeader !== '') { //header should be of the form "Basic " + user:password as a base64 encoded string
-            var credentialsBase64 = authHeader.split('Basic ')[1];
-            var credentialsDecoded = base64URL.decode(credentialsBase64);
-            var credentials = credentialsDecoded.split(':');
-            authenticationData.username = credentials[0];
-            authenticationData.password = credentials[1];
+        
+        var i = 0;
+        return securityChecks[i](req, _handleSecurityCheckResult);
+    
+        function _handleSecurityCheckResult(err, user) {
+            if (err) {
+                req.bosSecurity.scheme = securityChecks[i].scheme;
+                
+                var challenge = err.challenge || err.message;
+                return next(new SecurityRequirementError(challenge, err));
+            } else if (user) {
+                req.bosSecurity.authorized = true;
+                req.bosSecurity.scheme = securityChecks[i].scheme;
+                req.bosSecurity.user = user;
+                
+                // req.user is a common place for express.js apps to put their user objects
+                // but if something is already there, we're not going to trample it
+                if (!req.user) {
+                    req.user = user;
+                }
+                
+                return next();
+            } else {
+                i++;
+                if (i < securityChecks.length) {
+                    securityChecks[i](req, _handleSecurityCheckResult);
+                } else {
+                    // we've done all the configured security checks, but none of them authorized or rejected it
+                    // we can't let the request proceed, and don't have a realm, so it'll be a 403
+                    return next(new SecurityRequirementError());
+                }
+            }
+            
         }
-        return next();
     };
 }
 
-function apiKeyAuthentication(securityReq, securityDefn) {
-    return function (req, res, next) {
-        if (!req.bosAuthenticationData) {
-            req.bosAuthenticationData = [];
+function basicSecurity(schemeName, securityRequirements, validatorOptions) {
+    return function (req, callback) {
+        var credentials = basicAuth(req);
+        if (credentials) {
+            return securityRequirements.validator(req, credentials, validatorOptions || {}, function (err, user) {
+                if (err && !err.challenge) {
+                    err.challenge = util.format('Basic realm="%s"', schemeName);
+                }
+                return callback(err, user);
+            });
+        } else {
+            return callback();
         }
-        var authenticationData = {
-            type: securityDefn.type,
-            securityReq: securityReq,
-            securityDefn: securityDefn
-        };
-        req.bosAuthenticationData.push(authenticationData);
-        if (securityDefn.in === 'query') {
-            authenticationData.password = req.query[securityDefn.name];
+    };
+}
+
+function apiKeySecurity(schemeName, securityRequirements, validatorOptions) {
+    return function (req, callback) {
+        var apiKey,
+            securityDefinition = securityRequirements.config;
+        
+        if (securityDefinition.in === 'query') {
+            apiKey = req.query[securityDefinition.name];
         }
-        else if (securityDefn.in === 'header') {
-            authenticationData.password = req.get(securityDefn.name);
+        else if (securityDefinition.in === 'header') {
+            var headerMatch = (new RegExp('^\\s*' + schemeName + '\\s+(.+)$', 'i'))
+                .exec(req.get(securityDefinition.name));
+            if (headerMatch) {
+                apiKey = headerMatch[1];
+            }
         }
-        else {
-            log.warn('unknown location %s for apiKey. ' +
-                'looks like open api specs may have changed on us', securityDefn.in);
+        
+        if (apiKey) {
+            return securityRequirements.validator(req, apiKey, validatorOptions || {}, function (err, user) {
+                if (err && !err.challenge) {
+                    err.challenge = schemeName;
+                }
+                return callback(err, user);
+            });
+        } else {
+            return callback();
         }
-        return next();
+    };
+}
+
+function oauth2Security(schemeName, securityRequirements, validatorOptions) {
+    return function (req, callback) {
+        return securityRequirements.validator(req, securityRequirements.config, validatorOptions || {}, callback);
     };
 }
 
@@ -168,3 +239,16 @@ function convertSwaggerPathToExpressPath(swaggerPath) {
     var expressPath = swaggerPath.replace(reg, ':$1');
     return expressPath;
 }
+
+
+function SecurityRequirementError(challenge, cause) {
+    var errorInfo = {
+        name: 'SecurityError',
+        cause: cause,
+        info: {
+            challenge: challenge
+        }
+    };
+    SecurityRequirementError.super_.call(this, errorInfo, (challenge ? 'Unauthorized' : 'Forbidden'));
+}
+util.inherits(SecurityRequirementError, VError);

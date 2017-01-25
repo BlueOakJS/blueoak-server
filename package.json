@@ -40,6 +40,7 @@
   "dependencies": {
     "async": "^1.0.0",
     "base64url": "^1.0.4",
+    "basic-auth": "^1.1.0",
     "body-parser": "^1.12.4",
     "cfenv": "^1.0.0",
     "config": "^1.21.0",
