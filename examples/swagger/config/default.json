@@ -2,7 +2,7 @@
 {
   "express": {
     "port": "3000",
-    "middleware": ["cors", "body-parser", "session", "addHmac", "bos-authentication", "custom-auth"],
+    "middleware": ["cors", "body-parser", "session", "addHmac", "swagger-security", "custom-auth"],
     "middleware$": []
   },
   
@@ -38,24 +38,6 @@
 
   "session": {
     "keys": ["sessionKey"]
-  },
-
-  "swagger": {
-    "refCompiler": {
-      "petstore": {
-        "baseSpecFile": "petstore.json",
-        "refDirs": [
-          "v1-assets"
-        ]
-      },
-      "api-v1": {
-        "baseSpecFile": "api-v1.yaml",
-        "refDirs": [
-          "public"
-        ]
-      }
-    }
   }
-
 
 }

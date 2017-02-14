@@ -2,7 +2,7 @@
 {
   "express": {
     "port": "5000",
-    "middleware": ["cors", "body-parser", "session", "bos-authentication", "custom-auth"],
+    "middleware": ["cors", "body-parser", "session", "swagger-security", "custom-auth"],
     "middleware$": []
   },
   "cors": {
