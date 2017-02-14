@@ -99,7 +99,7 @@ function initializeSecurityDefinitions(api, apiName) {
 }
 
 function getMergedValidatorOptions(pathOverride) {
-    return _.mergeWith({}, securityValidatorOptions, pathOverride, function (globalValue, pathValue) {
+    return _.merge({}, securityValidatorOptions, pathOverride, function (globalValue, pathValue) {
         if (_.isArray(globalValue)) {
             // if there is an array value, we want to override it, not merge it
             return pathValue;
