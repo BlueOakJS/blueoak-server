@@ -1,5 +1,5 @@
 schema:
-  $ref: ../deinitions/ApiError.yaml
+  $ref: ../definitions/ApiError.yaml
 description: |
   The requested resource was not found.
       

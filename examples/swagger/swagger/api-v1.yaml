@@ -20,6 +20,8 @@ security:
 
 ### ref-compiler: BEGIN
 definitions:
+  ApiError:
+    $ref: 'public/definitions/ApiError.yaml'
   Contact:
     $ref: 'public/definitions/Contact.yaml'
   CuriousPerson:
@@ -32,6 +34,11 @@ definitions:
     $ref: 'public/definitions/Person.yaml'
   SuperFunTime:
     $ref: 'public/definitions/SuperFunTime.yaml'
+responses:
+  NotFound:
+    $ref: 'public/responses/NotFound.yaml'
+  Unauthorized:
+    $ref: 'public/responses/Unauthorized.yaml'
 parameters:
   PathId:
     $ref: 'public/parameters/PathId.yaml'
