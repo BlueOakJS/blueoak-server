@@ -230,11 +230,16 @@ describe('SERVER5 - request model validation', function () {
                 'message': 'Error validating request body',
                 'status': 422,
                 'type': 'ValidationError',
+                'source': {
+                    'type': 'body'
+                },
                 'validation_errors': [
                     {
-                        'field': '',
+                        'field': '/id',
                         'message': 'Missing required property: id',
-                        'schemaPath': '/required/0'
+                        'schemaPath': '/required/0',
+                        'in': 'body',
+                        'code': 302
                     }
                 ]
             });

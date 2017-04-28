@@ -2,6 +2,9 @@
  * Copyright (c) 2015-2016 PointSource, LLC.
  * MIT Licensed
  */
+
+var _ = require('lodash');
+
 exports.init = function (app, logger) {
 
     app.use(function (err, req, res, next) {
@@ -12,23 +15,21 @@ exports.init = function (app, logger) {
             var payload = {
                 message: err.message,
                 status: 422,
-                type: 'ValidationError'
+                type: 'ValidationError',
+                source: err.source
             };
 
             if (err.subErrors) {
                 payload.validation_errors = [];
-                err.subErrors.forEach(function(subError) {
-                    payload.validation_errors.push({
-                        message: subError.message,
-                        field: subError.dataPath,
-                        schemaPath: subError.schemaPath,
-                        model: subError.model
-                    });
+                err.subErrors.forEach(function (subError) {
+                    payload.validation_errors.push(
+                        _.pick(subError, ['message', 'schemaPath', 'model', 'code', 'field', 'in'])
+                    );
                 });
             }
             res.status(422).json(payload);
         } else {
-            logger.error(err.stack);
+            logger.error(err.message, err.stack);
             res.status(500).send(err.message);
         }
 

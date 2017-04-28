@@ -6,6 +6,7 @@ var _ = require('lodash'),
     swaggerUtil = require('../lib/swaggerUtil'),
     VError = require('verror'),
     multer = require('multer'),
+    path = require('path'),
     util = require('util');
 
 // config Enum for when multer.storage property matches,
@@ -24,7 +25,7 @@ exports.init = function (app, auth, config, logger, serviceLoader, swagger, call
     responseModelValidationLevel = swagger.getResponseModelValidationLevel();
     polymorphicValidation = swagger.isPolymorphicValidationEnabled();
     httpMethods = swagger.getValidHttpMethods();
-    rejectRequestAfterFirstValidationError = cfg.rejectRequestAfterFirstValidationError; 
+    rejectRequestAfterFirstValidationError = !!cfg.rejectRequestAfterFirstValidationError; 
 
     var useBasePath = cfg.useBasePath || (cfg.useBasePath === undefined); //default to true
     var serveSpec = cfg.serve;
@@ -448,10 +449,12 @@ function validateRequestParameters(req, data, swaggerDoc, logger, callback) {
     var parameters = _.toArray(data.parameters);
     for (var i = 0; i < parameters.length; i++) {
         validationError = _validateParameter(parameters[i]);
-        if (rejectRequestAfterFirstValidationError) {
-            return callback(validationError);
-        } else if (validationError) {
-            validationErrors.push(validationError);
+        if (validationError) {
+            if (rejectRequestAfterFirstValidationError) {
+                return callback(validationError);
+            } else {
+                validationErrors.push(validationError);
+            }
         }
     }
     
@@ -593,15 +596,21 @@ function validateRequestParameters(req, data, swaggerDoc, logger, callback) {
  * @returns  {Object} a VError representing the validation errors detected for the request
  */
 function _createRequestValidationError(message, parameterConfig, subErrors) {
-    var error = new VError(message);
-    error.name = 'ValidationError';
+    var error = new VError({
+        name: 'ValidationError',
+        constructorOpt: _createRequestValidationError
+    }, message);
     error.source = { type: parameterConfig.in };
-    if (/^(header|path|query|form)$/.test(parameterConfig.in)) {
+    if (/^(header|path|query|formData)$/.test(parameterConfig.in)) {
         error.source.name = parameterConfig.name;
     }
     error.subErrors = subErrors;
     _.forEach(error.subErrors, function (subError) {
-        subError.source = error.source;
+        subError.source = subError.source || error.source;
+        subError.field = _.get(subError, 'source.name',
+            path.join((subError.dataPath || '/'), _.get(subError, 'params.key', '')));
+        subError.in = _.get(subError, 'source.type');
+                                
     });
     return error;
 }
