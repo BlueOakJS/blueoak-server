@@ -460,7 +460,7 @@ function validateRequestParameters(req, data, swaggerDoc, logger, callback) {
     
     if (validationErrors.length > 1) {
         var superValidationError = _createRequestValidationError('Multiple validation errors for this request',
-                                   { in: 'request' }, []);
+            { in: 'request' }, []);
         // if there was more than one validation error, join them all together
         return callback(validationErrors.reduce(function (superError, thisError) {
             if (thisError.subErrors) {
@@ -469,13 +469,12 @@ function validateRequestParameters(req, data, swaggerDoc, logger, callback) {
                 });
             } else {
                 // when there were no sub errors, we'll create a representative sub error
-                // this happens when a required header, path or query parameter was not found at all
+                // this is an unexpected situation
                 superError.subErrors.push({
-                    code: 10404, // tv4 user errors are supposed to be > 10000
+                    code: 10500, // tv4 user errors are supposed to be > 10000
                     message: thisError.message,
-                    dataPath: '',
-                    schemaPath: '',
-                    source: thisError.source
+                    source: thisError.source,
+                    debug: '(ValidationError with no subErrors)'
                 });
             }
             return superError;
@@ -496,8 +495,11 @@ function validateRequestParameters(req, data, swaggerDoc, logger, callback) {
         case 'query':
             if (parameter.required && typeof(req.query[parameter.name]) === 'undefined') {
                 logger.warn('Missing query parameter "%s" for operation "%s"', parameter.name, data.operationId);
-                error = _createRequestValidationError(util.format('Missing %s query parameter', parameter.name),
-                        parameter);
+                error = _createRequestValidationError(
+                    util.format('Missing %s query parameter', parameter.name), parameter, [{
+                        code: 11404,
+                        message: 'Missing required query parameter: ' + parameter.name
+                    }]);
             } else if (typeof req.query[parameter.name] !== 'undefined') {
                 result = swaggerUtil.validateParameterType(parameter, req.query[parameter.name]);
                 if (!result.valid) {
@@ -510,7 +512,11 @@ function validateRequestParameters(req, data, swaggerDoc, logger, callback) {
         case 'header':
             if (parameter.required && typeof(req.get(parameter.name)) === 'undefined') {
                 logger.warn('Missing header "%s" for operation "%s"', parameter.name, data.operationId);
-                error = _createRequestValidationError(util.format('Missing %s header', parameter.name), parameter);
+                error = _createRequestValidationError(
+                    util.format('Missing %s header', parameter.name), parameter, [{
+                        code: 12404,
+                        message: 'Missing required header: ' + parameter.name
+                    }]);
             } else if (typeof req.get(parameter.name) !== 'undefined') {
                 result = swaggerUtil.validateParameterType(parameter, req.get(parameter.name));
                 if (!result.valid) {
@@ -534,15 +540,21 @@ function validateRequestParameters(req, data, swaggerDoc, logger, callback) {
             if (parameter.required && parameter.type === 'file') {
                 if (!req.files[parameter.name]) {
                     logger.warn('Missing form parameter "%s" for operation "%s"', parameter.name, data.operationId);
-                    error = _createRequestValidationError(util.format('Missing %s form parameter', parameter.name),
-                            parameter);
+                    error = _createRequestValidationError(
+                        util.format('Missing %s form parameter', parameter.name), parameter, [{
+                            code: 13404,
+                            message: 'Missing required form parameter: ' + parameter.name
+                        }]);
                 }
             }
             else if (!req.body[parameter.name]) { //multer puts the non-file parameters in the request body
                 if (parameter.required) { //something other than file
                     logger.warn('Missing form parameter "%s" for operation "%s"', parameter.name, data.operationId);
-                    error = _createRequestValidationError(util.format('Missing %s form parameter', parameter.name),
-                            parameter);
+                    error = _createRequestValidationError(
+                        util.format('Missing %s form parameter', parameter.name), parameter, [{
+                            code: 13404,
+                            message: 'Missing required form parameter: ' + parameter.name
+                        }]);
                 }
             } else {
                 //go through the param-parsing code which is able to take text and validate
@@ -551,7 +563,7 @@ function validateRequestParameters(req, data, swaggerDoc, logger, callback) {
                 if (!result.valid) {
                     error = _createRequestValidationError(
                             util.format('Error validating form parameter %s', parameter.name),
-                            parameter, result.errors);
+                        parameter, result.errors);
                 }
             }
             break;
@@ -575,7 +587,7 @@ function validateRequestParameters(req, data, swaggerDoc, logger, callback) {
             if (!result.valid || polymorphicValidationErrors.length > 0) {
                 result.errors = result.errors || [];
                 error = _createRequestValidationError('Error validating request body', parameter, 
-                        result.errors.concat(polymorphicValidationErrors));
+                    result.errors.concat(polymorphicValidationErrors));
             }
             break;
         }
