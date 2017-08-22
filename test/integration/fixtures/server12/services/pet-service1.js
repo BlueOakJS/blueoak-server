@@ -3,12 +3,12 @@
  * MIT Licensed
  */
 exports.init = function(logger) {
-    logger.info('Dummy Service Mock initialized');
+    logger.info('Pet Service1 initialized');
 };
 
 exports.getPets = function() {
     return {
-        id: 99,
-        name: 'mock pet'
+        id: 1,
+        name: 'service1 pet'
     };
 };
