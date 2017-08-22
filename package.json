@@ -50,6 +50,7 @@
     "express-static": "^1.0.3",
     "jsonwebtoken": "^5.4.1",
     "lodash": "^3.9.3",
+    "minimist": "^1.2.0",
     "multer": "^1.1.0",
     "node-cache": "^3.0.0",
     "node-statsd": "^0.1.1",
