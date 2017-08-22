@@ -21,4 +21,4 @@ exports.getPets2 = function (req, res, next) {
 
 exports.getPets3 = function (req, res, next) {
     res.send(serviceModule.getPets());
-}
+};
