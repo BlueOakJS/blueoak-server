@@ -1,0 +1,9 @@
+{
+  "express": {
+    "port": "5000"
+  },
+
+  "cluster": {
+    "maxWorkers": 1
+  }
+}

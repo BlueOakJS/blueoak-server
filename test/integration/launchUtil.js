@@ -27,9 +27,11 @@ exports.launch = function (fixtureName, opts, done) {
         opts.exec = '../../bin/blueoak-server.js';
     }
 
+    var args = opts.mocks ? ['--mocks', opts.mocks] : [];
+
     var bosPath = path.resolve(__dirname, opts.exec);
     output = '';
-    lastLaunch = spawner(execer + bosPath,
+    lastLaunch = spawner(execer + bosPath, args,
         {
             'cwd': path.resolve(__dirname, 'fixtures/' + fixtureName),
             'env': opts.env
@@ -42,13 +44,15 @@ exports.launch = function (fixtureName, opts, done) {
         }
     );
     setTimeout(function () {
-        // stack traces usually start with 'Error:', if there's that pattern, return it
-        output = /^Error:*/m.test(output) ? output : null;
+        if (!opts.fullOutput) {
+            // stack traces usually start with 'Error:', if there's that pattern, return it
+            output = /^Error:*/m.test(output) ? output : null;
+        }
         done(output);
     }, 4000);
 };
 
-exports.finish = function (done) {    
+exports.finish = function (done) {
     if (process.platform === 'win32') {
         child_process.exec('taskkill /PID ' + lastLaunch.pid + ' /T /F');
     }
@@ -65,4 +69,3 @@ exports.finish = function (done) {
         });
     }
 };
-

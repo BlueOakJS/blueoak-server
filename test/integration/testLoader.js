@@ -80,3 +80,24 @@ describe('SERVER11 - middleware should get loaded from node modules', function (
         });
     });
 });
+
+describe('SERVER12 - mocks should get loaded when specified by the --mocks command line argument', function () {
+    this.timeout(5000);
+
+    after(function (done) {
+        util.finish(done);
+    });
+
+    it('Launch server and load mocks', function (done) {
+        util.launch('server12',
+            {
+                appDir: path.resolve(__dirname, 'fixtures/server12'),
+                mocks: 'dummyservice',
+                fullOutput: true
+            }, function(output) {
+                assert.ok(output.indexOf('Dummy Service Mock initialized') > -1);
+                assert.ok(output.indexOf('Dummy Service initialized') < 0);
+                done();
+            });
+    });
+});
