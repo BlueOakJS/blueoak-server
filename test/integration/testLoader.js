@@ -2,7 +2,8 @@
  * Copyright (c) 2015-2016 PointSource, LLC.
  * MIT Licensed
  */
-var assert = require('assert'),
+var request = require('request'),
+    assert = require('assert'),
     util = require('./launchUtil'),
     path = require('path');
 
@@ -81,23 +82,29 @@ describe('SERVER11 - middleware should get loaded from node modules', function (
     });
 });
 
-describe('SERVER12 - mocks should get loaded when specified by the --mocks command line argument', function () {
+describe('SERVER12 - mock services should get loaded when specified by the --mock-services CLI argument', function () {
     this.timeout(5000);
+
+    before(function (done) {
+        util.launch('server12',
+            {
+                appDir: path.resolve(__dirname, 'fixtures/server12'),
+                mockServices: 'pet-service'
+            },
+            done
+        );
+    });
 
     after(function (done) {
         util.finish(done);
     });
 
     it('Launch server and load mocks', function (done) {
-        util.launch('server12',
-            {
-                appDir: path.resolve(__dirname, 'fixtures/server12'),
-                mocks: 'dummyservice',
-                fullOutput: true
-            }, function(output) {
-                assert.ok(output.indexOf('Dummy Service Mock initialized') > -1);
-                assert.ok(output.indexOf('Dummy Service initialized') < 0);
-                done();
-            });
+        request('http://localhost:' + (process.env.PORT || 5000) + '/api/pets', function(err, resp, body) {
+            assert.equal(null, err);
+            var json = JSON.parse(body);
+            assert.equal('mock pet', json.name);
+            done();
+        });
     });
 });

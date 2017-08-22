@@ -27,7 +27,7 @@ exports.launch = function (fixtureName, opts, done) {
         opts.exec = '../../bin/blueoak-server.js';
     }
 
-    var args = opts.mocks ? ['--mocks', opts.mocks] : [];
+    var args = opts.mockServices ? ['--mock-services', opts.mockServices] : [];
 
     var bosPath = path.resolve(__dirname, opts.exec);
     output = '';
@@ -44,10 +44,8 @@ exports.launch = function (fixtureName, opts, done) {
         }
     );
     setTimeout(function () {
-        if (!opts.fullOutput) {
-            // stack traces usually start with 'Error:', if there's that pattern, return it
-            output = /^Error:*/m.test(output) ? output : null;
-        }
+        // stack traces usually start with 'Error:', if there's that pattern, return it
+        output = /^Error:*/m.test(output) ? output : null;
         done(output);
     }, 4000);
 };

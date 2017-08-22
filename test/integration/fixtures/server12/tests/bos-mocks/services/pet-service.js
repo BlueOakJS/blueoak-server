@@ -4,5 +4,11 @@
  */
 exports.init = function(logger) {
     logger.info('Dummy Service Mock initialized');
-    process.exit(0); // exit test here
+};
+
+exports.getPets = function() {
+    return {
+        id: 99,
+        name: 'mock pet'
+    };
 };
