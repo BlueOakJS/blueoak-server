@@ -3,21 +3,15 @@
  * Copyright (c) 2015-2016 PointSource, LLC.
  * MIT Licensed
  */
-var parseArgs = require('minimist');
+var cli = require('commander');
+var pkg = require('../package.json');
 var server = require('../');
 
-// parse arguments
-var argv = parseArgs(process.argv.slice(2));
-
-// convert mocks from CSV into an array
-var mockServices = argv['mock-services'];
-if (mockServices) {
-    mockServices = mockServices.split(',');
-}
+cli = parseOptions();
 
 server.init({
     appDir: process.cwd(),
-    mockServices: mockServices
+    mockServices: cli.mockServices
 }, function(err) {
     if (err) {
         console.warn('Startup failed', err);
@@ -25,5 +19,17 @@ server.init({
         var logger = this.services.get('logger');
         logger.info('Server started');
     }
-
 });
+
+function parseOptions() {
+    // parse cli options
+    cli.version(pkg.version)
+        .option('--mock-services <services>', 'comma separated list of service names to mock', toList)
+        .parse(process.argv);
+
+    return cli;
+}
+
+function toList(val) {
+    return val.split(',');
+}
