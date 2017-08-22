@@ -10,14 +10,14 @@ var server = require('../');
 var argv = parseArgs(process.argv.slice(2));
 
 // convert mocks from CSV into an array
-var mocks = argv.mocks || argv.m;
-if (mocks) {
-    mocks = mocks.split(',');
+var mockServices = argv['mock-services'];
+if (mockServices) {
+    mockServices = mockServices.split(',');
 }
 
 server.init({
     appDir: process.cwd(),
-    mocks: mocks
+    mockServices: mockServices
 }, function(err) {
     if (err) {
         console.warn('Startup failed', err);

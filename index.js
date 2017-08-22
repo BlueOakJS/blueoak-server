@@ -32,8 +32,8 @@ module.exports.init = function (opts, callback) {
         global.__appDir = opts.appDir;
     }
 
-    if (opts.mocks) {
-        global.__mocks = opts.mocks;
+    if (opts.mockServices) {
+        global.__mockServices = opts.mockServices;
     }
 
     //Load the bootstrap services first (config and logging) since they're only needed for the master
