@@ -38,6 +38,7 @@ Projects use the following directory structure.
 │   ├── swagger/
 │   ├── test/
 |   |   ├── bos-mocks/
+|   |   |   ├── middleware/
 |   |   |   ├── services/
 ```
 
@@ -154,7 +155,7 @@ At a high-level, BlueOak Server's Swagger support provides the following:
 
 #### Mocking
 
-Services can be mocked for testing by creating a mock service in the `test/bos-mocks/services` directory. The mock service file name should match the file name of the service you wish to mock. The implementation of a mock service is no different than a normal service implementation. After you have implemented your mock services, you can instruct BlueOak Server to use them by specifying them as a comma-separated list in the `--mock-services` command line argument. For example: `blueoak-server --mock-services service1,service2`
+Services and middleware can be mocked for testing by creating mocks in the `test/bos-mocks/services` or `test/bos-mocks/middleware` directories. The mock file name should match the file name of the service or middleware you wish to mock. The implementation of a mock is no different than a normal service or middleware implementation. After you have implemented your mocks, you can instruct BlueOak Server to use them by specifying them as a comma-separated list in the `--mock-services` or `--mock-middleware` command line arguments. For example: `blueoak-server --mock-services service1,service2 --mock-middleware middleware1,middleware2`
 
 ### Installation
 
