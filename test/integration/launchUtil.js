@@ -27,7 +27,9 @@ exports.launch = function (fixtureName, opts, done) {
         opts.exec = '../../bin/blueoak-server.js';
     }
 
-    var args = opts.mockServices ? ['--mock-services', opts.mockServices] : [];
+    var args = [];
+    args = args.concat(opts.mockServices ? ['--mock-services', opts.mockServices] : []);
+    args = args.concat(opts.mockMiddleware ? ['--mock-middleware', opts.mockMiddleware] : []);
 
     var bosPath = path.resolve(__dirname, opts.exec);
     output = '';
@@ -40,12 +42,20 @@ exports.launch = function (fixtureName, opts, done) {
             if (err && err.signal !== 'SIGINT') {
                 console.warn(JSON.stringify(err, 0, 2), '\n' + stderr);
             }
-            output += stdout + stderr;
         }
     );
+
+    // capture output as it occurs
+    lastLaunch.stdout.on('data', function (data) {output += data;});
+    lastLaunch.stderr.on('data', function (data) {output += data;});
+
     setTimeout(function () {
-        // stack traces usually start with 'Error:', if there's that pattern, return it
-        output = /^Error:*/m.test(output) ? output : null;
+        // default level to ERROR
+        var level = (opts.outputLevel || 'error').toLowerCase();
+
+        // filter output that doesn't match the log level (case-insensitive, multiline)
+        var regex = new RegExp('^' + level + ':*', 'im');
+        output = regex.test(output) ? output : null;
         done(output);
     }, 4000);
 };

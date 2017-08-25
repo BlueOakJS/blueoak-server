@@ -11,7 +11,10 @@ cli = parseOptions();
 
 server.init({
     appDir: process.cwd(),
-    mockServices: cli.mockServices
+    mocks: {
+        services: cli.mockServices,
+        middleware: cli.mockMiddleware
+    }
 }, function(err) {
     if (err) {
         console.warn('Startup failed', err);
@@ -25,6 +28,7 @@ function parseOptions() {
     // parse cli options
     cli.version(pkg.version)
         .option('--mock-services <services>', 'comma separated list of service names to mock', toList)
+        .option('--mock-middleware <middleware>', 'comma separated list of middleware to mock', toList)
         .parse(process.argv);
 
     return cli;
