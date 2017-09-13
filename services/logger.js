@@ -27,7 +27,7 @@ exports.init = function (config) {
     //first attempt to load a code-based logger from <app>/logger.js
     //If that doesn't work we'll continue to use the normal config
     try {
-        var extLogger = require(global.__appDir + '/' + 'logger');
+        var extLogger = require(path.resolve(global.__appDir, 'logger'));
         extLogger.init(logger);
     } catch (err) {
         setupTransports(cfg, logger);
@@ -223,7 +223,7 @@ function setupTransports(cfg, logger) {
             } else {
                 //is a string
                 try {
-                    var tsm = require(global.__appDir + '/' + ts);
+                    var tsm = require(path.resolve(global.__appDir, ts));
                     if (typeof tsm.init === 'function' && typeof tsm.timestamp === 'function') {
                         transport.options.timestamp = tsm.timestamp;
                         tsm.init(); // allow one-time init if necessary, but require the function to be there
