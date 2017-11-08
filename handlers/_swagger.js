@@ -319,9 +319,9 @@ function registerRoute(app, auth, additionalMiddleware, method, path, data, allo
             setDefaultQueryParams(req, data, logger);
             setDefaultHeaders(req, data, logger);
 
-            //Wrap the set function, which is responsible for setting headers
-            let type;
-            //Validate that the content-type is correct per the swagger definition
+            // Wrap the set function, which is responsible for setting headers
+            var type = '';
+            // Validate that the content-type is correct per the swagger definition
             wrapCall(res, 'set', function (name, value) {
                 if (name === 'Content-Type') {
                     type = value.split(';')[0]; //parse off the optional encoding
@@ -337,14 +337,14 @@ function registerRoute(app, auth, additionalMiddleware, method, path, data, allo
                     var isBodyValid = isValidDataType(body);
                     if (!isBodyValid) {
                         if ( type === 'application/json') {
-                          try { //body can come in as JSON, we want it unJSONified
-                              body = JSON.parse(body);
-                          } catch (err) {
-                              logger.info('Unexpected format when attempting to validate response');
-                              res.send = responseSender;
-                              responseSender.call(res, body);
-                              return;
-                          }
+                            try { //body can come in as JSON, we want it unJSONified
+                                body = JSON.parse(body);
+                            } catch (err) {
+                                logger.info('Unexpected format when attempting to validate response');
+                                res.send = responseSender;
+                                responseSender.call(res, body);
+                                return;
+                            }
                         }
                     } else if (body) {
                         // if the response object has a property which is an object that implements toJSON() ...

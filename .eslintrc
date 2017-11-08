@@ -9,7 +9,7 @@
   },
   "extends": "eslint:recommended",
   "rules": {
-    // 4-space indentation
+    // 2-space indentation
     "indent": 2,
     // Require semicolons
     "semi": [2, "always"],
