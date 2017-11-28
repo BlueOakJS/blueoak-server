@@ -263,7 +263,7 @@ function handleMulterConfig(multerConfig, logger, serviceLoader) {
     return multerConfig;
 }
 
-function isValidDataType(body) {
+function isValidJsonData(body) {
     if (typeof body === 'object') {
         return true;
     } else if (Array.isArray(body)) {
@@ -320,13 +320,13 @@ function registerRoute(app, auth, additionalMiddleware, method, path, data, allo
             setDefaultHeaders(req, data, logger);
 
             // Wrap the set function, which is responsible for setting headers
-            var type = '';
+            var responseContentType = '';
             // Validate that the content-type is correct per the swagger definition
             wrapCall(res, 'set', function (name, value) {
                 if (name === 'Content-Type') {
-                    type = value.split(';')[0]; //parse off the optional encoding
-                    if (allowedTypes && !_.contains(allowedTypes, type)) {
-                        logger.warn('Invalid content type specified: %s. Expecting one of %s', type, allowedTypes);
+                    responseContentType = value.split(';')[0]; //parse off the optional encoding
+                    if (allowedTypes && !_.contains(allowedTypes, responseContentType)) {
+                        logger.warn('Invalid content type specified: %s. Expecting one of %s', responseContentType, allowedTypes);
                     }
                 }
             });
@@ -334,9 +334,9 @@ function registerRoute(app, auth, additionalMiddleware, method, path, data, allo
             if (responseModelValidationLevel) {
                 var responseSender = res.send;
                 res.send = function (body) {
-                    var isBodyValid = isValidDataType(body);
+                    var isBodyValid = isValidJsonData(body);
                     if (!isBodyValid) {
-                        if ( type === 'application/json') {
+                        if (responseContentType === 'application/json' || responseContentType === '') {
                             try { //body can come in as JSON, we want it unJSONified
                                 body = JSON.parse(body);
                             } catch (err) {
