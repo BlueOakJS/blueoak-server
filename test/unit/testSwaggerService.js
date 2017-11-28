@@ -48,7 +48,7 @@ describe('Swagger spec building test', function () {
                                 if (JSON.stringify(response.schema).includes('"discriminator":')) {
                                     assert.ok(
                                         JSON.stringify(response['x-bos-generated-disc-map'])
-                                            .includes('"discriminator":'), 
+                                            .includes('"discriminator":'),
                                         'x-bos-generated-disc-map for ' + pathKey + '/' + key +
                                             ' does not have a discriminator property');
                                 }
@@ -86,9 +86,9 @@ describe('Swagger spec building test', function () {
 
     it('Model properties can be overridden', function () {
         var curiousPersonDefn = swaggerService.getSimpleSpecs()['api-v1'].definitions.CuriousPerson;
-        //kind enum should have been overriden by curious person
-        //required property should contain curious person required properties AND
-         //any required properties from inherited models
+        // kind enum should have been overriden by curious person
+        // required property should contain curious person required properties AND
+        // any required properties from inherited models
         assert.equal(curiousPersonDefn.properties.kind.enum[0], 'CuriousPerson');
         assert.equal(curiousPersonDefn.required.length, 3);
     });

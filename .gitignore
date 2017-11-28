@@ -9,3 +9,4 @@ tests-report.xml
 *.swp
 *.swo
 *.log
+.DS_Store
