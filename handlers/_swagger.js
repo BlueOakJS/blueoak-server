@@ -326,7 +326,11 @@ function registerRoute(app, auth, additionalMiddleware, method, path, data, allo
                 if (name === 'Content-Type') {
                     responseContentType = value.split(';')[0]; //parse off the optional encoding
                     if (allowedTypes && !_.contains(allowedTypes, responseContentType)) {
-                        logger.warn('Invalid content type specified: %s. Expecting one of %s', responseContentType, allowedTypes);
+                        logger.warn(
+                            'Invalid content type specified: %s. Expecting one of %s',
+                            responseContentType,
+                            allowedTypes
+                        );
                     }
                 }
             });
@@ -336,7 +340,7 @@ function registerRoute(app, auth, additionalMiddleware, method, path, data, allo
                 res.send = function (body) {
                     var isBodyValid = isValidJsonData(body);
                     if (!isBodyValid) {
-                        if (responseContentType === 'application/json' || responseContentType === '') {
+                        if (responseContentType === 'application/json' || responseContentType === '') {
                             try { //body can come in as JSON, we want it unJSONified
                                 body = JSON.parse(body);
                             } catch (err) {
@@ -491,7 +495,7 @@ function validateRequestParameters(req, data, swaggerDoc, logger, callback) {
      * @returns {Object} the validation error for the parameter, or null if there's no problem
      */
     function _validateParameter(parameter) {
-        var result, error;
+        var result, error, errMessage;
         switch (parameter.in) {
         case 'query':
             if (parameter.required && typeof(req.query[parameter.name]) === 'undefined') {
@@ -504,12 +508,11 @@ function validateRequestParameters(req, data, swaggerDoc, logger, callback) {
             } else if (typeof req.query[parameter.name] !== 'undefined') {
                 result = swaggerUtil.validateParameterType(parameter, req.query[parameter.name]);
                 if (!result.valid) {
-                    error = _createRequestValidationError(util.format('Error validating query parameter %s',
-                            parameter.name), parameter, result.errors);
+                    errMessage = util.format('Error validating query parameter %s', parameter.name);
+                    error = _createRequestValidationError(errMessage, parameter, result.errors);
                 }
             }
             break;
-
         case 'header':
             if (parameter.required && typeof(req.get(parameter.name)) === 'undefined') {
                 logger.warn('Missing header "%s" for operation "%s"', parameter.name, data.operationId);
@@ -521,8 +524,8 @@ function validateRequestParameters(req, data, swaggerDoc, logger, callback) {
             } else if (typeof req.get(parameter.name) !== 'undefined') {
                 result = swaggerUtil.validateParameterType(parameter, req.get(parameter.name));
                 if (!result.valid) {
-                    error = _createRequestValidationError(util.format('Error validating %s header', parameter.name),
-                            parameter, result.errors);
+                    errMessage = util.format('Error validating %s header', parameter.name);
+                    error = _createRequestValidationError(errMessage, parameter, result.errors);
                 }
             }
             break;
@@ -530,8 +533,8 @@ function validateRequestParameters(req, data, swaggerDoc, logger, callback) {
         case 'path':
             result = swaggerUtil.validateParameterType(parameter, req.params[parameter.name]);
             if (!result.valid) {
-                error = _createRequestValidationError(util.format('Error validating %s path parameter', parameter.name),
-                        parameter, result.errors);
+                errMessage = util.format('Error validating %s path parameter', parameter.name);
+                error = _createRequestValidationError(errMessage, parameter, result.errors);
             }
             break;
 
@@ -562,9 +565,8 @@ function validateRequestParameters(req, data, swaggerDoc, logger, callback) {
                 //it as any type, such as number, or array
                 result = swaggerUtil.validateParameterType(parameter, req.body[parameter.name]);
                 if (!result.valid) {
-                    error = _createRequestValidationError(
-                            util.format('Error validating form parameter %s', parameter.name),
-                        parameter, result.errors);
+                    errMessage = util.format('Error validating form parameter %s', parameter.name);
+                    error = _createRequestValidationError(errMessage, parameter, result.errors);
                 }
             }
             break;
@@ -720,7 +722,7 @@ function wrapCall(obj, funcName, toCall) {
 
 //swagger paths use {blah} while express uses :blah
 function convertPathToExpress(swaggerPath) {
-    var reg = /\{([^\}]+)\}/g;  //match all {...}
+    var reg = /{([^}]+)}/g;  //match all {...}
     swaggerPath = swaggerPath.replace(reg, ':$1');
     return swaggerPath;
 }
