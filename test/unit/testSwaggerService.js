@@ -81,7 +81,7 @@ describe('Swagger spec building test', function () {
             _.forIn(spec.definitions, function (model, modelName) {
                 assert.ok(model[swaggerService.discriminatorKeyMap],
                     'Simple specs ' + modelName + ' does not have an x-bos-generated-disc-map property');
-                if (model.discriminator || modelsWithDiscMapsFromReferences.includes(modelName)) {
+                if (model.discriminator || modelsWithDiscMapsFromReferences.indexOf(modelName) >= 0) {
                     assert.ok(!_.isEmpty(model[swaggerService.discriminatorKeyMap]),
                         'Simple specs ' + modelName + ' does not have a complete x-bos-generated-disc-map object');
                 } else {
