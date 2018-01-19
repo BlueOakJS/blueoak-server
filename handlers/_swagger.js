@@ -18,7 +18,7 @@ var httpMethods;
 var responseModelValidationLevel;
 var polymorphicValidation;
 var rejectRequestAfterFirstValidationError;
-var swaggerDiscriminatorKeyMap;
+var swaggerService;
 
 exports.init = function (app, auth, config, logger, serviceLoader, swagger, callback) {
     var cfg = config.get('swagger');
@@ -27,7 +27,8 @@ exports.init = function (app, auth, config, logger, serviceLoader, swagger, call
     polymorphicValidation = swagger.isPolymorphicValidationEnabled();
     httpMethods = swagger.getValidHttpMethods();
     rejectRequestAfterFirstValidationError = !!cfg.rejectRequestAfterFirstValidationError;
-    swaggerDiscriminatorKeyMap = swagger.discriminatorKeyMap; 
+    
+    swaggerService = swagger;
 
     var useBasePath = cfg.useBasePath || (cfg.useBasePath === undefined); //default to true
     var serveSpec = cfg.serve;
@@ -571,25 +572,21 @@ function validateRequestParameters(req, data, swaggerDoc, logger, callback) {
             break;
 
         case 'body':
-            result = swaggerUtil.validateJSONType(parameter.schema, req.body);
-            var polymorphicValidationErrors = [];
-            if (polymorphicValidation !== 'off') {
-                polymorphicValidationErrors = swaggerUtil.validateIndividualObjects(swaggerDoc,
-                    parameter[swaggerDiscriminatorKeyMap], req.body);
-                if (polymorphicValidationErrors.length > 0 && polymorphicValidation === 'warn') {
-                    var warning = {
-                        errors: polymorphicValidationErrors,
-                        body: req.body || null
-                    };
-                    logger.warn('Request body polymorphic validation error for %s %s:', req.method, req.path,
-                        JSON.stringify(warning, null, 2));
-                    polymorphicValidationErrors = [];
-                }
+            result = swaggerService.validateObject(
+                    req.body, swaggerDoc, parameter.schema, (polymorphicValidation === 'off'));
+            if (!_.isEmpty(result.polymorphicValidationErrors) && polymorphicValidation === 'warn') {
+                var warning = {
+                    errors: result.polymorphicValidationErrors,
+                    body: req.body || null
+                };
+                logger.warn('Request body polymorphic validation error for %s %s:', req.method, req.path,
+                    JSON.stringify(warning, null, 2));
+                result.polymorphicValidationErrors = [];
+                result.valid = true;
             }
-            if (!result.valid || polymorphicValidationErrors.length > 0) {
-                result.errors = result.errors || [];
+            if (!result.valid) {
                 error = _createRequestValidationError('Error validating request body', parameter, 
-                    result.errors.concat(polymorphicValidationErrors));
+                    _.compact([].concat(result.errors, result.polymorphicValidationErrors)));
             }
             break;
         }
@@ -636,14 +633,9 @@ function validateResponseModels(res, body, data, swaggerDoc, logger) {
         return;
     }
 
-    var schemaPath = 'responses.%s',
-        mapPath = 'responses.%s.x-bos-generated-disc-map',
-        responseModel = util.format(schemaPath, res.statusCode),
-        defaultResponseModel = util.format(schemaPath, 'default'),
-        mapSchema = util.format(mapPath, res.statusCode),
-        defaultMapSchema = util.format(mapPath, 'default');
+    var responseModel = 'responses.' + res.statusCode,
+        defaultResponseModel = 'responses.default';
     var modelSchema;
-    var responseModelMap;
     if (_.has(data, responseModel)) {
         modelSchema = _.get(data, responseModel + '.schema');
         if (!modelSchema) {
@@ -653,7 +645,6 @@ function validateResponseModels(res, body, data, swaggerDoc, logger) {
                 return _createResponseValidationError('No response schema defined for %s %s with status code %s', res);
             }
         }
-        responseModelMap = _.get(data, mapSchema);
     } else if (_.has(data, defaultResponseModel)) {
         modelSchema = _.get(data, defaultResponseModel + '.schema');
         if (!modelSchema) {
@@ -663,18 +654,13 @@ function validateResponseModels(res, body, data, swaggerDoc, logger) {
                 return _createResponseValidationError('No response schema defined for %s %s with status code %s', res);
             }
         }
-        responseModelMap = _.get(data, defaultMapSchema);
     } else {
         return _createResponseValidationError('No response schema defined for %s %s with status code %s', res);
     }
-    var result = swaggerUtil.validateJSONType(modelSchema, body);
-    var polymorphicValidationErrors = [];
-    if (polymorphicValidation !== 'off') {
-        polymorphicValidationErrors = swaggerUtil.validateIndividualObjects(swaggerDoc, responseModelMap, body);
-    }
-    if (!result.valid || polymorphicValidationErrors.length > 0) {
+    var result = swaggerService.validateObject(body, swaggerDoc, modelSchema, (polymorphicValidation === 'off'));
+    if (!result.valid) {
         return _createResponseValidationError('Error validating response body for %s %s with status code %s', res,
-            result.errors.concat(polymorphicValidationErrors));
+            _.compact([].concat(result.errors, result.polymorphicValidationErrors)));
     }
     return;
 
