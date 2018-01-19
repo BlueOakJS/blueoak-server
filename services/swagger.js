@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2016 PointSource, LLC.
+ * Copyright (c) 2015-2018 PointSource, LLC.
  * MIT Licensed
  */
 
@@ -23,6 +23,8 @@ var httpMethods = ['get', 'put', 'post', 'delete', 'options', 'head', 'patch'];
 var responseModelValidationLevel;
 var polymorphicValidation;
 var refCompilation;
+
+exports.discriminatorKey = 'x-bos-generated-disc-map';
 
 exports.init = function (logger, config, callback) {
     var cfg = config.get('swagger');
@@ -89,8 +91,9 @@ exports.init = function (logger, config, callback) {
             .then(function (dereferencedApi) {
                 specs.dereferenced[handlerName] = dereferencedApi;
                 if (polymorphicValidation !== 'off') {
-                    getDiscriminatorObjectsForSchemas(dereferencedApi.paths, responseModelValidationLevel);
+                    compileDiscriminatorsForPaths(dereferencedApi.paths, responseModelValidationLevel);
                 }
+                compileDiscriminatorsForDefinitions(dereferencedApi.definitions);
                 flattenModelDefinitions(dereferencedApi.definitions);
                 return swagCallback();
             })
@@ -178,7 +181,7 @@ function mergeToFlatModel(flatModel, model) {
     flatModel.allOf = undefined;
 }
 
-function getDiscriminatorObjectsForSchemas(paths, doResponseValidation) {
+function compileDiscriminatorsForPaths(paths, doResponseValidation) {
     var pathKeys = Object.keys(paths);
     pathKeys.forEach(function (path) {
         var methodKeys = Object.keys(paths[path]);
@@ -189,7 +192,7 @@ function getDiscriminatorObjectsForSchemas(paths, doResponseValidation) {
                     responseCodeKeys.forEach(function (responseCode) {
                         var schema = paths[path][method].responses[responseCode].schema;
                         if (schema) {
-                            paths[path][method].responses[responseCode]['x-bos-generated-disc-map'] =
+                            paths[path][method].responses[responseCode][exports.discriminatorKey] =
                                 swaggerUtil.getObjectsWithDiscriminator(schema);
                         }
                     });
@@ -199,13 +202,30 @@ function getDiscriminatorObjectsForSchemas(paths, doResponseValidation) {
                     requestParamKeys.forEach(function (param) {
                         var schema = paths[path][method].parameters[param].schema;
                         if (schema) {
-                            paths[path][method].parameters[param]['x-bos-generated-disc-map'] =
+                            paths[path][method].parameters[param][exports.discriminatorKey] =
                                 swaggerUtil.getObjectsWithDiscriminator(schema);
                         }
                     });
                 }
             }
         });
+    });
+}
+
+function compileDiscriminatorsForDefinitions(definitions) {
+    var modelNames = Object.keys(definitions);
+    modelNames.forEach(function (modelName) {
+        var schema = definitions[modelName];
+        var discMap = swaggerUtil.getObjectsWithDiscriminator(schema);
+        if (schema.allOf) {
+            var completeDiscMap = {
+                type: 'object'
+            };
+            completeDiscMap[exports.discriminatorKey] = discMap;
+            schema.allOf.push(completeDiscMap);
+        } else {
+            schema[exports.discriminatorKey] = discMap;
+        }
     });
 }
 

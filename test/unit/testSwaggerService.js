@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2016 PointSource, LLC.
+ * Copyright (c) 2015-2018 PointSource, LLC.
  * MIT Licensed
  */
 var _ = require('lodash'),
@@ -11,43 +11,39 @@ var _ = require('lodash'),
     testUtil = require('../../testlib/util');
 
 var swaggerExampleDir = path.resolve(__dirname, '../../examples/swagger'),
-    swaggerExampleSpecs = 3;
-var httpMethods = ['get', 'put', 'post', 'delete', 'options', 'head', 'patch'];
-
-var swaggerValidateResponsesConfig = {
+    swaggerValidateResponsesConfig = {
     swagger: {
         polymorphicValidation: 'on',
         validateResponseModels: 'error'
     }
-};
+    },
+    swaggerExampleSpecs = 3,
+    swaggerExampleSpecNames = ['api-v1', 'petstore', 'uber-v1'];
 
-function initSwaggerService(rootDir, swaggerConfig, callback) {
-    global.__appDir = rootDir;
-    if (typeof swaggerConfig === 'function') {
-        callback = swaggerConfig;
-        swaggerConfig = {};
-    }
-    swaggerService.init(logger, testUtil.createConfigService(swaggerConfig), callback);
-}
+describe('Swagger service initialization', function () {
+
+    before(function (callback) {
+        global.__appDir = swaggerExampleDir;
+        swaggerService.init(logger, testUtil.createConfigService(swaggerValidateResponsesConfig), callback);
+    });
+
+    });
 
 describe('Swagger spec building test', function () {
 
-    before(function (callback) {
-        initSwaggerService(swaggerExampleDir, swaggerValidateResponsesConfig, callback);
-    });
-
     it('responses/requests with schema have x-bos-generated-disc-map property', function () {
+        var httpMethods = ['get', 'put', 'post', 'delete', 'options', 'head', 'patch'];
         _.forIn(swaggerService.getSimpleSpecs(), function (spec) {
             _.forIn(spec.paths, function (path, pathKey) {
                 _.forIn(path, function (method, methodKey) {
                     if (httpMethods.indexOf(methodKey) != -1) {
                         _.forIn(method.responses, function (response, key) {
                             if (response.schema) {
-                                assert.ok(response['x-bos-generated-disc-map'], 'Simple specs ' + key +
+                                assert.ok(response[swaggerService.discriminatorKey], 'Simple specs ' + key +
                                     ' does not have a x-bos-generated-disc-map property');
                                 if (JSON.stringify(response.schema).includes('"discriminator":')) {
                                     assert.ok(
-                                        JSON.stringify(response['x-bos-generated-disc-map'])
+                                        JSON.stringify(response[swaggerService.discriminatorKey])
                                             .includes('"discriminator":'), 
                                         'x-bos-generated-disc-map for ' + pathKey + '/' + key +
                                             ' does not have a discriminator property');
@@ -57,11 +53,13 @@ describe('Swagger spec building test', function () {
                         _.forIn(method.parameters, function (param, key) {
                             if (param.in === 'body') {//schema required
                                 assert.ok(param.schema, 'Simple specs ' + key + ' does not have a schema property');
-                                assert.ok(param['x-bos-generated-disc-map'],
+                                assert.ok(param[swaggerService.discriminatorKey],
                                     'Simple specs ' + key + ' does not have a x-bos-generated-disc-map property');
                                 if (JSON.stringify(param.schema).includes('"discriminator":')) {
                                     assert.ok(
-                                        JSON.stringify(param['x-bos-generated-disc-map']).includes('"discriminator":'),
+                                        JSON.stringify(
+                                            param[swaggerService.discriminatorKey])
+                                            .includes('"discriminator":'),
                                         'x-bos-generated-disc-map for ' + key +
                                             ' does not have a discriminator property');
                                 }
@@ -73,10 +71,27 @@ describe('Swagger spec building test', function () {
         });
     });
 
+    it('definitions have x-bos-generated-disc-map property', function () {
+        var modelsWithDiscMapsFromReferences = ['SuperFunTime'];
+        _.forIn(swaggerService.getSimpleSpecs(), function (spec) {
+            _.forIn(spec.definitions, function (model, modelName) {
+                assert.ok(model[swaggerService.discriminatorKey],
+                    'Simple specs ' + modelName + ' does not have an x-bos-generated-disc-map property');
+                if (model.discriminator || modelsWithDiscMapsFromReferences.includes(modelName)) {
+                    assert.ok(!_.isEmpty(model[swaggerService.discriminatorKey]),
+                        'Simple specs ' + modelName + ' does not have a complete x-bos-generated-disc-map object');
+                } else {
+                    assert.ok(_.isEmpty(model[swaggerService.discriminatorKey]),
+                        'Simple specs ' + modelName + ' does not have an empty x-bos-generated-disc-map object');
+                }
+            });
+        });
+    });
+
     it('has validation error indicating required field from implementing model is missing', function () {
         var exampleData = require('./data/example.json');
         var map = swaggerService.getSimpleSpecs()['api-v1'].paths['/superfuntime/{id}']
-            .get.responses['200']['x-bos-generated-disc-map'];
+            .get.responses['200'][swaggerService.discriminatorKey];
         var polymorphicValidationErrors = swaggerUtil.validateIndividualObjects(
             swaggerService.getSimpleSpecs()['api-v1'], map, exampleData);
         assert.equal(polymorphicValidationErrors.length, 1);
@@ -124,8 +139,7 @@ describe('Swagger spec building test', function () {
 
 describe('Swagger format validators test', function () {
 
-    before(function (callback) {
-        initSwaggerService(swaggerExampleDir, callback);
+    before(function () {
         swaggerService.addFormat('uppercase', function (data, schema) {
             if (data.toUpperCase() !== data) {
                 return 'Must be upper case';

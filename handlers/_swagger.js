@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2016 PointSource, LLC.
+ * Copyright (c) 2015-2018 PointSource, LLC.
  * MIT Licensed
  */
 var _ = require('lodash'),
@@ -18,6 +18,7 @@ var httpMethods;
 var responseModelValidationLevel;
 var polymorphicValidation;
 var rejectRequestAfterFirstValidationError;
+var swaggerDiscriminatorKey;
 
 exports.init = function (app, auth, config, logger, serviceLoader, swagger, callback) {
     var cfg = config.get('swagger');
@@ -25,7 +26,8 @@ exports.init = function (app, auth, config, logger, serviceLoader, swagger, call
     responseModelValidationLevel = swagger.getResponseModelValidationLevel();
     polymorphicValidation = swagger.isPolymorphicValidationEnabled();
     httpMethods = swagger.getValidHttpMethods();
-    rejectRequestAfterFirstValidationError = !!cfg.rejectRequestAfterFirstValidationError; 
+    rejectRequestAfterFirstValidationError = !!cfg.rejectRequestAfterFirstValidationError;
+    swaggerDiscriminatorKey = swagger.discriminatorKey; 
 
     var useBasePath = cfg.useBasePath || (cfg.useBasePath === undefined); //default to true
     var serveSpec = cfg.serve;
@@ -573,7 +575,7 @@ function validateRequestParameters(req, data, swaggerDoc, logger, callback) {
             var polymorphicValidationErrors = [];
             if (polymorphicValidation !== 'off') {
                 polymorphicValidationErrors = swaggerUtil.validateIndividualObjects(swaggerDoc,
-                    parameter['x-bos-generated-disc-map'], req.body);
+                    parameter[swaggerDiscriminatorKey], req.body);
                 if (polymorphicValidationErrors.length > 0 && polymorphicValidation === 'warn') {
                     var warning = {
                         errors: polymorphicValidationErrors,
