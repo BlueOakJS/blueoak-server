@@ -12,10 +12,10 @@ var _ = require('lodash'),
 
 var swaggerExampleDir = path.resolve(__dirname, '../../examples/swagger'),
     swaggerValidateResponsesConfig = {
-    swagger: {
-        polymorphicValidation: 'on',
-        validateResponseModels: 'error'
-    }
+        swagger: {
+            polymorphicValidation: 'on',
+            validateResponseModels: 'error'
+        }
     },
     swaggerExampleSpecs = 3,
     swaggerExampleSpecNames = ['api-v1', 'petstore', 'uber-v1'];
@@ -26,8 +26,12 @@ describe('Swagger service initialization', function () {
         global.__appDir = swaggerExampleDir;
         swaggerService.init(logger, testUtil.createConfigService(swaggerValidateResponsesConfig), callback);
     });
-
+    
+    it('Gets a list of all spec names', function () {
+        var specNames = swaggerService.getSpecNames();
+        assert.deepEqual(specNames, swaggerExampleSpecNames);
     });
+});
 
 describe('Swagger spec building test', function () {
 
@@ -39,11 +43,11 @@ describe('Swagger spec building test', function () {
                     if (httpMethods.indexOf(methodKey) != -1) {
                         _.forIn(method.responses, function (response, key) {
                             if (response.schema) {
-                                assert.ok(response[swaggerService.discriminatorKey], 'Simple specs ' + key +
+                                assert.ok(response[swaggerService.discriminatorKeyMap], 'Simple specs ' + key +
                                     ' does not have a x-bos-generated-disc-map property');
                                 if (JSON.stringify(response.schema).includes('"discriminator":')) {
                                     assert.ok(
-                                        JSON.stringify(response[swaggerService.discriminatorKey])
+                                        JSON.stringify(response[swaggerService.discriminatorKeyMap])
                                             .includes('"discriminator":'), 
                                         'x-bos-generated-disc-map for ' + pathKey + '/' + key +
                                             ' does not have a discriminator property');
@@ -53,12 +57,12 @@ describe('Swagger spec building test', function () {
                         _.forIn(method.parameters, function (param, key) {
                             if (param.in === 'body') {//schema required
                                 assert.ok(param.schema, 'Simple specs ' + key + ' does not have a schema property');
-                                assert.ok(param[swaggerService.discriminatorKey],
+                                assert.ok(param[swaggerService.discriminatorKeyMap],
                                     'Simple specs ' + key + ' does not have a x-bos-generated-disc-map property');
                                 if (JSON.stringify(param.schema).includes('"discriminator":')) {
                                     assert.ok(
                                         JSON.stringify(
-                                            param[swaggerService.discriminatorKey])
+                                            param[swaggerService.discriminatorKeyMap])
                                             .includes('"discriminator":'),
                                         'x-bos-generated-disc-map for ' + key +
                                             ' does not have a discriminator property');
@@ -70,18 +74,18 @@ describe('Swagger spec building test', function () {
             });
         });
     });
-
+    
     it('definitions have x-bos-generated-disc-map property', function () {
         var modelsWithDiscMapsFromReferences = ['SuperFunTime'];
         _.forIn(swaggerService.getSimpleSpecs(), function (spec) {
             _.forIn(spec.definitions, function (model, modelName) {
-                assert.ok(model[swaggerService.discriminatorKey],
+                assert.ok(model[swaggerService.discriminatorKeyMap],
                     'Simple specs ' + modelName + ' does not have an x-bos-generated-disc-map property');
                 if (model.discriminator || modelsWithDiscMapsFromReferences.includes(modelName)) {
-                    assert.ok(!_.isEmpty(model[swaggerService.discriminatorKey]),
+                    assert.ok(!_.isEmpty(model[swaggerService.discriminatorKeyMap]),
                         'Simple specs ' + modelName + ' does not have a complete x-bos-generated-disc-map object');
                 } else {
-                    assert.ok(_.isEmpty(model[swaggerService.discriminatorKey]),
+                    assert.ok(_.isEmpty(model[swaggerService.discriminatorKeyMap]),
                         'Simple specs ' + modelName + ' does not have an empty x-bos-generated-disc-map object');
                 }
             });
@@ -91,7 +95,7 @@ describe('Swagger spec building test', function () {
     it('has validation error indicating required field from implementing model is missing', function () {
         var exampleData = require('./data/example.json');
         var map = swaggerService.getSimpleSpecs()['api-v1'].paths['/superfuntime/{id}']
-            .get.responses['200'][swaggerService.discriminatorKey];
+            .get.responses['200'][swaggerService.discriminatorKeyMap];
         var polymorphicValidationErrors = swaggerUtil.validateIndividualObjects(
             swaggerService.getSimpleSpecs()['api-v1'], map, exampleData);
         assert.equal(polymorphicValidationErrors.length, 1);
@@ -190,4 +194,75 @@ describe('Swagger format validators test', function () {
         assert.equal(swaggerUtil.validateJSONType(schema, data).valid, true);
     });
 
+});
+
+describe('User model validation', function () {
+    
+    var specName = 'api-v1',
+        myContact = {
+            firstName: 'String',
+            lastName: 'Cheese',
+            email: 'string.cheese@mailinator.com'
+        },
+        brokenPolymorph = {
+            email: 'foobar86@mailinator.com',
+            kind: 'EnthusiasticPerson'
+        };
+    
+    it('Validates an object against simple model', function () {
+        assert.equal(swaggerService.validateObject(specName, 'Contact', myContact).valid, true);
+    });
+    
+    it('Fails validation for a simple model with a wrong type', function () {
+        var badContact = _.cloneDeep(myContact);
+        badContact.gender = 7;
+        var validationResult = swaggerService.validateObject(specName, 'Contact', badContact);
+        assert.equal(validationResult.valid, false);
+        assert.equal(validationResult.errors[0].schemaPath, '/properties/gender/type');
+        assert.deepEqual(validationResult.errors[0].params, {
+            expected: 'string',
+            type: 'number'
+        });
+    });
+    
+    it('Fails validation for a simple model with a bad enum value', function () {
+        var badContact = _.cloneDeep(myContact);
+        badContact.gender = 'Robot';
+        var validationResult = swaggerService.validateObject(specName, 'Contact', badContact);
+        assert.equal(validationResult.valid, false);
+        assert.equal(validationResult.errors[0].schemaPath, '/properties/gender/type');
+        assert.deepEqual(validationResult.errors[0].message, 'No enum match for: "Robot"');
+    });
+    
+    it('Fails validation for a simple model missing an object against simple model', function () {
+        var validationResult = swaggerService.validateObject(specName, 'Person', myContact);
+        assert.equal(validationResult.valid, false);
+        assert.equal(validationResult.errors[0].code, 302);
+        assert(validationResult.errors[0].message, 'Missing required property: kind');
+    });
+    
+    it('Throws for an unknown specification', function () {
+        assert.throws(function () {
+            swaggerService.validateObject('foo-bar', 'Contact', myContact);
+        }, /unknown specification/);
+    });
+    
+    it('Throws for an unknown model', function () {
+        assert.throws(function () {
+            swaggerService.validateObject(specName, 'Missing', myContact);
+        }, /unknown model/);
+    });
+    
+    it('Fails validation when polymorphic contracts are broken', function () {
+        var validationResult = swaggerService.validateObject(specName, 'Person', brokenPolymorph);
+        assert.equal(validationResult.valid, false);
+        assert.equal(validationResult.polymorphicValidationErrors[0].code, 302);
+        assert(validationResult.polymorphicValidationErrors[0].message,
+            'Missing required property: enthusiasticPersonReqField');
+    });
+    
+    it('Passes validation when polymorphic contracts are broken but the check is disabled', function () {
+        var validationResult = swaggerService.validateObject(specName, 'Person', brokenPolymorph, true);
+        assert.equal(validationResult.valid, true);
+    });
 });

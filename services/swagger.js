@@ -12,10 +12,12 @@ var swaggerUtil = require('../lib/swaggerUtil');
 var refCompiler = require('../lib/swaggerRefCompiler');
 var tv4 = require('tv4');
 var _ = require('lodash');
+var util = require('util');
 
 var specs = {
     dereferenced: {},
-    bundled: {}
+    bundled: {},
+    names: []
 };
 
 var httpMethods = ['get', 'put', 'post', 'delete', 'options', 'head', 'patch'];
@@ -24,7 +26,7 @@ var responseModelValidationLevel;
 var polymorphicValidation;
 var refCompilation;
 
-exports.discriminatorKey = 'x-bos-generated-disc-map';
+exports.discriminatorKeyMap = 'x-bos-generated-disc-map';
 
 exports.init = function (logger, config, callback) {
     var cfg = config.get('swagger');
@@ -97,6 +99,10 @@ exports.init = function (logger, config, callback) {
                 flattenModelDefinitions(dereferencedApi.definitions);
                 return swagCallback();
             })
+            .then (function () {
+                specs.names.push(handlerName);
+                return swagCallback();
+            })
             .catch(function (error) {
                 // don't generate an error if it was a non-Swagger Spec JSON file
                 var swagErr = error;
@@ -133,6 +139,10 @@ exports.getValidHttpMethods = function () {
     return httpMethods;
 };
 
+exports.getSpecNames = function () {
+    return specs.names;
+};
+
 exports.getSimpleSpecs = function () {
     return specs.dereferenced;
 };
@@ -143,6 +153,55 @@ exports.getPrettySpecs = function () {
 
 exports.addFormat = function (format, validationFunction) {
     tv4.addFormat(format, validationFunction);
+};
+
+/**
+ * Validate an arbitrary object against a model definition in a given specification
+ * 
+ * @param {String} specName - the name of the specification in which the model is defined
+ * @param {String} modelName - the name of the model definition to validate against
+ * @param {Object} object - the object to be validated
+ * @param {Boolean} [skipPolymorphicChecks] - whether to disable polymorphic checks
+ * 
+ * @returns {Object} an object containing the validation result:
+ *          .valid is a boolean indicated whether the object validated against the model;
+ *          .errors is an array of tv4 validation errors for particular fields;
+ *          .polymorphicValidationErrors is an array of tv4 validation errors that only
+ *              show with polymorphic validation;
+ * 
+ * @throws {Error} when the model cannot be found
+ */
+exports.validateObject = function (specName, modelName, object, skipPolymorphicChecks) {
+    var spec = _.get(specs.dereferenced, specName);
+    if (!spec) {
+        throw _createObjectValidationError(
+            util.format('Cannot validate object for unknown specification "%s"', specName));
+    }
+    
+    var schema = _.get(spec, ['definitions', modelName].join('.'));
+    if (!schema) {
+        throw _createObjectValidationError(
+            util.format('Cannot validate object for unknown model "%s" in specification "%s"', modelName, specName));
+    }
+    
+    var result = swaggerUtil.validateJSONType(schema, object);
+    if (!(skipPolymorphicChecks || _.isEmpty(schema[exports.discriminatorKeyMap]))) {
+        result.polymorphicValidationErrors = swaggerUtil.validateIndividualObjects(
+            spec, schema[exports.discriminatorKeyMap], object);
+        if (result.polymorphicValidationErrors.length > 0) {
+            result.valid = false;
+        }
+    }
+
+    return result;
+    
+    function _createObjectValidationError(message) {
+        var error = new Error(message);
+        error.name = 'SwaggerObjectValidationError';
+        error.specName = specName;
+        error.modelName = modelName;
+        return error;
+    }
 };
 
 function flattenModelDefinitions(definitions) {
@@ -192,7 +251,7 @@ function compileDiscriminatorsForPaths(paths, doResponseValidation) {
                     responseCodeKeys.forEach(function (responseCode) {
                         var schema = paths[path][method].responses[responseCode].schema;
                         if (schema) {
-                            paths[path][method].responses[responseCode][exports.discriminatorKey] =
+                            paths[path][method].responses[responseCode][exports.discriminatorKeyMap] =
                                 swaggerUtil.getObjectsWithDiscriminator(schema);
                         }
                     });
@@ -202,7 +261,7 @@ function compileDiscriminatorsForPaths(paths, doResponseValidation) {
                     requestParamKeys.forEach(function (param) {
                         var schema = paths[path][method].parameters[param].schema;
                         if (schema) {
-                            paths[path][method].parameters[param][exports.discriminatorKey] =
+                            paths[path][method].parameters[param][exports.discriminatorKeyMap] =
                                 swaggerUtil.getObjectsWithDiscriminator(schema);
                         }
                     });
@@ -221,10 +280,10 @@ function compileDiscriminatorsForDefinitions(definitions) {
             var completeDiscMap = {
                 type: 'object'
             };
-            completeDiscMap[exports.discriminatorKey] = discMap;
+            completeDiscMap[exports.discriminatorKeyMap] = discMap;
             schema.allOf.push(completeDiscMap);
         } else {
-            schema[exports.discriminatorKey] = discMap;
+            schema[exports.discriminatorKeyMap] = discMap;
         }
     });
 }

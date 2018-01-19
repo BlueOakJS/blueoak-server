@@ -18,7 +18,7 @@ var httpMethods;
 var responseModelValidationLevel;
 var polymorphicValidation;
 var rejectRequestAfterFirstValidationError;
-var swaggerDiscriminatorKey;
+var swaggerDiscriminatorKeyMap;
 
 exports.init = function (app, auth, config, logger, serviceLoader, swagger, callback) {
     var cfg = config.get('swagger');
@@ -27,7 +27,7 @@ exports.init = function (app, auth, config, logger, serviceLoader, swagger, call
     polymorphicValidation = swagger.isPolymorphicValidationEnabled();
     httpMethods = swagger.getValidHttpMethods();
     rejectRequestAfterFirstValidationError = !!cfg.rejectRequestAfterFirstValidationError;
-    swaggerDiscriminatorKey = swagger.discriminatorKey; 
+    swaggerDiscriminatorKeyMap = swagger.discriminatorKeyMap; 
 
     var useBasePath = cfg.useBasePath || (cfg.useBasePath === undefined); //default to true
     var serveSpec = cfg.serve;
@@ -575,7 +575,7 @@ function validateRequestParameters(req, data, swaggerDoc, logger, callback) {
             var polymorphicValidationErrors = [];
             if (polymorphicValidation !== 'off') {
                 polymorphicValidationErrors = swaggerUtil.validateIndividualObjects(swaggerDoc,
-                    parameter[swaggerDiscriminatorKey], req.body);
+                    parameter[swaggerDiscriminatorKeyMap], req.body);
                 if (polymorphicValidationErrors.length > 0 && polymorphicValidation === 'warn') {
                     var warning = {
                         errors: polymorphicValidationErrors,
