@@ -96,8 +96,6 @@ exports.init = function (logger, config, callback) {
                     preparePathsForPolymorphicValidation(dereferencedApi.paths, responseModelValidationLevel);
                 }
                 prepareDefinitionsForPolymorphicValidation(dereferencedApi.definitions);
-            })
-            .then (function () {
                 specs.names.push(handlerName);
                 return swagCallback();
             })

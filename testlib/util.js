@@ -8,6 +8,7 @@ var di = require('../lib/di'),
     _ = require('lodash'),
     fs = require('fs'),
     path = require('path'),
+    importFresh = require('import-fresh'),
     stripJsonComments = require('strip-json-comments');
 
 //creates a mock config service
@@ -20,11 +21,9 @@ function getConfigService(configObject) {
 }
 exports.createConfigService = getConfigService;
 
-//create a mock logger
-var logger = require('./mocks/logger');
-
-//create a mock monitor
-var monitor = require('./mocks/monitor');
+//create a mock logger services, loading them using import-fresh in case they ever need to be reloaded
+var logger = importFresh('./mocks/logger'),
+    monitor = importFresh('./mocks/monitor');
 
 //This will simulate the normal dependency injection
 //pass in a service module, a set of config to inject into the config service,
@@ -32,7 +31,7 @@ var monitor = require('./mocks/monitor');
 //config, logger, and monitor are handled automatically, anything else needs to be included in the injections map
 //callback is optional as well
 exports.initService = function(module, config, injections, callback) {
-    // injections and callbackare optional ...
+    // injections and callback are optional ...
     if (_.isFunction(injections)) {
         callback = injections;
         injections = {};
@@ -119,7 +118,8 @@ exports.injectCore = function (modules, config, callback) {
             throw new Error('Given module name is not a core service');
         }
 
-        initializedModules[modules[j]] = require('../services/' + modules[j]);
+        // in testing we might get multiple calls to this function, give fresh modules each time with import-fresh
+        initializedModules[modules[j]] = importFresh('../services/' + modules[j]);
 
         this.initService(initializedModules[modules[j]], config, function (error) {
             if (error) {
@@ -201,13 +201,8 @@ exports.init = function(mod, serviceMap, serviceCallback, callback) {
     var mockParams = [];
     paramNames.forEach(function(paramName) {
         if (!serviceMap[paramName]) {
-
-            //since it's possible that this has already been loaded once and
-            //has stubbed out methods, delete it from the cache
-            var modPath = require.resolve('./mocks/' + paramName);
-            delete require.cache[modPath];
-
-            serviceMap[paramName] = require('./mocks/' + paramName);
+            // use import-fresh to make sure we have fresh modules 
+            serviceMap[paramName] = importFresh('./mocks/' + paramName);
         }
         mockParams.push(serviceMap[paramName]);
     });
