@@ -43,11 +43,11 @@ describe('Swagger spec building test', function () {
                     if (httpMethods.indexOf(methodKey) != -1) {
                         _.forIn(method.responses, function (response, key) {
                             if (response.schema) {
-                                assert.ok(response[swaggerService.discriminatorKeyMap], 'Simple specs ' + key +
+                                assert.ok(response.schema[swaggerService.discriminatorKeyMap], 'Simple specs ' + key +
                                     ' does not have a x-bos-generated-disc-map property');
                                 if (JSON.stringify(response.schema).includes('"discriminator":')) {
                                     assert.ok(
-                                        JSON.stringify(response[swaggerService.discriminatorKeyMap])
+                                        JSON.stringify(response.schema[swaggerService.discriminatorKeyMap])
                                             .includes('"discriminator":'), 
                                         'x-bos-generated-disc-map for ' + pathKey + '/' + key +
                                             ' does not have a discriminator property');
@@ -57,12 +57,12 @@ describe('Swagger spec building test', function () {
                         _.forIn(method.parameters, function (param, key) {
                             if (param.in === 'body') {//schema required
                                 assert.ok(param.schema, 'Simple specs ' + key + ' does not have a schema property');
-                                assert.ok(param[swaggerService.discriminatorKeyMap],
+                                assert.ok(param.schema[swaggerService.discriminatorKeyMap],
                                     'Simple specs ' + key + ' does not have a x-bos-generated-disc-map property');
                                 if (JSON.stringify(param.schema).includes('"discriminator":')) {
                                     assert.ok(
                                         JSON.stringify(
-                                            param[swaggerService.discriminatorKeyMap])
+                                            param.schema[swaggerService.discriminatorKeyMap])
                                             .includes('"discriminator":'),
                                         'x-bos-generated-disc-map for ' + key +
                                             ' does not have a discriminator property');
@@ -95,7 +95,7 @@ describe('Swagger spec building test', function () {
     it('has validation error indicating required field from implementing model is missing', function () {
         var exampleData = require('./data/example.json');
         var map = swaggerService.getSimpleSpecs()['api-v1'].paths['/superfuntime/{id}']
-            .get.responses['200'][swaggerService.discriminatorKeyMap];
+            .get.responses['200'].schema[swaggerService.discriminatorKeyMap];
         var polymorphicValidationErrors = swaggerUtil.validateIndividualObjects(
             swaggerService.getSimpleSpecs()['api-v1'], map, exampleData);
         assert.equal(polymorphicValidationErrors.length, 1);
@@ -207,16 +207,37 @@ describe('User model validation', function () {
         brokenPolymorph = {
             email: 'foobar86@mailinator.com',
             kind: 'EnthusiasticPerson'
-        };
+        },
+        specObj, modelObj, paramModel;
+    
+    before(function () {
+        specObj = swaggerService.getSimpleSpecs()[specName];
+        modelObj = specObj.definitions['Contact'];
+        paramModel = specObj.paths['/superfuntime/{id}'].post.parameters[1].schema;
+    });
     
     it('Validates an object against simple model', function () {
-        assert.equal(swaggerService.validateObject(specName, 'Contact', myContact).valid, true);
+        assert.equal(swaggerService.validateObject(myContact, specName, 'Contact').valid, true);
+    });
+    
+    it('Validates an object against simple model with the spec object provided directly', function () {
+        assert.equal(swaggerService.validateObject(myContact, specObj, 'Contact').valid, true);
+    });
+    
+    it('Validates an object against simple model with the spec and model objects provided directly', function () {
+        assert.equal(swaggerService.validateObject(myContact, specObj, modelObj).valid, true);
+    });
+    
+    it('Validates parameter with the spec and model objects provided directly', function () {
+        var myPerson = _.cloneDeep(myContact);
+        myPerson.kind = 'Person';
+        assert.equal(swaggerService.validateObject(myPerson, specObj, paramModel).valid, true);
     });
     
     it('Fails validation for a simple model with a wrong type', function () {
         var badContact = _.cloneDeep(myContact);
         badContact.gender = 7;
-        var validationResult = swaggerService.validateObject(specName, 'Contact', badContact);
+        var validationResult = swaggerService.validateObject(badContact, specName, 'Contact');
         assert.equal(validationResult.valid, false);
         assert.equal(validationResult.errors[0].schemaPath, '/properties/gender/type');
         assert.deepEqual(validationResult.errors[0].params, {
@@ -228,14 +249,21 @@ describe('User model validation', function () {
     it('Fails validation for a simple model with a bad enum value', function () {
         var badContact = _.cloneDeep(myContact);
         badContact.gender = 'Robot';
-        var validationResult = swaggerService.validateObject(specName, 'Contact', badContact);
+        var validationResult = swaggerService.validateObject(badContact, specName, 'Contact');
         assert.equal(validationResult.valid, false);
         assert.equal(validationResult.errors[0].schemaPath, '/properties/gender/type');
         assert.deepEqual(validationResult.errors[0].message, 'No enum match for: "Robot"');
     });
     
     it('Fails validation for a simple model missing an object against simple model', function () {
-        var validationResult = swaggerService.validateObject(specName, 'Person', myContact);
+        var validationResult = swaggerService.validateObject(myContact, specName, 'Person');
+        assert.equal(validationResult.valid, false);
+        assert.equal(validationResult.errors[0].code, 302);
+        assert(validationResult.errors[0].message, 'Missing required property: kind');
+    });
+    
+    it('Fails validation when the object does not match the directly provided model', function () {
+        var validationResult = swaggerService.validateObject(myContact, specObj, paramModel);
         assert.equal(validationResult.valid, false);
         assert.equal(validationResult.errors[0].code, 302);
         assert(validationResult.errors[0].message, 'Missing required property: kind');
@@ -243,18 +271,26 @@ describe('User model validation', function () {
     
     it('Throws for an unknown specification', function () {
         assert.throws(function () {
-            swaggerService.validateObject('foo-bar', 'Contact', myContact);
+            swaggerService.validateObject(myContact, 'foo-bar', 'Contact');
         }, /unknown specification/);
     });
     
     it('Throws for an unknown model', function () {
         assert.throws(function () {
-            swaggerService.validateObject(specName, 'Missing', myContact);
+            swaggerService.validateObject(myContact, specName, 'Missing');
         }, /unknown model/);
     });
     
     it('Fails validation when polymorphic contracts are broken', function () {
-        var validationResult = swaggerService.validateObject(specName, 'Person', brokenPolymorph);
+        var validationResult = swaggerService.validateObject(brokenPolymorph, specName, 'Person');
+        assert.equal(validationResult.valid, false);
+        assert.equal(validationResult.polymorphicValidationErrors[0].code, 302);
+        assert(validationResult.polymorphicValidationErrors[0].message,
+            'Missing required property: enthusiasticPersonReqField');
+    });
+    
+    it('Fails validation when polymorphic contracts are broken for parameters passed as direct objects', function () {
+        var validationResult = swaggerService.validateObject(brokenPolymorph, specObj, paramModel);
         assert.equal(validationResult.valid, false);
         assert.equal(validationResult.polymorphicValidationErrors[0].code, 302);
         assert(validationResult.polymorphicValidationErrors[0].message,
@@ -262,7 +298,21 @@ describe('User model validation', function () {
     });
     
     it('Passes validation when polymorphic contracts are broken but the check is disabled', function () {
-        var validationResult = swaggerService.validateObject(specName, 'Person', brokenPolymorph, true);
+        var validationResult = swaggerService.validateObject(brokenPolymorph, specName, 'Person', true);
+        assert.equal(validationResult.valid, true);
+        assert.equal(validationResult.polymorphicValidationErrors, undefined);
+    });
+    
+    it('Passes validation with invalid polymorph, direct spec object, and check is disabled', function () {
+        var validationResult = swaggerService.validateObject(brokenPolymorph, specObj, 'Person', true);
+        assert.equal(validationResult.valid, true);
+        assert.equal(validationResult.polymorphicValidationErrors, undefined);
+    });
+    
+    it('Validates bad polymorph parameter with direct spec and model objects and check disabled', function () {
+        var myPerson = _.cloneDeep(myContact);
+        myPerson.kind = 'EnthusiasticPerson';
+        var validationResult = swaggerService.validateObject(myPerson, specObj, paramModel, true);
         assert.equal(validationResult.valid, true);
     });
 });

@@ -10,3 +10,20 @@ get:
       schema:
         $ref: '../definitions/SuperFunTime.yaml'
       description: I want a super fun time
+post:
+  summary: Make it even more of a fun time
+  operationId: addMoreFun
+  tags:
+    - Fun Times
+  parameters:
+    - $ref: '../parameters/PathId.yaml'
+    - in: body
+      schema: 
+        $ref: '../definitions/Person.yaml'
+      name: more
+      required: true
+  responses:
+    200:
+      schema:
+        $ref: '../definitions/SuperFunTime.yaml'
+      description: I want an even more fun time
