@@ -219,20 +219,20 @@ exports.validateObject = function (object, spec, model, skipPolymorphicChecks) {
 };
 
 function preparePathsForPolymorphicValidation(paths, doResponseValidation) {
-    var pathKeys = Object.keys(paths);
+    var pathKeys = _.keys(paths);
     pathKeys.forEach(function (path) {
-        var methodKeys = Object.keys(paths[path]);
+        var methodKeys = _.keys(paths[path]);
         methodKeys.forEach(function (method) {
             if (httpMethods.indexOf(method) !== -1) {//is this key actually an http method
                 if (doResponseValidation) {
-                    var responseCodeKeys = Object.keys(paths[path][method].responses);
+                    var responseCodeKeys = _.keys(paths[path][method].responses);
                     responseCodeKeys.forEach(function (responseCode) {
                         var responseDefinition = paths[path][method].responses[responseCode];
                         _makeSchemaPolymorphic(responseDefinition);
                     });
                 }
                 if (paths[path][method].parameters) {
-                    var requestParamKeys = Object.keys(paths[path][method].parameters);
+                    var requestParamKeys = _.keys(paths[path][method].parameters);
                     requestParamKeys.forEach(function (param) {
                         var requestParameter = paths[path][method].parameters[param];
                         _makeSchemaPolymorphic(requestParameter);
@@ -295,7 +295,7 @@ function _createFlattenedSchema(sourceSchema) {
 }
 
 function prepareDefinitionsForPolymorphicValidation(definitions) {
-    var modelNames = Object.keys(definitions);
+    var modelNames = _.keys(definitions);
     modelNames.forEach(function (modelName) {
         var schema = definitions[modelName];
         _addDiscMapToSchema(schema);
