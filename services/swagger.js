@@ -154,12 +154,16 @@ exports.addFormat = function (format, validationFunction) {
 /**
  * Validate an arbitrary object against a model definition in a given specification
  * 
- * @param {Object} object - the object to be validated
- * @param {String|Object} spec - the name of the specification in which the model is defined
+ * @param {Object|String} config - configuration for this validation,
+ *          or, simply, the name of the spec to use with the default config
+ * @param {String|Object} config.spec - the name of the specification in which the model is defined
  *          or the specification model definition object to use for validation
- * @param {String} model - the name of the model definition to validate against
+ * @param {Boolean} [config.banUnknownProperties=false] - whether to fail validation when there are undefined properties
+ * @param {Boolean} [config.failFast=false] - whether to stop validation when the first error is found
+ * @param {Boolean} [config.skipPolymorphicChecks=false] - whether to disable polymorphic checks
+ * @param {String|Object} model - the name of the model, in the given spec, to validate against
  *          or the actual model to use
- * @param {Boolean} [skipPolymorphicChecks] - whether to disable polymorphic checks
+ * @param {Object} object - the object to be validated
  * 
  * @returns {Object} an object containing the validation result:
  *          .valid is a boolean indicated whether the object validated against the model;
@@ -167,20 +171,25 @@ exports.addFormat = function (format, validationFunction) {
  *          .polymorphicValidationErrors is an array of tv4 validation errors that only
  *              show with polymorphic validation;
  * 
- * @throws {Error} when the model cannot be found
+ * @throws {Error} when the spec or model cannot be found
  */
-exports.validateObject = function (object, spec, model, skipPolymorphicChecks) {
+exports.validateObject = function (config, model, object) {
     var specObject, specName;
-    if (typeof spec === 'object') {
-        specObject = spec;
+    if (typeof config === 'string') {
+        specName = config;
+    } else if (typeof config.spec === 'string') {
+        specName = config.spec;
+    } else if (typeof config.spec === 'object') {
+        specObject = config.spec;
         specName = '<inline>';
-    } else {
-        specName = spec;
-        specObject = _.get(specs.dereferenced, spec);
     }
     if (!specObject) {
-        throw _createObjectValidationError(
-            util.format('Cannot validate object for unknown specification "%s"', specName));
+        specObject = _.get(specs.dereferenced, specName);
+        
+        if (!specObject) {
+            throw _createObjectValidationError(
+                util.format('Cannot validate object for unknown specification "%s"', specName));
+        }
     }
     
     var modelObject, modelName;
@@ -196,10 +205,11 @@ exports.validateObject = function (object, spec, model, skipPolymorphicChecks) {
             util.format('Cannot validate object for unknown model "%s" in specification "%s"', modelName, specName));
     }
     
-    var result = swaggerUtil.validateJSONType(modelObject, object);
-    if (!(skipPolymorphicChecks || _.isEmpty(modelObject[exports.discriminatorKeyMap]))) {
+    var result = swaggerUtil.validateJSONType(modelObject, object, config);
+    if (!(config.skipPolymorphicChecks || _.isEmpty(modelObject[exports.discriminatorKeyMap]))
+        && (result.valid || !config.failFast)) {
         result.polymorphicValidationErrors = swaggerUtil.validateIndividualObjects(
-            specObject, modelObject[exports.discriminatorKeyMap], object);
+            specObject, modelObject[exports.discriminatorKeyMap], object, config);
         if (result.polymorphicValidationErrors.length > 0) {
             result.valid = false;
         }

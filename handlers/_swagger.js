@@ -572,8 +572,12 @@ function validateRequestParameters(req, data, swaggerDoc, logger, callback) {
             break;
 
         case 'body':
-            result = swaggerService.validateObject(
-                    req.body, swaggerDoc, parameter.schema, (polymorphicValidation === 'off'));
+            var validationConfig = {
+                spec: swaggerDoc,
+                failFast: rejectRequestAfterFirstValidationError,
+                skipPolymorphicChecks: (polymorphicValidation === 'off')
+            };
+            result = swaggerService.validateObject(validationConfig, parameter.schema, req.body);
             if (!_.isEmpty(result.polymorphicValidationErrors) && polymorphicValidation === 'warn') {
                 var warning = {
                     errors: result.polymorphicValidationErrors,
@@ -657,7 +661,12 @@ function validateResponseModels(res, body, data, swaggerDoc, logger) {
     } else {
         return _createResponseValidationError('No response schema defined for %s %s with status code %s', res);
     }
-    var result = swaggerService.validateObject(body, swaggerDoc, modelSchema, (polymorphicValidation === 'off'));
+    var validationConfig = {
+        spec: swaggerDoc,
+        failFast: rejectRequestAfterFirstValidationError,
+        skipPolymorphicChecks: (polymorphicValidation === 'off')
+    };
+    var result = swaggerService.validateObject(validationConfig, modelSchema, body);
     if (!result.valid) {
         return _createResponseValidationError('Error validating response body for %s %s with status code %s', res,
             _.compact([].concat(result.errors, result.polymorphicValidationErrors)));
