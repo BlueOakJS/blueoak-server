@@ -663,6 +663,7 @@ function validateResponseModels(res, body, data, swaggerDoc, logger) {
     }
     var validationConfig = {
         spec: swaggerDoc,
+        banUnknownProperties: true,
         failFast: rejectRequestAfterFirstValidationError,
         skipPolymorphicChecks: (polymorphicValidation === 'off')
     };
