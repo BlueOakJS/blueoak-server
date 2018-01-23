@@ -10,20 +10,23 @@
   "main": "index.js",
   "author": "PointSource LLC <github@pointsource.com>",
   "contributors": [
+    "Erik Daughtrey <erik.daughtrey@pointsource.com>",
     "Sean Kennedy <sean.kennedy@pointsource.com>",
     "Ryan Sheppard <ryan.sheppard@pointsource.com>",
-    "Greg Considine <greg@greg-considine.com>",
-    "Erik Daughtrey <erik.daughtrey@pointsource.com>",
-    "Erin Bartholomew <erin.bartholomew@pointsource.com>",
-    "Benjamin Schell <ben@benschell.org>",
-    "Patrick Wolf <patrick.wolf@pointsource.com>"
+    "Erin Bartholomew",
+    "Greg Considine",
+    "Benjamin Schell",
+    "Patrick Wolf"
   ],
   "keywords": [
     "node",
+    "integration",
     "framework",
     "swagger",
+    "openapi",
     "rest",
     "express",
+    "middleware",
     "api"
   ],
   "scripts": {
