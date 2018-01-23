@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2016 PointSource, LLC.
+ * Copyright (c) 2015-2018 PointSource, LLC.
  * MIT Licensed
  */
 
@@ -12,10 +12,12 @@ var swaggerUtil = require('../lib/swaggerUtil');
 var refCompiler = require('../lib/swaggerRefCompiler');
 var tv4 = require('tv4');
 var _ = require('lodash');
+var util = require('util');
 
 var specs = {
     dereferenced: {},
-    bundled: {}
+    bundled: {},
+    names: []
 };
 
 var httpMethods = ['get', 'put', 'post', 'delete', 'options', 'head', 'patch'];
@@ -23,6 +25,8 @@ var httpMethods = ['get', 'put', 'post', 'delete', 'options', 'head', 'patch'];
 var responseModelValidationLevel;
 var polymorphicValidation;
 var refCompilation;
+
+exports.discriminatorKeyMap = 'x-bos-generated-disc-map';
 
 exports.init = function (logger, config, callback) {
     var cfg = config.get('swagger');
@@ -89,9 +93,10 @@ exports.init = function (logger, config, callback) {
             .then(function (dereferencedApi) {
                 specs.dereferenced[handlerName] = dereferencedApi;
                 if (polymorphicValidation !== 'off') {
-                    getDiscriminatorObjectsForSchemas(dereferencedApi.paths, responseModelValidationLevel);
+                    preparePathsForPolymorphicValidation(dereferencedApi.paths, responseModelValidationLevel);
                 }
-                flattenModelDefinitions(dereferencedApi.definitions);
+                prepareDefinitionsForPolymorphicValidation(dereferencedApi.definitions);
+                specs.names.push(handlerName);
                 return swagCallback();
             })
             .catch(function (error) {
@@ -130,6 +135,10 @@ exports.getValidHttpMethods = function () {
     return httpMethods;
 };
 
+exports.getSpecNames = function () {
+    return specs.names;
+};
+
 exports.getSimpleSpecs = function () {
     return specs.dereferenced;
 };
@@ -142,70 +151,163 @@ exports.addFormat = function (format, validationFunction) {
     tv4.addFormat(format, validationFunction);
 };
 
-function flattenModelDefinitions(definitions) {
-    if (!definitions) {
-        return;
+/**
+ * Validate an arbitrary object against a model definition in a given specification
+ * 
+ * @param {Object|String} config - configuration for this validation,
+ *          or, simply, the name of the spec to use with the default config
+ * @param {String|Object} config.spec - the name of the specification in which the model is defined
+ *          or the specification model definition object to use for validation
+ * @param {Boolean} [config.banUnknownProperties=false] - whether to fail validation when there are undefined properties
+ * @param {Boolean} [config.failFast=false] - whether to stop validation when the first error is found
+ * @param {Boolean} [config.skipPolymorphicChecks=false] - whether to disable polymorphic checks
+ * @param {String|Object} model - the name of the model, in the given spec, to validate against
+ *          or the actual model to use
+ * @param {Object} object - the object to be validated
+ * 
+ * @returns {Object} an object containing the validation result:
+ *          .valid is a boolean indicated whether the object validated against the model;
+ *          .errors is an array of tv4 validation errors for particular fields;
+ *          .polymorphicValidationErrors is an array of tv4 validation errors that only
+ *              show with polymorphic validation;
+ * 
+ * @throws {Error} when the spec or model cannot be found
+ */
+exports.validateObject = function (config, model, object) {
+    var specObject, specName;
+    if (typeof config === 'string') {
+        specName = config;
+    } else if (typeof config.spec === 'string') {
+        specName = config.spec;
+    } else if (typeof config.spec === 'object') {
+        specObject = config.spec;
+        specName = '<inline>';
     }
-
-    Object.keys(definitions).forEach(function (defn) {
-        if (definitions[defn].hasOwnProperty('allOf')) {
-            var flattenedDefn = {};
-            for (var i = 0; i < definitions[defn].allOf.length; i++) {
-                //have to clone so that inherited definitions are not affected
-                definitions[defn].allOf[i] = _.cloneDeep(definitions[defn].allOf[i]);
-                mergeToFlatModel(flattenedDefn, definitions[defn].allOf[i]);
-            }
-            flattenedDefn.required = flattenedDefn.required ? Object.keys(flattenedDefn.required) : undefined;
-            definitions[defn] = flattenedDefn;
+    if (!specObject) {
+        specObject = _.get(specs.dereferenced, specName);
+        
+        if (!specObject) {
+            throw _createObjectValidationError(
+                util.format('Cannot validate object for unknown specification "%s"', specName));
         }
-    });
-}
-
-function mergeToFlatModel(flatModel, model) {
-    //have to convert 'required' array to object for merging purposes
-    if (model.required && Array.isArray(model.required)) {
-        model.required = model.required.reduce(function (reqsAsObj, reqdPropName, arrayIndex) {
-            reqsAsObj[reqdPropName] = arrayIndex;
-            return reqsAsObj;
-        }, {});
     }
-    _.merge(flatModel, model);
-    if (model.hasOwnProperty('allOf')) {
-        model.allOf.forEach(function (subModel) {
-            mergeToFlatModel(flatModel, subModel);
-        });
+    
+    var modelObject, modelName;
+    if (typeof model === 'object') {
+        modelObject = model;
+        modelName = '<inline>';
+    } else {
+        modelName = model;
+        modelObject = _.get(specObject, ['definitions', modelName].join('.'));
     }
-    flatModel.allOf = undefined;
-}
+    if (!modelObject) {
+        throw _createObjectValidationError(
+            util.format('Cannot validate object for unknown model "%s" in specification "%s"', modelName, specName));
+    }
+    
+    var result = swaggerUtil.validateJSONType(modelObject, object, config);
+    if (!(config.skipPolymorphicChecks || _.isEmpty(modelObject[exports.discriminatorKeyMap]))
+        && (result.valid || !config.failFast)) {
+        result.polymorphicValidationErrors = swaggerUtil.validateIndividualObjects(
+            specObject, modelObject[exports.discriminatorKeyMap], object, config);
+        if (result.polymorphicValidationErrors.length > 0) {
+            result.valid = false;
+        }
+    }
 
-function getDiscriminatorObjectsForSchemas(paths, doResponseValidation) {
-    var pathKeys = Object.keys(paths);
+    return result;
+    
+    function _createObjectValidationError(message) {
+        var error = new Error(message);
+        error.name = 'SwaggerObjectValidationError';
+        error.specName = specName;
+        error.modelName = modelName;
+        return error;
+    }
+};
+
+function preparePathsForPolymorphicValidation(paths, doResponseValidation) {
+    var pathKeys = _.keys(paths);
     pathKeys.forEach(function (path) {
-        var methodKeys = Object.keys(paths[path]);
+        var methodKeys = _.keys(paths[path]);
         methodKeys.forEach(function (method) {
             if (httpMethods.indexOf(method) !== -1) {//is this key actually an http method
                 if (doResponseValidation) {
-                    var responseCodeKeys = Object.keys(paths[path][method].responses);
+                    var responseCodeKeys = _.keys(paths[path][method].responses);
                     responseCodeKeys.forEach(function (responseCode) {
-                        var schema = paths[path][method].responses[responseCode].schema;
-                        if (schema) {
-                            paths[path][method].responses[responseCode]['x-bos-generated-disc-map'] =
-                                swaggerUtil.getObjectsWithDiscriminator(schema);
-                        }
+                        var responseDefinition = paths[path][method].responses[responseCode];
+                        _makeSchemaPolymorphic(responseDefinition);
                     });
                 }
                 if (paths[path][method].parameters) {
-                    var requestParamKeys = Object.keys(paths[path][method].parameters);
+                    var requestParamKeys = _.keys(paths[path][method].parameters);
                     requestParamKeys.forEach(function (param) {
-                        var schema = paths[path][method].parameters[param].schema;
-                        if (schema) {
-                            paths[path][method].parameters[param]['x-bos-generated-disc-map'] =
-                                swaggerUtil.getObjectsWithDiscriminator(schema);
-                        }
+                        var requestParameter = paths[path][method].parameters[param];
+                        _makeSchemaPolymorphic(requestParameter);
                     });
                 }
             }
         });
+    });
+
+    function _makeSchemaPolymorphic(parentObject) {
+        if (!parentObject.schema) {
+            return;
+        }
+        _addDiscMapToSchema(parentObject.schema);
+        parentObject.schema = _createFlattenedSchema(parentObject.schema);
+    }
+}
+
+function _addDiscMapToSchema(targetSchema) {
+    var discMap = swaggerUtil.getObjectsWithDiscriminator(targetSchema);
+    if (targetSchema.allOf) {
+        var completeDiscMap = {
+            type: 'object'
+        };
+        completeDiscMap[exports.discriminatorKeyMap] = discMap;
+        targetSchema.allOf.push(completeDiscMap);
+    } else {
+        targetSchema[exports.discriminatorKeyMap] = discMap;
+    }
+}
+
+function _createFlattenedSchema(sourceSchema) {
+    var flattenedSchema;
+    if (sourceSchema.type === 'array') {
+        flattenedSchema = _.clone(sourceSchema);
+        flattenedSchema.items = _createFlattenedSchema(sourceSchema.items);
+    } else if (Array.isArray(sourceSchema.allOf)) {
+        flattenedSchema = _doFlatMerge({}, sourceSchema);
+    } else if (sourceSchema.type === 'object') {
+        flattenedSchema = _.cloneDeep(sourceSchema);
+    } else {
+        flattenedSchema = _.clone(sourceSchema);
+    }
+    return flattenedSchema;
+
+    function _doFlatMerge(target, source) {
+        if (Array.isArray(source.allOf)) {
+            source.allOf.forEach(function (duckType) {
+                _doFlatMerge(target, duckType);
+            });
+            return target;
+        }
+        
+        // we have to handle merging the array `required` on our own
+        var reqArr = _.union(target.required, source.required);
+        _.merge(target, source);
+        target.required = reqArr;
+        return target;
+    }
+}
+
+function prepareDefinitionsForPolymorphicValidation(definitions) {
+    var modelNames = _.keys(definitions);
+    modelNames.forEach(function (modelName) {
+        var schema = definitions[modelName];
+        _addDiscMapToSchema(schema);
+        definitions[modelName] = _createFlattenedSchema(schema);
     });
 }
 

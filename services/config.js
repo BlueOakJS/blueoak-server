@@ -6,7 +6,8 @@ var stripJsonComments = require('strip-json-comments'),
     fs = require('fs'),
     cluster = require('cluster'),
     security = require('../lib/security'),
-    path = require('path');
+    path = require('path'),
+    importFresh = require('import-fresh');
 
 var config = null;
 
@@ -17,7 +18,7 @@ var individualKeyCache = {}; //when we load a specific key file, e.g. routes.jso
 
 exports.init = function(callback) {
     process.env.NODE_CONFIG_DIR = path.resolve(global.__appDir, 'config');
-    config = require('config');
+    config = importFresh('config');
 
     fs.readFile(path.join(__dirname, '/../defaults.json'), function (err, data) {
         if (err) {
