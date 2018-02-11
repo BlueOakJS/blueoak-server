@@ -259,8 +259,8 @@ function preparePathsForPolymorphicValidation(paths, doResponseValidation) {
     }
 }
 
-function _addDiscMapToSchema(targetSchema) {
-    var discMap = swaggerUtil.getObjectsWithDiscriminator(targetSchema);
+function _addDiscMapToSchema(targetSchema, schemaName) {
+    var discMap = swaggerUtil.getObjectsWithDiscriminator(targetSchema, schemaName);
     if (targetSchema.allOf) {
         var completeDiscMap = {
             type: 'object'
@@ -306,7 +306,7 @@ function prepareDefinitionsForPolymorphicValidation(definitions) {
     var modelNames = _.keys(definitions);
     modelNames.forEach(function (modelName) {
         var schema = definitions[modelName];
-        _addDiscMapToSchema(schema);
+        _addDiscMapToSchema(schema, modelName);
         definitions[modelName] = _createFlattenedSchema(schema);
     });
 }
