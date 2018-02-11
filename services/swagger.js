@@ -232,35 +232,38 @@ function preparePathsForPolymorphicValidation(paths, doResponseValidation) {
         var methodKeys = _.keys(paths[path]);
         methodKeys.forEach(function (method) {
             if (httpMethods.indexOf(method) !== -1) {//is this key actually an http method
+                var methodName = method.toUpperCase();
                 if (doResponseValidation) {
                     var responseCodeKeys = _.keys(paths[path][method].responses);
                     responseCodeKeys.forEach(function (responseCode) {
                         var responseDefinition = paths[path][method].responses[responseCode];
-                        _makeSchemaPolymorphic(responseDefinition);
+                        _makeSchemaPolymorphic(responseDefinition,
+                            util.format('%s %s (response %s)', methodName, path, responseCode));
                     });
                 }
                 if (paths[path][method].parameters) {
                     var requestParamKeys = _.keys(paths[path][method].parameters);
                     requestParamKeys.forEach(function (param) {
                         var requestParameter = paths[path][method].parameters[param];
-                        _makeSchemaPolymorphic(requestParameter);
+                        _makeSchemaPolymorphic(requestParameter,
+                            util.format('%s %s (request parameter "%s"', methodName, path, param));
                     });
                 }
             }
         });
     });
 
-    function _makeSchemaPolymorphic(parentObject) {
+    function _makeSchemaPolymorphic(parentObject, methodRef) {
         if (!parentObject.schema) {
             return;
         }
-        _addDiscMapToSchema(parentObject.schema);
+        _addDiscMapToSchema(parentObject.schema, methodRef);
         parentObject.schema = _createFlattenedSchema(parentObject.schema);
     }
 }
 
-function _addDiscMapToSchema(targetSchema) {
-    var discMap = swaggerUtil.getObjectsWithDiscriminator(targetSchema);
+function _addDiscMapToSchema(targetSchema, schemaName) {
+    var discMap = swaggerUtil.getObjectsWithDiscriminator(targetSchema, schemaName);
     if (targetSchema.allOf) {
         var completeDiscMap = {
             type: 'object'
@@ -306,7 +309,7 @@ function prepareDefinitionsForPolymorphicValidation(definitions) {
     var modelNames = _.keys(definitions);
     modelNames.forEach(function (modelName) {
         var schema = definitions[modelName];
-        _addDiscMapToSchema(schema);
+        _addDiscMapToSchema(schema, modelName);
         definitions[modelName] = _createFlattenedSchema(schema);
     });
 }
