@@ -232,29 +232,32 @@ function preparePathsForPolymorphicValidation(paths, doResponseValidation) {
         var methodKeys = _.keys(paths[path]);
         methodKeys.forEach(function (method) {
             if (httpMethods.indexOf(method) !== -1) {//is this key actually an http method
+                var methodName = method.toUpperCase();
                 if (doResponseValidation) {
                     var responseCodeKeys = _.keys(paths[path][method].responses);
                     responseCodeKeys.forEach(function (responseCode) {
                         var responseDefinition = paths[path][method].responses[responseCode];
-                        _makeSchemaPolymorphic(responseDefinition);
+                        _makeSchemaPolymorphic(responseDefinition,
+                            util.format('%s %s (response %s)', methodName, path, responseCode));
                     });
                 }
                 if (paths[path][method].parameters) {
                     var requestParamKeys = _.keys(paths[path][method].parameters);
                     requestParamKeys.forEach(function (param) {
                         var requestParameter = paths[path][method].parameters[param];
-                        _makeSchemaPolymorphic(requestParameter);
+                        _makeSchemaPolymorphic(requestParameter,
+                            util.format('%s %s (request parameter "%s"', methodName, path, param));
                     });
                 }
             }
         });
     });
 
-    function _makeSchemaPolymorphic(parentObject) {
+    function _makeSchemaPolymorphic(parentObject, methodRef) {
         if (!parentObject.schema) {
             return;
         }
-        _addDiscMapToSchema(parentObject.schema);
+        _addDiscMapToSchema(parentObject.schema, methodRef);
         parentObject.schema = _createFlattenedSchema(parentObject.schema);
     }
 }
