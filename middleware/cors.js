@@ -9,10 +9,21 @@
  * See https://github.com/troygoode/node-cors#configuration-options
  */
 
-var cors = require('cors');
+var cors = require('cors'),
+    _ = require('lodash');
 
 exports.init = function(app, config, logger, callback) {
     var cfg = config.get('cors');
+
+    if (cfg.originRegex) {
+        var regex = new RegExp(cfg.originRegex);
+        if (!cfg.origin) {
+            cfg.origin = regex;
+        } else if (_.isArray(cfg.origin)) {
+            cfg.origin.push(regex);
+        }
+    }
+
     app.use(cors(cfg));
     logger.debug('Enabled CORS.');
     callback();
