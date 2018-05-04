@@ -1,0 +1,10 @@
+{
+  "express": {
+    "port": "5000",
+    "middleware": ["pet-middleware"]
+  },
+
+  "cluster": {
+    "maxWorkers": 1
+  }
+}

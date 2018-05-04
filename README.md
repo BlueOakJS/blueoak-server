@@ -36,6 +36,10 @@ Projects use the following directory structure.
 │   ├── services/
 │   ├── middleware/
 │   ├── swagger/
+│   ├── test/
+|   |   ├── bos-mocks/
+|   |   |   ├── middleware/
+|   |   |   ├── services/
 ```
 
 #### Handlers
@@ -75,7 +79,7 @@ exports.getResult = function(num) {
         return num;
     }
 };
-  
+
 ```
 
 We want to use that service from our handler, so we include `fizzbuzz` as a parameter of the `init` function.
@@ -90,7 +94,7 @@ exports.init = function(app, fizzbuzz) {
         result: fizzbuzz.getResult(num)
      });
   });
-  
+
 }
 ```
 #### Third-party Services
@@ -148,6 +152,10 @@ At a high-level, BlueOak Server's Swagger support provides the following:
 * JSON `$ref`s to external Swagger documents on the file system
 * Multiple top-level Swagger API definitions supporting delivery of multiple API base paths
 * Publishing of the fully compiled Swagger spec for input to by tools such as [`Swagger-UI`](http://swagger.io/swagger-ui/) and [`swagger-commander`](https://www.npmjs.com/package/swagger-commander)
+
+#### Mocking
+
+Services and middleware can be mocked for testing by creating mocks in the `test/bos-mocks/services` or `test/bos-mocks/middleware` directories. The mock file name should match the file name of the service or middleware you wish to mock. The implementation of a mock is no different than a normal service or middleware implementation. After you have implemented your mocks, you can instruct BlueOak Server to use them by specifying them as a comma-separated list in the `--mock-services` or `--mock-middleware` command line arguments. For example: `blueoak-server --mock-services service1,service2 --mock-middleware middleware1,middleware2`
 
 ### Installation
 

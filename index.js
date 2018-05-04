@@ -32,6 +32,10 @@ module.exports.init = function (opts, callback) {
         global.__appDir = opts.appDir;
     }
 
+    if (opts.mocks) {
+        global.__mocks = opts.mocks;
+    }
+
     //Load the bootstrap services first (config and logging) since they're only needed for the master
     initServices({bootstrap: true}, function (err) {
         if (err) {
@@ -362,4 +366,3 @@ function checkNodeVersion(logger) {
 module.exports.testUtility = function () {
     return require('./testlib/util');
 };
-
