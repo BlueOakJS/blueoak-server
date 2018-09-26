@@ -363,3 +363,5 @@ module.exports.testUtility = function () {
     return require('./testlib/util');
 };
 
+module.exports.subRequire = require('./lib/subRequire');
+

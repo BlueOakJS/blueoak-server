@@ -15,4 +15,12 @@ exports.getFunTimeById = function(req, res, next) {
     });
 };
 
+exports.addFunTime = function(req, res, next) {
+    res.status(204).send();
+};
+
+exports.deleteFunTimeById = function(req, res, next) {
+    res.status(204).send();
+};
+
 

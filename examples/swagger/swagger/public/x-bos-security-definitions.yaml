@@ -1,0 +1,11 @@
+hmac:
+  verify:
+    service: hmacService
+    method:
+      name: getApiUser
+      execute: false
+      args: []
+  routeOptions:
+    session: false
+  module: passport-hmac-strategy
+  x-bos-middleware: bos-passport
