@@ -107,7 +107,7 @@ describe('Swagger spec building test', function () {
         var curiousPersonDefn = swaggerService.getSimpleSpecs()['api-v1'].definitions.CuriousPerson;
         //kind enum should have been overriden by curious person
         //required property should contain curious person required properties AND
-         //any required properties from inherited models
+        //any required properties from inherited models
         assert.equal(curiousPersonDefn.properties.kind.enum[0], 'CuriousPerson');
         assert.equal(curiousPersonDefn.required.length, 3);
     });
