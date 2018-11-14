@@ -105,7 +105,7 @@ exports.init = function (app, auth, config, logger, serviceLoader, swagger, call
 
             //loop for http method keys, like get an post
             _.keys(data).forEach(function (key) {
-                if (_.contains(httpMethods, key)) {
+                if (_.includes(httpMethods, key)) {
                     var methodData = data[key];
                     if (!methodData.operationId) {
                         return logger.warn('Missing operationId in route "%s"', routePath);
@@ -328,7 +328,7 @@ function registerRoute(app, auth, additionalMiddleware, method, path, data, allo
                 wrapCall(res, 'set', function (name, value) {
                     if (name === 'Content-Type') {
                         var type = value.split(';')[0]; //parse off the optional encoding
-                        if (!_.contains(allowedTypes, type)) {
+                        if (!_.includes(allowedTypes, type)) {
                             logger.warn('Invalid content type specified: %s. Expecting one of %s', type, allowedTypes);
                         }
                     }

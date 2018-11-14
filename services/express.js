@@ -69,7 +69,7 @@ exports.getDependencies = function(serviceLoader) {
     for (var i = 0; i < mods.length; i++) {
         params = params.concat(di.getParamNames(mods[i].init));
     }
-    return _.unique(params);
+    return _.uniq(params);
 };
 
 
