@@ -44,7 +44,7 @@ exports.init = function (logger, config, callback) {
         logger.info('Polymorphic validation is disabled (%s)', polymorphicValidation);
     }
 
-    refCompilation = typeof cfg.refCompiler === 'object';
+    refCompilation = _.isObject(cfg.refCompiler);
     if (refCompilation) {
         logger.info('Ref compilation is enabled (%s), compiling references...', refCompilation);
         refCompiler.compileSpecs(logger, cfg);
@@ -63,7 +63,7 @@ exports.init = function (logger, config, callback) {
     var files = [];
 
     try {
-        fs.readdirSync(swaggerDir).forEach(function (fileName) {
+        _.forEach(fs.readdirSync(swaggerDir), function (fileName) {
             //look for json and yaml
             if (path.extname(fileName) === '.json') {
                 files.push(path.resolve(swaggerDir, fileName));
@@ -175,11 +175,11 @@ exports.addFormat = function (format, validationFunction) {
  */
 exports.validateObject = function (config, model, object) {
     var specObject, specName;
-    if (typeof config === 'string') {
+    if (_.isString(config)) {
         specName = config;
-    } else if (typeof config.spec === 'string') {
+    } else if (_.isString(config.spec)) {
         specName = config.spec;
-    } else if (typeof config.spec === 'object') {
+    } else if (_.isObject(config.spec)) {
         specObject = config.spec;
         specName = '<inline>';
     }
@@ -193,7 +193,7 @@ exports.validateObject = function (config, model, object) {
     }
     
     var modelObject, modelName;
-    if (typeof model === 'object') {
+    if (_.isObject(model)) {
         modelObject = model;
         modelName = '<inline>';
     } else {
@@ -228,14 +228,14 @@ exports.validateObject = function (config, model, object) {
 
 function preparePathsForPolymorphicValidation(paths, doResponseValidation) {
     var pathKeys = _.keys(paths);
-    pathKeys.forEach(function (path) {
+    _.forEach(pathKeys, function (path) {
         var methodKeys = _.keys(paths[path]);
-        methodKeys.forEach(function (method) {
-            if (httpMethods.indexOf(method) !== -1) {//is this key actually an http method
-                var methodName = method.toUpperCase();
+        _.forEach(methodKeys, function (method) {
+            if (_.includes(httpMethods, method)) {//is this key actually an http method
+                var methodName = _.upperCase(method);
                 if (doResponseValidation) {
                     var responseCodeKeys = _.keys(paths[path][method].responses);
-                    responseCodeKeys.forEach(function (responseCode) {
+                    _.forEach(responseCodeKeys, function (responseCode) {
                         var responseDefinition = paths[path][method].responses[responseCode];
                         _makeSchemaPolymorphic(responseDefinition,
                             util.format('%s %s (response %s)', methodName, path, responseCode));
@@ -243,7 +243,7 @@ function preparePathsForPolymorphicValidation(paths, doResponseValidation) {
                 }
                 if (paths[path][method].parameters) {
                     var requestParamKeys = _.keys(paths[path][method].parameters);
-                    requestParamKeys.forEach(function (param) {
+                    _.forEach(requestParamKeys, function (param) {
                         var requestParameter = paths[path][method].parameters[param];
                         _makeSchemaPolymorphic(requestParameter,
                             util.format('%s %s (request parameter "%s"', methodName, path, param));
@@ -280,7 +280,7 @@ function _createFlattenedSchema(sourceSchema) {
     if (sourceSchema.type === 'array') {
         flattenedSchema = _.clone(sourceSchema);
         flattenedSchema.items = _createFlattenedSchema(sourceSchema.items);
-    } else if (Array.isArray(sourceSchema.allOf)) {
+    } else if (_.isArray(sourceSchema.allOf)) {
         flattenedSchema = _doFlatMerge({}, sourceSchema);
     } else if (sourceSchema.type === 'object') {
         flattenedSchema = _.cloneDeep(sourceSchema);
@@ -290,8 +290,8 @@ function _createFlattenedSchema(sourceSchema) {
     return flattenedSchema;
 
     function _doFlatMerge(target, source) {
-        if (Array.isArray(source.allOf)) {
-            source.allOf.forEach(function (duckType) {
+        if (_.isArray(source.allOf)) {
+            _.forEach(source.allOf, function (duckType) {
                 _doFlatMerge(target, duckType);
             });
             return target;
@@ -307,7 +307,7 @@ function _createFlattenedSchema(sourceSchema) {
 
 function prepareDefinitionsForPolymorphicValidation(definitions) {
     var modelNames = _.keys(definitions);
-    modelNames.forEach(function (modelName) {
+    _.forEach(modelNames, function (modelName) {
         var schema = definitions[modelName];
         _addDiscMapToSchema(schema, modelName);
         definitions[modelName] = _createFlattenedSchema(schema);

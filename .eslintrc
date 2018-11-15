@@ -7,7 +7,13 @@
     // `false` means overwriting is not allowed
     "services": false
   },
-  "extends": "eslint:recommended",
+  "plugins":[
+    "lodash"
+  ],
+  "extends": [
+    "eslint:recommended",
+    "plugin:lodash/canonical"
+  ],
   "rules": {
     // 4-space indentation
     "indent": 2,

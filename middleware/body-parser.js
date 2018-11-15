@@ -25,10 +25,10 @@ var _ = require('lodash');
 exports.init = function(app, config, logger) {
 
     //allow to be configured through both bodyParser and body-parser
-    var cfg = _.extend({}, config.get('bodyParser'), config.get('body-parser'));
+    var cfg = _.assignIn({}, config.get('bodyParser'), config.get('body-parser'));
 
     var types = ['urlencoded', 'json', 'raw', 'text'];
-    types.forEach(function (type) {
+    _.forEach(types, function (type) {
         if (cfg[type]) {
             logger.debug('Enabled body parser for type %s.', type);
             app.use(bodyParser[type](cfg[type]));

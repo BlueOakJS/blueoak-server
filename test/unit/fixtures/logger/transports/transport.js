@@ -12,6 +12,7 @@ var Transport = function(options) {
 };
 util.inherits(Transport, winston.Transport);
 
+// eslint-disable-next-line lodash/prefer-noop
 Transport.prototype.log = function() {
     
 };

@@ -2,7 +2,8 @@
  * Copyright (c) 2015-2016 PointSource, LLC.
  * MIT Licensed
  */
-var redis = require('redis');
+var _ = require('lodash'),
+    redis = require('redis');
 
 var client = null;
 
@@ -69,13 +70,13 @@ exports.cacheInterface = {
 
     set: function(key, val, ttl, callback) {
         //ttl is optional
-        if (typeof ttl === 'function') {
+        if (_.isFunction(ttl)) {
             callback = ttl;
             ttl = undefined;
         }
 
         //callback is optional
-        callback = callback || function() {};
+        callback = callback || _.noop;
 
         //redis doesn't handle JSON data, so stringify it ourselves
         val = JSON.stringify(val);

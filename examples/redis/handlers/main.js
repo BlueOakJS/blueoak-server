@@ -1,3 +1,5 @@
+/* eslint-disable lodash/prefer-lodash-typecheck */
+/* eslint-disable lodash/prefer-is-nil */
 /*
  * Copyright (c) 2015-2016 PointSource, LLC.
  * MIT Licensed

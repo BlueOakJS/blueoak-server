@@ -1,3 +1,4 @@
+/* eslint-disable lodash/prefer-noop */
 exports.init = function() {
 
 };

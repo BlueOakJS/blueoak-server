@@ -23,7 +23,7 @@ var workerNumberMap = {}; //map a worker pid to a worker number
 //Opts is optional
 module.exports.init = function (opts, callback) {
 
-    if (typeof opts === 'function') {
+    if (_.isFunction(opts)) {
         callback = opts;
         opts = {};
     }
@@ -221,7 +221,7 @@ function sendCommand(worker, command, callback) {
 
     var listener = function(msg) {
         var data = null;
-        if (typeof msg === 'object') {
+        if (_.isObject(msg)) {
             data = msg;
         } else {
             data = JSON.parse(msg);
@@ -241,11 +241,11 @@ function sendCommand(worker, command, callback) {
 //if force, don't bother restarting.  We were probably stopped by a ctrl+c
 module.exports.stop = function (force, callback) {
     if (!callback) {
-        callback = function() {};
+        callback = _.noop;
     }
 
     if (isClusteredMaster()) {
-        async.each(Object.keys(cluster.workers), function(id, next) {
+        async.each(_.keys(cluster.workers), function(id, next) {
             var worker = cluster.workers[id];
             sendCommand(worker, 'stop', function() {
                 if (force) {

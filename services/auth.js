@@ -14,7 +14,8 @@
  *
  * In general apps shouldn't ever need to directly access the auth service.
  */
-var vm = require('vm');
+var _ = require('lodash'),
+    vm = require('vm');
 
 var callbacks = {};
 var cfg = null;
@@ -47,7 +48,7 @@ module.exports.getAuthMiddleware = function(additionalAuthNames) {
     authNames = authNames.concat(additionalAuthNames || []);
 
     if (authNames.length > 0) {
-        authNames.forEach(function (name) {
+        _.forEach(authNames, function (name) {
             var authCallback = exports.get(name);
             middleware.push(authCallback);
         });
@@ -59,7 +60,7 @@ module.exports.getAuthMiddleware = function(additionalAuthNames) {
 
 function registerCallbacks(logger, serviceLoader) {
     var authList = serviceLoader.getConsumers('auth');
-    authList.forEach(function(auther) {
+    _.forEach(authList, function(auther) {
         if (auther.authenticate) {
             callbacks[auther.__id] = auther.authenticate;
         } else {

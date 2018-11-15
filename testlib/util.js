@@ -40,7 +40,7 @@ exports.initService = function(module, config, injections, callback) {
             injections = {};
         }
         if (!callback) {
-            callback = function() {};
+            callback = _.noop;
         }
     }
     
@@ -48,9 +48,8 @@ exports.initService = function(module, config, injections, callback) {
     injections.logger = logger;
     injections.monitor = monitor;
 
-    var args = [];
-    di.getParamNames(module.init).forEach(function(name) {
-        args.push(injections[normalizeServiceName(name)]);
+    var args = _.map(di.getParamNames(module.init), function(name) {
+        return injections[normalizeServiceName(name)];
     });
 
     if (di.hasCallback(module.init)) {
@@ -70,6 +69,7 @@ function normalizeServiceName(str) {
         str = str.slice(0, str.length - 1);
     }
 
+    // eslint-disable-next-line lodash/prefer-lodash-method
     return str.replace(/([A-Z])/g, '-$1').replace(/[-_\s]+/g, '-').toLowerCase();
 }
 
@@ -94,7 +94,7 @@ exports.injectCore = function (modules, config, callback) {
         initializedModules = {},
         initializedCount = 0;
 
-    if (typeof config === 'string') {
+    if (_.isString(config)) {
         config = loadJson(config);
     }
 
@@ -105,16 +105,16 @@ exports.injectCore = function (modules, config, callback) {
             coreModules.splice(i, 1);
         }
 
-        coreModules[i] = coreModules[i].split('.')[0];
+        coreModules[i] = _.split(coreModules[i], '.')[0];
     }
 
-    if (!(modules instanceof Array)) {
+    if (!_.isArray(modules)) {
         modules = [modules];
     }
 
     for (var j = 0; j < modules.length; j++) {
 
-        if (coreModules.indexOf(modules[j]) === -1) {
+        if (!_.includes(coreModules, modules[j])) {
             throw new Error('Given module name is not a core service');
         }
 
@@ -149,7 +149,7 @@ function augmentConfigWithDefaults (config) {
  */
 function populateMissingProperties (defaultConfig, config) {
     for (var property in defaultConfig) {
-        if (typeof defaultConfig[property] === 'object' && !(defaultConfig[property] instanceof Array)) {
+        if (_.isObject(defaultConfig[property]) && !(_.isArray(defaultConfig[property]))) {
             if (!config[property]) {
                 config[property] = {};
             }
@@ -199,7 +199,7 @@ exports.init = function(mod, serviceMap, serviceCallback, callback) {
 
     var paramNames = di.getParamNames(mod.init);
     var mockParams = [];
-    paramNames.forEach(function(paramName) {
+    _.forEach(paramNames, function(paramName) {
         if (!serviceMap[paramName]) {
             // use import-fresh to make sure we have fresh modules 
             serviceMap[paramName] = importFresh('./mocks/' + paramName);
@@ -221,5 +221,4 @@ exports.init = function(mod, serviceMap, serviceCallback, callback) {
     }
 };
 
-exports.restore = function() {
-};
+exports.restore = _.noop;

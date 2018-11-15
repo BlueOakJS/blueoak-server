@@ -54,8 +54,8 @@ describe('Logger test', function () {
         };
 
         util.injectCore('logger', {logger: cfg, cluster: {maxWorkers: 1}}, function (services) {
-            assert.ok(typeof services.logger.foo !== 'undefined');
-            assert.ok(typeof services.logger.bar !== 'undefined');
+            assert.ok(!_.isUndefined(services.logger.foo));
+            assert.ok(!_.isUndefined(services.logger.bar));
             done();
         });
     });

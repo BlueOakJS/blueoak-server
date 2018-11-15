@@ -16,9 +16,9 @@ exports.init = function (app, config, serviceLoader, auth, logger) {
  */
 function registerDeclarativeRoutes(app, config, routes, serviceLoader, auth, logger) {
 
-    _.keys(routes).forEach(function (routePath) {
+    _.forEach(_.keys(routes), function (routePath) {
         //routePath should be of form "<method> path"
-        var parts = routePath.split(' ');
+        var parts = _.split(routePath, ' ');
         if (parts.length !== 2) {
             return logger.warn('Invalid route path "%s"', routePath);
         }
@@ -35,7 +35,7 @@ function registerDeclarativeRoutes(app, config, routes, serviceLoader, auth, log
         }
 
         //handler is something like foo.bar where there's a foo.js handler module which exports bar
-        var handlerParts = handler.split('.');
+        var handlerParts = _.split(handler, '.');
 
         if (handlerParts.length !== 2) {
             return logger.warn('Invalid handler reference "%s"', parts[1]);

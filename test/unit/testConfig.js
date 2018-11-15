@@ -2,7 +2,8 @@
  * Copyright (c) 2015-2016 PointSource, LLC.
  * MIT Licensed
  */
-var assert = require('assert'),
+var _ = require('lodash'),
+    assert = require('assert'),
     path = require('path'),
     util = require('../../testlib/util'),
     config = require('../../services/config');
@@ -24,9 +25,7 @@ describe('Config test', function () {
 
     it('Test config load order', function (done) {
 
-        util.init(config, {}, function(services) {
-
-        }, function() {
+        util.init(config, {}, _.noop, function() {
             assert.equal(config.get('express').port, 3001); //default.json overrides the built-in default of 3000
             assert.equal(config.get('monitor').port, 8125); //use the server default
 
