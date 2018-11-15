@@ -348,10 +348,12 @@ function printVersion(logger) {
 
 function checkNodeVersion(logger) {
     var nodeCfg = serviceLoader.get('config').get('node');
-    var minVersionRange = nodeCfg.version.min;
-    var recommendedVersion = nodeCfg.version.recommended;
+    var minVersionRange = _.get(nodeCfg, 'version.min');
+    var recommendedVersion = _.get(nodeCfg, 'version.recommended');
     if (!semver.satisfies(process.version, minVersionRange)) {
-        logger.warn('Unsupported Node.js. Consider upgrading to at least v%s', recommendedVersion);
+        logger.warn('Your version of Node.js, %s, DOES NOT SATISFY the defined minimum(s) for this app: %s',
+            process.version, minVersionRange);
+        logger.info('Consider installing this app\'s recommended version: %s', recommendedVersion);
     }
 
 }

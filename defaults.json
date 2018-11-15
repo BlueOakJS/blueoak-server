@@ -55,5 +55,11 @@
     "polymorphicValidation": "on",
     "refCompiler": "off",
     "validateResponseModels": false
+  },
+  "node": {
+    "version": {
+      "min": ">=6.9.4",
+      "recommended": "https://github.com/nodejs/Release#release-schedule"
+    }
   }
 }
