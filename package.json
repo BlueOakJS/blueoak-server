@@ -6,6 +6,9 @@
     "type": "git",
     "url": "git@github.com:BlueOakJS/blueoak-server.git"
   },
+  "engines": {
+    "node": ">=6"
+  },
   "license": "MIT",
   "main": "index.js",
   "author": "PointSource LLC <github@pointsource.com>",
