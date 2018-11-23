@@ -2,7 +2,8 @@
  * Copyright (c) 2015-2016 PointSource, LLC.
  * MIT Licensed
  */
-var assert = require('assert'),
+var _ = require('lodash'),
+    assert = require('assert'),
     loader = require('../../lib/loader'),
     path = require('path');
 
@@ -75,7 +76,7 @@ describe('DI Loader test2 - errors', function () {
         //async error
         testLoader.init(['service3'], function(err) {
             assert.equal(service3.isInitialized(), false);
-            assert.ok(err !== null && err.message.indexOf('crap') > -1, 'contains an error with a message');
+            assert.ok(err !== null && _.includes(err.message, 'crap'), 'contains an error with a message');
             done();
         });
     });
@@ -88,7 +89,7 @@ describe('DI Loader test2 - errors', function () {
         //async error
         testLoader.init(['service4'], function(err) {
             assert.equal(service4.isInitialized(), false);
-            assert.ok(err !== null && err.message.indexOf('crap') > -1, 'contains an error with a message');
+            assert.ok(err !== null && _.includes(err.message, 'crap'), 'contains an error with a message');
             done();
         });
     });
@@ -140,7 +141,7 @@ describe('DI Loader test4 - dependency injection errors', function () {
 
         testLoader.get('service8');
         testLoader.init(function(err) {
-            assert.ok(err && err.message.indexOf('blah') > -1); //should cause an error about unmet dependency blah
+            assert.ok(err && _.includes(err.message, 'blah')); //should cause an error about unmet dependency blah
             done();
         });
     });
@@ -182,7 +183,7 @@ describe('DI Loader test5 - circular dependencies', function () {
         testLoader.loadServices(path.resolve(__dirname, 'fixtures/loader/test5')); //app services
 
         testLoader.init(function(err) {
-            assert.ok(err && err.message.indexOf('Cycle found') > -1); //should cause cycle error
+            assert.ok(err && _.includes(err.message, 'Cycle found')); //should cause cycle error
             done();
         });
     });
@@ -208,8 +209,8 @@ describe('DI Loader test6 - test consumers', function () {
         testLoader.init(function(err1) {
             testLoader.initConsumers('foo', function(err2) {
                 //both consumers if they were init'd will registered themselves with service20
-                assert.ok(service20.get().indexOf('consumer1') > -1);
-                assert.ok(service20.get().indexOf('consumer2') > -1);
+                assert.ok(_.includes(service20.get(), 'consumer1'));
+                assert.ok(_.includes(service20.get(), 'consumer2'));
                 done(err1 || err2);
             });
 
@@ -224,8 +225,8 @@ describe('DI Loader test6 - test consumers', function () {
         testLoader.init(function(err1) {
             testLoader.initConsumers('foo', ['consumer1'], function(err2) {
                 //both consumers if they were init'd will registered themselves with service20
-                assert.ok(service20.get().indexOf('consumer1') > -1);
-                assert.ok(service20.get().indexOf('consumer2') < 0); //consumer2 won't have loaded
+                assert.ok(_.includes(service20.get(), 'consumer1'));
+                assert.ok(!_.includes(service20.get(), 'consumer2')); //consumer2 won't have loaded
                 done(err1 || err2);
             });
 
@@ -242,9 +243,9 @@ describe('DI Loader test6 - test consumers', function () {
             testLoader.initConsumers('foo', function(err2) {
                 testLoader.initConsumers('bar', function(err3) {
                     //both consumers if they were init'd will registered themselves with service20
-                    assert.ok(service20.get().indexOf('consumer1') > -1);
-                    assert.ok(service20.get().indexOf('consumer2') > -1);
-                    assert.ok(service20.get().indexOf('otherConsumer1') > -1);
+                    assert.ok(_.includes(service20.get(), 'consumer1'));
+                    assert.ok(_.includes(service20.get(), 'consumer2'));
+                    assert.ok(_.includes(service20.get(), 'otherConsumer1'));
                     done(err1 || err2 || err3);
                 });
             });
@@ -262,7 +263,7 @@ describe('DI Loader test6 - test consumers', function () {
                 return done(err);
             }
             testLoader.initConsumers('foo', ['consumer1'], function(err) {
-                assert.ok(err && err.message.indexOf('bad consumer1') > -1);
+                assert.ok(err && _.includes(err.message, 'bad consumer1'));
                 done();
             });
 
@@ -279,7 +280,7 @@ describe('DI Loader test6 - test consumers', function () {
                 return done(err);
             }
             testLoader.initConsumers('foo', ['consumer2'], function(err) {
-                assert.ok(err && err.message.indexOf('bad consumer2') > -1);
+                assert.ok(err && _.includes(err.message, 'bad consumer2'));
                 done();
             });
 
@@ -453,7 +454,7 @@ describe('DI Loader test11 - load from subdirectories', function () {
         testLoader.init(function (err1) {
             testLoader.initConsumers('foo', function (err2) {
                 //both consumer4 if it was init'd will registered with service21
-                assert.ok(service21.get().indexOf('consumer5') > -1);
+                assert.ok(_.includes(service21.get(), 'consumer5'));
 
                 //service22 won't exist because it didn't recurse deep enough
                 assert.ok(!testLoader.get('service22'));

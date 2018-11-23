@@ -33,9 +33,9 @@ exports.init = function (config) {
         setupTransports(cfg, logger);
     }
 
-    _.keys(cfg.levels).forEach(function (level) {
+    _.forEach(_.keys(cfg.levels), function (level) {
 
-        module.exports[level.toLowerCase()] = function () {
+        module.exports[_.lowerCase(level)] = function () {
 
             var args = [].slice.call(arguments); //convert to pure array
             if (workerCount !== 1) { //cluster mode
@@ -52,7 +52,7 @@ exports.init = function (config) {
                 }
 
                 //if we're in clustered mode, throw the service name in the metadata
-                if (showLocation && typeof meta.service === 'undefined') {
+                if (showLocation && _.isUndefined(meta.service)) {
                     meta.service  = getLocation();
                 }
             }
@@ -70,8 +70,8 @@ exports.init = function (config) {
                         args[0] = location + ' - ' + args[0];
                     }
                 }
-                logger[level.toLowerCase()].apply(logger, args);
-                buffer(level.toLowerCase(), args);
+                logger[_.lowerCase(level)].apply(logger, args);
+                buffer(_.lowerCase(level), args);
             }
 
         };
@@ -91,13 +91,13 @@ exports.init = function (config) {
 
         var tmp = {'component': component};
         var self = this;
-        _.keys(this.levels).forEach(function (lev) {
+        _.forEach(_.keys(this.levels), function (lev) {
             tmp[lev] = function () {
                 var args = [].slice.call(arguments);
                 args[0] = this.component + ' - ' + args[0];
                 var tlevels = [];
                 //look through transports and save current log levels
-                Object.keys(theLogger.transports).forEach(function (k) {
+                _.forEach(_.keys(theLogger.transports), function (k) {
                     tlevels.push([k, theLogger.transports[k].level]);
                     var newLevel = loglevels[k];
                     if (newLevel) { // if overridden by component, set the loglevel for this transport
@@ -105,7 +105,7 @@ exports.init = function (config) {
                     }
                 });
                 self[lev](args);
-                tlevels.forEach(function (levelinfo) { // restore all the transport loglevels
+                _.forEach(tlevels, function (levelinfo) { // restore all the transport loglevels
                     theLogger.transports[levelinfo[0]].level = levelinfo[1];
                 });
             };
@@ -176,7 +176,7 @@ function getLocation() {
     var modNm = 'logger';
     var rmodNm = null;
     var skip = ['logger', 'logger.js'];
-    while ((skip.indexOf(modNm) >= 0) && trace.length > idx) {
+    while ((_.includes(skip, modNm)) && trace.length > idx) {
         var fpath = trace[idx].getFileName();
         ++idx;
         if (fpath.slice(0, 'native'.length) === 'native') {
@@ -191,7 +191,7 @@ function getLocation() {
         }
         if (mod) { //__id is injected into services by the loader
             if (!mod.__id) {
-                modNm = fpath.split('/').pop();
+                modNm = _.split(fpath, '/').pop();
                 rmodNm = modNm;
             } else {
                 modNm = mod.__id;
@@ -200,7 +200,7 @@ function getLocation() {
                 }
             }
         } else {
-            modNm = fpath.split('/').pop();
+            modNm = _.split(fpath, '/').pop();
             rmodNm = modNm;
         }
 
@@ -213,9 +213,9 @@ function setupTransports(cfg, logger) {
     //dynamically add transports based on the config
     //Each transport will have a package, which is the package name of the transport, e.g. winston-papertrail
     //and a field, which is the field within the transport containing the instance, e.g. Papertrail
-    cfg.transports.forEach(function (transport) {
+    _.forEach(cfg.transports, function (transport) {
         transport.options = transport.options || {};
-        if (typeof transport.options.timestamp !== 'undefined') {
+        if (_.isUndefined(transport.options.timestamp)) {
             var ts = transport.options.timestamp;
 
             if (ts === true || ts === false) {
@@ -224,7 +224,7 @@ function setupTransports(cfg, logger) {
                 //is a string
                 try {
                     var tsm = require(path.resolve(global.__appDir, ts));
-                    if (typeof tsm.init === 'function' && typeof tsm.timestamp === 'function') {
+                    if (_.isFunction(tsm.init) && _.isFunction(tsm.timestamp)) {
                         transport.options.timestamp = tsm.timestamp;
                         tsm.init(); // allow one-time init if necessary, but require the function to be there
                     } else {
@@ -264,7 +264,7 @@ function setupTransports(cfg, logger) {
         var obj = mod;
 
         //if transport field is something like transports.Console, split at the dots and dereference each part
-        transport.field.split('.').forEach(function (field) {
+        _.forEach(_.split(transport.field, '.'), function (field) {
             obj = obj[field];
         });
         logger.add(obj, transport.options);

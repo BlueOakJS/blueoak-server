@@ -20,11 +20,8 @@ exports.init = function (app, logger) {
             };
 
             if (err.subErrors) {
-                payload.validation_errors = [];
-                err.subErrors.forEach(function (subError) {
-                    payload.validation_errors.push(
-                        _.pick(subError, ['message', 'schemaPath', 'model', 'code', 'field', 'in'])
-                    );
+                payload.validation_errors = _.map(err.subErrors, function (subError) {
+                    return _.pick(subError, ['message', 'schemaPath', 'model', 'code', 'field', 'in']);
                 });
             }
             res.status(422).json(payload);

@@ -40,15 +40,15 @@ describe('Swagger spec building test', function () {
         _.forIn(swaggerService.getSimpleSpecs(), function (spec) {
             _.forIn(spec.paths, function (path, pathKey) {
                 _.forIn(path, function (method, methodKey) {
-                    if (httpMethods.indexOf(methodKey) != -1) {
+                    if (!_.includes(httpMethods, methodKey)) {
                         _.forIn(method.responses, function (response, key) {
                             if (response.schema) {
                                 assert.ok(response.schema[swaggerService.discriminatorKeyMap], 'Simple specs ' + key +
                                     ' does not have a x-bos-generated-disc-map property');
-                                if (JSON.stringify(response.schema).includes('"discriminator":')) {
+                                if (_.includes(JSON.stringify(response.schema), '"discriminator":')) {
                                     assert.ok(
-                                        JSON.stringify(response.schema[swaggerService.discriminatorKeyMap])
-                                            .includes('"discriminator":'), 
+                                        _.includes(JSON.stringify(response.schema[swaggerService.discriminatorKeyMap]),
+                                            '"discriminator":'), 
                                         'x-bos-generated-disc-map for ' + pathKey + '/' + key +
                                             ' does not have a discriminator property');
                                 }
@@ -59,11 +59,10 @@ describe('Swagger spec building test', function () {
                                 assert.ok(param.schema, 'Simple specs ' + key + ' does not have a schema property');
                                 assert.ok(param.schema[swaggerService.discriminatorKeyMap],
                                     'Simple specs ' + key + ' does not have a x-bos-generated-disc-map property');
-                                if (JSON.stringify(param.schema).includes('"discriminator":')) {
+                                if (_.includes(JSON.stringify(param.schema), '"discriminator":')) {
                                     assert.ok(
-                                        JSON.stringify(
-                                            param.schema[swaggerService.discriminatorKeyMap])
-                                            .includes('"discriminator":'),
+                                        _.includes(JSON.stringify(param.schema[swaggerService.discriminatorKeyMap]),
+                                            '"discriminator":'),
                                         'x-bos-generated-disc-map for ' + key +
                                             ' does not have a discriminator property');
                                 }
@@ -81,7 +80,7 @@ describe('Swagger spec building test', function () {
             _.forIn(spec.definitions, function (model, modelName) {
                 assert.ok(model[swaggerService.discriminatorKeyMap],
                     'Simple specs ' + modelName + ' does not have an x-bos-generated-disc-map property');
-                if (model.discriminator || modelsWithDiscMapsFromReferences.indexOf(modelName) >= 0) {
+                if (model.discriminator || _.includes(modelsWithDiscMapsFromReferences, modelName)) {
                     assert.ok(!_.isEmpty(model[swaggerService.discriminatorKeyMap]),
                         'Simple specs ' + modelName + ' does not have a complete x-bos-generated-disc-map object');
                 } else {
@@ -99,7 +98,7 @@ describe('Swagger spec building test', function () {
         var polymorphicValidationErrors = swaggerUtil.validateIndividualObjects(
             swaggerService.getSimpleSpecs()['api-v1'], map, exampleData);
         assert.equal(polymorphicValidationErrors.length, 1);
-        assert.ok(polymorphicValidationErrors[0].message.includes('Missing required property'),
+        assert.ok(_.includes(polymorphicValidationErrors[0].message, 'Missing required property'),
             'validation did not identify missing required property');
     });
 
@@ -107,7 +106,7 @@ describe('Swagger spec building test', function () {
         var curiousPersonDefn = swaggerService.getSimpleSpecs()['api-v1'].definitions.CuriousPerson;
         //kind enum should have been overriden by curious person
         //required property should contain curious person required properties AND
-         //any required properties from inherited models
+        //any required properties from inherited models
         assert.equal(curiousPersonDefn.properties.kind.enum[0], 'CuriousPerson');
         assert.equal(curiousPersonDefn.required.length, 3);
     });
@@ -128,13 +127,13 @@ describe('Swagger spec building test', function () {
 
     it('Simple specs have no $refs', function () {
         _.forIn(swaggerService.getSimpleSpecs(), function (value, key) {
-            assert.ok(!JSON.stringify(value).includes('"$ref":'), 'Simple spec ' + key + ' has a $ref!');
+            assert.ok(!_.includes(JSON.stringify(value), '"$ref":'), 'Simple spec ' + key + ' has a $ref!');
         });
     });
 
     it('Pretty specs have $refs', function () {
         _.forIn(swaggerService.getPrettySpecs(), function (value, key) {
-            assert.ok(JSON.stringify(value).includes('"$ref":'), 'Pretty spec ' + key + ' has no $refs!');
+            assert.ok(_.includes(JSON.stringify(value), '"$ref":'), 'Pretty spec ' + key + ' has no $refs!');
         });
     });
 
@@ -145,7 +144,7 @@ describe('Swagger format validators test', function () {
 
     before(function () {
         swaggerService.addFormat('uppercase', function (data, schema) {
-            if (data.toUpperCase() !== data) {
+            if (_.upperCase(data) !== data) {
                 return 'Must be upper case';
             }
         });

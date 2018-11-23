@@ -42,9 +42,9 @@ exports.launch = function (fixtureName, opts, done) {
         }
     );
     setTimeout(function () {
-        // stack traces usually start with 'Error:', if there's that pattern, return it
-        output = /^Error:*/m.test(output) ? output : null;
-        done(output);
+        // key off the failure output from bin/blueoak-server.js or other Errors for errors
+        output = /^([A-z]*Error|Startup failed):*/m.test(output) ? output : null;
+        done(output, lastLaunch);
     }, 4000);
 };
 

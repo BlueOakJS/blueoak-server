@@ -1,3 +1,4 @@
+/* eslint-disable lodash/prefer-includes */
 /*
  * Copyright (c) 2015-2016 PointSource, LLC.
  * MIT Licensed

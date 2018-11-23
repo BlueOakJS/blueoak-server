@@ -1,3 +1,4 @@
+/* eslint-disable lodash/prefer-noop */
 /*
  * Copyright (c) 2015-2016 PointSource, LLC.
  * MIT Licensed

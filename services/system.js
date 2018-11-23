@@ -7,8 +7,7 @@ var _ = require('lodash');
 
 
 //this mod is only used to get stats about the system
-exports.init = function () {
-};
+exports.init = _.noop;
 
 function getBlueOakVersion() {
     var pkg = require('../package.json');
@@ -20,7 +19,7 @@ exports.stats = function (callback) {
         'blueoak-server': getBlueOakVersion()
     };
 
-    _.extend(versions, process.versions);
+    _.assignIn(versions, process.versions);
     var stats = {
         os: {
             hostname: os.hostname(),

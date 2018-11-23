@@ -2,7 +2,8 @@
  * Copyright (c) 2015-2016 PointSource, LLC.
  * MIT Licensed
  */
-var assert = require('assert'),
+var _ = require('lodash'),
+    assert = require('assert'),
     depCalc = require('../../lib/dependencyCalc');
 
 describe('Dependency Calculator', function () {
@@ -28,13 +29,13 @@ describe('Dependency Calculator', function () {
 
         //c & d
         assert.equal(results[1].length, 2);
-        assert(results[1].indexOf('c') > -1);
-        assert(results[1].indexOf('d') > -1);
+        assert(_.includes(results[1], 'c'));
+        assert(_.includes(results[1], 'd'));
 
         //e & f
         assert.equal(results[2].length, 2);
-        assert(results[2].indexOf('e') > -1);
-        assert(results[2].indexOf('f') > -1);
+        assert(_.includes(results[2], 'e'));
+        assert(_.includes(results[2], 'f'));
     });
 
     it('should throw an error for circular dependencies', function () {

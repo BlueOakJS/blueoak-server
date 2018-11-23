@@ -5,6 +5,9 @@
 //Provides a cache service that can support multiple underlying interfaces
 //if the "type" field is set to "redis", we use a redis interface,
 //otherwise we default to a node-cache interface.
+
+var _ = require('lodash');
+
 exports.init = function (monitor, config) {
 
     var cfg = config.get('cache');
@@ -28,10 +31,10 @@ exports.init = function (monitor, config) {
     exports.get = function (key, callback) {
 
         //callback is optional
-        callback = callback || function () {};
+        callback = callback || _.noop;
 
         function cb(err, result) {
-            var keyStr = (typeof key === 'string') ? key : null;
+            var keyStr = (_.isString(key)) ? key : null;
             if (err) {
                 if (keyStr) {
                     monitor.increment(keyStr + '.' + 'cacheMisses', 1);
@@ -60,15 +63,15 @@ exports.init = function (monitor, config) {
     };
 
     exports.set = function (key, value, ttl, callback) {
-        if (typeof ttl === 'function') {
+        if (_.isFunction(ttl)) {
             callback = ttl;
             ttl = undefined;
         }
         //callback is optional
-        callback = callback || function () {};
+        callback = callback || _.noop;
 
         function cb(err, success) {
-            var keyStr = (typeof key === 'string') ? key : null;
+            var keyStr = (_.isString(key)) ? key : null;
             if (!err && success) {
                 if (keyStr) {
                     monitor.increment(keyStr + '.' + 'cacheUpdates', 1);

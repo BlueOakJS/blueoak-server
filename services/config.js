@@ -2,7 +2,8 @@
  * Copyright (c) 2015-2016 PointSource, LLC.
  * MIT Licensed
  */
-var stripJsonComments = require('strip-json-comments'),
+var _ = require('lodash'),
+    stripJsonComments = require('strip-json-comments'),
     fs = require('fs'),
     cluster = require('cluster'),
     security = require('../lib/security'),
@@ -77,7 +78,7 @@ exports.get = function(key) {
 //For every requested config key, check if there's a json file by that name in the config dir.
 //If there is, load the contents and return it so that it can be merged in.
 function loadFromIndividualConfigFile(key) {
-    key = key.replace(/\/|\\/g, ''); //forward and backslashes are unsafe when resolving filenames
+    key = _.replace(key, /\/|\\/g, ''); //forward and backslashes are unsafe when resolving filenames
 
     if (individualKeyCache[key]) {
         return individualKeyCache[key];

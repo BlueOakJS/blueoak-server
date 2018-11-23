@@ -2,7 +2,8 @@
  * Copyright (c) 2015-2016 PointSource, LLC.
  * MIT Licensed
  */
-var StatsD = require('node-statsd'),
+var _ = require('lodash'),
+    StatsD = require('node-statsd'),
     onHeaders = require('on-headers');
 
 var client;
@@ -20,13 +21,13 @@ exports.init = function(config, logger) {
     }
 
     //Wrap all the methods in sdc with either a call to sdc or a no-op if monitoring is disabled
-    methodsToExpose.forEach(function(name) {
+    _.forEach(methodsToExpose, function(name) {
         if (enabled) {
             exports[name] = function() {
                 client[name].apply(client, arguments);
             };
         } else {
-            exports[name] = function() {}; //no-op
+            exports[name] = _.noop;
         }
     });
 };
@@ -70,6 +71,7 @@ exports.express = function(prefix, genRoute) {
                     routeName = 'root.';
                 }
                 routeName = req.method + routeName;
+                // eslint-disable-next-line lodash/prefer-lodash-method
                 routeName = routeName.replace(/:/g, '').replace(/^\/|\/$/g, '').replace(/\//g, '.');
                 key = prefix + '.' + routeName + '.';
             } else {

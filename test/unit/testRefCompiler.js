@@ -1,4 +1,5 @@
-var assert = require('assert'),
+var _ = require('lodash'),
+    assert = require('assert'),
     path = require('path'),
     fs = require('fs'),
     parser = require('swagger-parser'),
@@ -38,8 +39,8 @@ describe('Swagger spec building test', function () {
                     'swagger/public/definitions')).length;
                 var parametersCount = fs.readdirSync(path.join(swaggerExampleDir,
                     'swagger/public/parameters')).length;
-                assert.equal(Object.keys(specs.definitions).length, definitionsCount);
-                assert.equal(Object.keys(specs.parameters).length, parametersCount);
+                assert.equal(_.keys(specs.definitions).length, definitionsCount);
+                assert.equal(_.keys(specs.parameters).length, parametersCount);
                 done();
             }).catch(function (err) {
                 done(err);

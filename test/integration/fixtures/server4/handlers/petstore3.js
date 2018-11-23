@@ -4,6 +4,7 @@
  */
 module.exports = {
 
+    // eslint-disable-next-line lodash/prefer-noop
     foo: function() {
 
     }

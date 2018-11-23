@@ -69,7 +69,7 @@ exports.getDependencies = function(serviceLoader) {
     for (var i = 0; i < mods.length; i++) {
         params = params.concat(di.getParamNames(mods[i].init));
     }
-    return _.unique(params);
+    return _.uniq(params);
 };
 
 
@@ -128,7 +128,7 @@ function startExpress(cfg, app, callback) {
 function resolveSSLOptions(options) {
     var toReturn = _.clone(options);
     //Resolve the file-based properties
-    _.keys(toReturn).forEach(function(key) {
+    _.forEach(_.keys(toReturn), function(key) {
         if (key === 'cert' || key === 'key' || key === 'pfx') {
             toReturn[key] = fs.readFileSync(path.resolve(global.__appDir, toReturn[key]));
         } else if (key === 'ca') { //this can be an array
