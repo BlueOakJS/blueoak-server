@@ -333,15 +333,16 @@ function registerRoute(app, auth, additionalMiddleware, method, path, data, allo
                 });
             }
 
-            if (responseModelValidationLevel) {
-                var responseSender = res.send;
-                res.send = function (body) {
+            var responseSender = res.send;
+            res.send = function (body) {
+                if (responseModelValidationLevel) {
                     var isBodyValid = isValidDataType(body);
                     if (!isBodyValid) {
                         try { //body can come in as JSON, we want it unJSONified
                             body = JSON.parse(body);
                         } catch (err) {
                             logger.error('Unexpected format when attempting to validate response');
+                            res.body = body;
                             res.send = responseSender;
                             responseSender.call(res, body);
                             return;
@@ -403,15 +404,22 @@ function registerRoute(app, auth, additionalMiddleware, method, path, data, allo
                             'Response validation error:', JSON.stringify(validationErrors, null, 2)
                         );
                     }
-
-                    // after this initial call (sometimes `send` will call itself again),
-                    // we don't need to get the response for validation anymore
-                    res.send = responseSender;
+                    
                     // if we parsed JSON at the start, reJSONify
-                    responseSender.call(res, isBodyValid ? body : JSON.stringify(body));
+                    body = isBodyValid ? body : JSON.stringify(body);
+                }
 
-                };
-            }
+                // after this initial call (sometimes `send` will call itself again),
+                // we don't need to get the response for validation anymore
+                res.send = responseSender;
+
+                // attach the body for post-send() middlewares
+                res.body = body;
+
+                // and call send()
+                responseSender.call(res, body);
+            };
+
             handlerFunc(req, res, next);
         });
 
