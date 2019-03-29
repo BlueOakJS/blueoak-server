@@ -414,7 +414,7 @@ function registerRoute(app, auth, additionalMiddleware, method, path, data, allo
                     // attach the body for post-send() middlewares that aren't being swagger validated
                     try {
                         // make sure body is JSON object
-                        body = JSON.parse(body);
+                        res.body = JSON.parse(body);
                     } catch (err) {
                         // not JSON stringified, so just attach body
                         res.body = body;
