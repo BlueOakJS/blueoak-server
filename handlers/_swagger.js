@@ -405,16 +405,25 @@ function registerRoute(app, auth, additionalMiddleware, method, path, data, allo
                         );
                     }
                     
+                    // attach the body for post-send() middlewares
+                    res.body = body;
+
                     // if we parsed JSON at the start, reJSONify
                     body = isBodyValid ? body : JSON.stringify(body);
+                } else {
+                    // attach the body for post-send() middlewares that aren't being swagger validated
+                    try {
+                        // make sure body is JSON object
+                        body = JSON.parse(body);
+                    } catch (err) {
+                        // not JSON stringified, so just attach body
+                        res.body = body;
+                    }
                 }
 
                 // after this initial call (sometimes `send` will call itself again),
                 // we don't need to get the response for validation anymore
                 res.send = responseSender;
-
-                // attach the body for post-send() middlewares
-                res.body = body;
 
                 // and call send()
                 responseSender.call(res, body);
