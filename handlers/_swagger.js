@@ -344,6 +344,7 @@ function registerRoute(app, auth, additionalMiddleware, method, path, data, allo
                             logger.error('Unexpected format when attempting to validate response');
                             res.send = responseSender;
                             responseSender.call(res, body);
+                            res.sentBody = body;
                             return;
                         }
                     } else if (body) {
@@ -410,6 +411,8 @@ function registerRoute(app, auth, additionalMiddleware, method, path, data, allo
                     // if we parsed JSON at the start, reJSONify
                     responseSender.call(res, isBodyValid ? body : JSON.stringify(body));
 
+                    // attach the body object for post-send() middlewares
+                    res.sentBody = body;
                 };
             }
             handlerFunc(req, res, next);
