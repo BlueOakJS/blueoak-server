@@ -333,16 +333,16 @@ function registerRoute(app, auth, additionalMiddleware, method, path, data, allo
                 });
             }
 
-            var responseSender = res.send;
-            res.send = function (body) {
-                if (responseModelValidationLevel) {
+            if (responseModelValidationLevel) {
+                var responseSender = res.send;
+                res.send = function (body) {
                     var isBodyValid = isValidDataType(body);
                     if (!isBodyValid) {
                         try { //body can come in as JSON, we want it unJSONified
                             body = JSON.parse(body);
                         } catch (err) {
                             logger.error('Unexpected format when attempting to validate response');
-                            res.body = body;
+                            res.sentBody = body;
                             res.send = responseSender;
                             responseSender.call(res, body);
                             return;
@@ -404,31 +404,17 @@ function registerRoute(app, auth, additionalMiddleware, method, path, data, allo
                             'Response validation error:', JSON.stringify(validationErrors, null, 2)
                         );
                     }
-                    
-                    // attach the body for post-send() middlewares
-                    res.body = body;
 
+                    // after this initial call (sometimes `send` will call itself again),
+                    // we don't need to get the response for validation anymore
+                    res.send = responseSender;
                     // if we parsed JSON at the start, reJSONify
-                    body = isBodyValid ? body : JSON.stringify(body);
-                } else {
-                    // attach the body for post-send() middlewares that aren't being swagger validated
-                    try {
-                        // make sure body is JSON object
-                        res.body = JSON.parse(body);
-                    } catch (err) {
-                        // not JSON stringified, so just attach body
-                        res.body = body;
-                    }
-                }
+                    responseSender.call(res, isBodyValid ? body : JSON.stringify(body));
 
-                // after this initial call (sometimes `send` will call itself again),
-                // we don't need to get the response for validation anymore
-                res.send = responseSender;
-
-                // and call send()
-                responseSender.call(res, body);
-            };
-
+                    // attach the body object for post-send() middlewares
+                    res.sentBody = body;
+                };
+            }
             handlerFunc(req, res, next);
         });
 
