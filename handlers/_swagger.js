@@ -342,9 +342,9 @@ function registerRoute(app, auth, additionalMiddleware, method, path, data, allo
                             body = JSON.parse(body);
                         } catch (err) {
                             logger.error('Unexpected format when attempting to validate response');
-                            res.sentBody = body;
                             res.send = responseSender;
                             responseSender.call(res, body);
+                            res.sentBody = body;
                             return;
                         }
                     } else if (body) {
