@@ -117,6 +117,21 @@ function startExpress(cfg, app, callback) {
             callback(err);
         });
     }
+
+    //Apply configuration file defined http-server settings to node server
+    if (cfg.httpServer) {
+        if (cfg.httpServer.timeout) {
+            server.timeout = cfg.httpServer.timeout;
+        }
+        if (cfg.httpServer.keepAliveTimeout) {
+            server.keepAliveTimeout = cfg.httpServer.keepAliveTimeout;
+        }
+        if (cfg.httpServer.headersTimeout) {
+            server.headersTimeout = cfg.httpServer.headersTimeout;
+        }
+        _logger.info('App configured with httpServer settings - timeout: %d, keepAliveTimeout: %d, headersTimeout: %d',
+            server.timeout, server.keepAliveTimeout, server.headersTimeout);
+    }
 }
 
 /**
