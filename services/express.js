@@ -118,16 +118,17 @@ function startExpress(cfg, app, callback) {
         });
     }
 
-    //Apply configuration file defined http-server settings to node server
+    //Apply express/node http server timeouts from blueoak config, 
+    //see: https://nodejs.org/api/http.html#http_class_http_server
     if (cfg.httpServer) {
         if (cfg.httpServer.timeout) {
-            server.timeout = cfg.httpServer.timeout;
+            server.timeout = cfg.httpServer.timeout; // Node v0.9.12+
         }
         if (cfg.httpServer.keepAliveTimeout) {
-            server.keepAliveTimeout = cfg.httpServer.keepAliveTimeout;
+            server.keepAliveTimeout = cfg.httpServer.keepAliveTimeout; // Node v8.0.0+
         }
         if (cfg.httpServer.headersTimeout) {
-            server.headersTimeout = cfg.httpServer.headersTimeout;
+            server.headersTimeout = cfg.httpServer.headersTimeout; // Node v11.3.0+
         }
         _logger.info('App configured with httpServer settings - timeout: %d, keepAliveTimeout: %d, headersTimeout: %d',
             server.timeout, server.keepAliveTimeout, server.headersTimeout);
