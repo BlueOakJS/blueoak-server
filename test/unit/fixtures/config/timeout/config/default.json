@@ -1,0 +1,9 @@
+{
+"express": {
+    "httpServer": {
+      "timeout": 111111,
+      "keepAliveTimeout": 222222,
+      "headersTimeout": 333333
+    }
+  }
+}

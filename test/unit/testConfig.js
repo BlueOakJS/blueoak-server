@@ -38,3 +38,29 @@ describe('Config test', function () {
 
 });
 
+describe('Node server timeout config test', function () {
+
+    //The logger will try to read global.__appDir, so make sure it's set
+    beforeEach(function() {
+        global.__appDir = path.resolve(__dirname, 'fixtures/config/timeout');
+    });
+
+    //restore __appDir to its original value
+    afterEach(function() {
+        global.__appDir = origAppDir;
+    });
+
+    it('Test timeout config', function (done) {
+
+        util.init(config, {}, _.noop, function() {
+            //timeout/default.json overrides default node timeout settings
+            assert.equal(config.get('express').httpServer.timeout, 111111);
+            assert.equal(config.get('express').httpServer.keepAliveTimeout, 222222);
+            assert.equal(config.get('express').httpServer.headersTimeout, 333333);
+
+            done();
+        });
+    });
+
+});
+
