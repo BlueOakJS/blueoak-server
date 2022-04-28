@@ -45,7 +45,7 @@
     "blueoak-server": "bin/blueoak-server.js"
   },
   "dependencies": {
-    "async": "^1.0.0",
+    "async": "^2.6.4",
     "base64url": "^3.0.1",
     "body-parser": "^1.19.0",
     "cfenv": "^1.0.0",
